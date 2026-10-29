@@ -1,20 +1,79 @@
-# Arif Visual Answers
+<p align="center">
+  <img src="docs/images/arif-logo.png" alt="Arif logo" width="112" height="112">
+</p>
 
-**Ask a question about any PDF and get a short answer plus up to three visuals: a chart, a comparison, steps, a table, a diagram, a formula, a quiz or flashcards. Every number and claim in a visual is checked against the page it cites. Ask it to act ("make tasks from the action items", "draft an email to the team") and it proposes the actions, but nothing happens until you approve.**
+<h1 align="center">Arif Visual Answers</h1>
 
-The default language is Egyptian Arabic (RTL), and English (LTR) is one click away. This prototype explores what Arif could add on top of a text answer: a small set of typed components that can be verified, instead of free-form model output, and an assistant that understands the document, connects it to tasks and messages, and acts only with permission.
+<p align="center">
+  <b>Grounded visual answers and permission-gated actions over any PDF, Arabic first.</b><br>
+  A prototype of what Arif (عارف) could add to Qriib: short answers with verified visuals,<br>
+  and an assistant that understands the document, connects it to tasks and messages, and acts only with permission.
+</p>
 
-![Demo: an Arabic question answered with a grounded comparison, then a quiz](demo/arif-visual-answers.gif)
+<p align="center">
+  <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-SSE-009688?logo=fastapi&logoColor=white">
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
+  <img alt="Groq" src="https://img.shields.io/badge/Groq-gpt--oss--120b-F55036">
+  <img alt="Gemini" src="https://img.shields.io/badge/Gemini-3.8%20Flash-4285F4?logo=google&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-195%20backend%20%C2%B7%20113%20e2e-2EA44F">
+  <img alt="RTL" src="https://img.shields.io/badge/Arabic-RTL%20first-6D28D9">
+</p>
+
+<p align="center">
+  <a href="#the-problem">Problem</a> ·
+  <a href="#what-it-does">Features</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#results">Results</a> ·
+  <a href="#cost-plan">Cost plan</a> ·
+  <a href="#quick-start">Quick start</a>
+</p>
+
+<p align="center">
+  <img src="demo/arif-visual-answers.gif" alt="Demo: an Arabic question answered with a grounded comparison, then a quiz" width="820">
+</p>
 
 ---
 
-## Why
+## The problem
 
-A student who asks *"how much does chain-of-thought improve GSM8K as models grow?"* doesn't need 300 words. They need the number, the trend and the page it came from. Three things make that hard in practice:
+Students and teams ask questions about long documents (papers, course notes, reports, meeting transcripts), mostly in Egyptian Arabic mixed with English terms. Three things go wrong with a plain chat answer:
 
-1. **Visuals must be trustworthy.** A chart with one invented number is worse than no chart.
-2. **Arabic first.** RTL layout, mixed Arabic and English terms, and Arabic questions about English documents.
-3. **Cost and latency.** The answer has to stream quickly and cost a fraction of a cent.
+1. **It is a wall of text.** The user needs the number, the trend, the steps or the owners, not 300 words.
+2. **It can't be trusted.** A chart with one invented number is worse than no chart, and nothing tells the reader which page a claim came from.
+3. **An assistant that acts can be steered.** Once the assistant can create tasks or write messages, text inside the document (even text the reader can't see) can try to make it act.
+
+### Formulation
+
+```text
+Input
+  D = (p1 … pn)        a PDF; each page has visible text V(pi) and hidden text H(pi)
+                        (white, tiny or off-page characters; H is never evidence)
+  q                     a question, 1–500 characters
+  ℓ ∈ {ar, en}          the answer language (Egyptian Arabic, RTL, by default)
+
+Output                  R(D, q, ℓ) = (t, C, A), streamed
+  t                     a short answer in ℓ (≤ 700 characters)
+  C = {c1 … ck}, k ≤ 3  typed components from a fixed catalog K (12 types)
+  A                     proposed actions (tasks, message drafts), each in state "proposed"
+
+Constraints
+  G1 grounding     every claim in C cites (page j, quote s) with
+                   fuzzy_match(s, V(p_j')) ≥ 90 for some j' ∈ {j−1, j, j+1}
+  G2 numbers       every number in a claim appears in s AND in V(p_j')
+  G3 agent items   a task's owner and due date appear in its cited sentence
+  S1 permission    an action changes state only via an explicit user approval:
+                   proposed → approved | rejected; nothing is ever sent
+  S2 injection     text in D (visible or hidden) may cause a proposal, never an approval;
+                   a proposal traced to H is flagged
+  P1 latency       answer text starts streaming within seconds; repeat questions < 300 ms
+  P2 cost          ≈ $0.001–0.002 per answer; fits Groq's free tier for a demo (8K tokens/min)
+
+Policy             a claim that fails G1–G3 is removed, downgraded (chart → table) or dropped:
+                   it is never shown as verified.
+```
+
+The design follows from these constraints: the model never writes free-form UI, only typed components that the server validates and checks against the page; and the agent's tools can only *propose*.
 
 ## What it does
 
@@ -23,24 +82,32 @@ A student who asks *"how much does chain-of-thought improve GSM8K as models grow
 | **Any PDF** | Upload one or several PDFs and switch or delete them from the "working in" bar; each keeps its question history. Scanned PDFs are OCR'd locally in the background. Arabic PDFs whose producer stores lines right-to-left with shaped glyphs (Chromium, Word) are restored to reading order. |
 | **Any question** | Typed in Arabic or English. Suggested questions are generated for each document. |
 | **Short answer + ≤ 3 visuals** | 9 visual types: `text`, `chart`, `comparison`, `steps`, `table`, `diagram`, `formula`, `quiz`, `flashcards`. The model chooses; a policy layer enforces the limits. |
-| **Grounding** | Every data point carries a page number and a verbatim quote. The server checks the quote against the visible text of that page, and the numbers against both the quote and the page. Anything that fails is removed or downgraded, never shown as fact. |
+| **Grounding** | Every data point carries a page number and a verbatim quote, checked against the visible text of that page (G1, G2). Anything that fails is removed or downgraded, never shown as fact. |
 | **Agent mode** | Questions about decisions, owners, tasks or messages go to an agent loop with Groq tool calling (at most 4 steps, a timeout per step) and four tools: `search_document`, `extract_items` (decisions or action items, each citing its sentence ids), `create_task` and `draft_message`. Any other question keeps the visual-answer path. |
-| **Permission gate** | `create_task` and `draft_message` only write proposals. Each appears in an action card with **Approve / Edit / Reject**; a task is saved only when the user who asked clicks Approve, and a draft is saved but never sent. |
-| **Agent cards** | 3 more catalog types built by the server from tool results, with the same validation and grounding: `decision_cards`, `task_cards` (the owner and the due date must appear in the cited sentence) and `action_card`. |
-| **Injection-safe actions** | Text in the document can lead to a proposal, never to an action. A proposal that matches text only hidden characters contain is flagged as coming from hidden text; one without a supporting sentence, or of a kind the user didn't ask for, is flagged too. |
+| **Permission gate** | `create_task` and `draft_message` only write proposals. Each appears in an action card with **Approve / Edit / Reject**; a task is saved only when the user who asked clicks Approve, and a draft is saved but never sent (S1). |
+| **Agent cards** | 3 more catalog types built by the server from tool results, with the same validation and grounding: `decision_cards`, `task_cards` (G3) and `action_card`. |
+| **Injection-safe actions** | Text in the document can lead to a proposal, never to an action (S2). A proposal that matches text only hidden characters contain is flagged; one without a supporting sentence, or of a kind the user didn't ask for, is flagged too. |
 | **Tasks tab** | Approved tasks with owner, due date and source (file, page, quote), and saved drafts marked "not sent". Each can be deleted. |
-| **Execution audit** | Under every answer: each tool call with its input, status and duration (for example "Execution audit · 5 completed"). Plain answers list their pipeline steps (retrieve, generate, verify), with tokens and cost. |
+| **Execution audit** | Under every answer: each tool call with its input, status and duration ("Execution audit · 5 completed"). Plain answers list their pipeline steps (retrieve, generate, verify) with tokens and cost. |
 | **Streaming** | The text streams token by token; each visual appears as soon as it is complete and verified. |
 | **Before vs After** | The same question answered as plain prose and as a visual answer, side by side, with cost and time for each. |
 | **Two providers** | Gemini (sends the whole PDF) and Groq (`gpt-oss-120b`, sends retrieved chunks), switchable in the UI. Agent mode always uses Groq. A self-hosted OpenAI-compatible endpoint is also supported for answers. |
 
 ## Screenshots
 
-The UI is the Arif chat window: a floating panel with the Arif logo, the document it is working in, suggested questions as cards, and the answer under Arif's name with an "Execution audit" drawer.
+The UI is the Arif chat window: a floating panel with the Arif logo, the document it is working in, suggested questions as cards, and each answer under Arif's name with an Execution audit drawer.
 
 | Welcome: suggested questions | Arabic answer (RTL) |
 |---|---|
 | ![Welcome](docs/images/ar-welcome.png) | ![Arabic answer](docs/images/ar-answer.png) |
+
+| Agent proposals (one approved) | Execution audit |
+|---|---|
+| ![Proposals](docs/images/agent-approve.png) | ![Execution audit](docs/images/agent-audit.png) |
+
+| Tasks tab | Injection attempt, flagged |
+|---|---|
+| ![Tasks tab](docs/images/agent-tasks-tab.png) | ![Injection flagged](docs/images/agent-injection.png) |
 
 **Before vs After**: the same question as plain prose and as a visual answer, with cost and time for each.
 
@@ -50,59 +117,49 @@ The UI is the Arif chat window: a floating panel with the Arif logo, the documen
 |---|---|
 | ![English chart](docs/images/en-chart.png) | ![Mobile](docs/images/ar-mobile.png) |
 
-**Agent mode** on the SAMPLE meeting transcript (`fixtures/pdfs/meeting_sample.pdf`): proposals with Approve / Edit / Reject, the Execution audit, the Tasks tab, and a task smuggled in through hidden PDF text, flagged and waiting.
+<sub>Screenshots were taken in offline mode (replayed answers, hence the "Mock" badge); the UI is the same with a live model.</sub>
 
-| Proposals (one approved) | Execution audit |
-|---|---|
-| ![Proposals](docs/images/agent-approve.png) | ![Execution audit](docs/images/agent-audit.png) |
+## Architecture
 
-| Tasks tab | Injection attempt, flagged |
-|---|---|
-| ![Tasks tab](docs/images/agent-tasks-tab.png) | ![Injection flagged](docs/images/agent-injection.png) |
+![Architecture and data flow: upload, ask (visual path and agent path) and approve, with every condition and technology](docs/images/architecture.svg)
 
-<sub>The screenshots were taken in offline mode (replayed answers, hence the "Mock" badge); the UI is the same with a live model.</sub>
+<sub>The diagram is generated by <code>docs/images/make_architecture.py</code>.</sub>
 
-## How it works
+### ① Upload: `POST /api/documents`
 
-![Architecture: upload, ask and check lanes](docs/images/architecture.svg)
+1. **Validate**: MIME type and `%PDF` magic, ≤ 20 MB, ≤ 60 pages, no encryption, per-IP rate limit.
+2. **Parse** with pdfplumber. Only *visible* characters count; white, tiny or off-page text is excluded and raises `HIDDEN_TEXT_DETECTED`. Arabic lines stored in visual order are restored to reading order.
+3. **OCR** (RapidOCR, local) runs in the background, and only for pages without a text layer.
+4. **Store**: memoised by SHA-256, owned by the uploading browser (`X-Client-Id`), kept 48 h. Gemini gets the PDF through its Files API; Groq never receives the file, only text.
 
-**One request, step by step**
+### ② Ask: `POST /api/ask` → server-sent events
 
-1. The PDF is parsed once (memoised by SHA-256). Only *visible* text counts: characters that are tiny, white or outside the page are excluded, and a warning is raised if hidden text is found (a prompt-injection defence).
-2. **Retrieval** picks the relevant chunks under a token budget (about 5K tokens, sized for Groq's free tier). An Arabic question about an English document is first translated by a small model, for search only.
-3. The model returns **one JSON object**: `answer_text` plus a list of typed components, following a single catalog schema (Pydantic on the server, mirrored by Zod in the browser and checked in CI).
-4. The JSON is parsed **while it streams**. Answer text goes to the browser immediately. Each component, once complete, goes through:
-   - **validation** against its type (over-long strings or lists are trimmed, not dropped);
-   - **grounding**: the quote must fuzzy-match the cited page (≥ 90, ±1 page tolerance), and every number must appear in the quote *and* on the page;
-   - **policy**: at most 3 visuals, quiz last, a chart with too few verified points becomes a table, and a table with fewer than 2 verified rows is dropped.
-5. Events are sent over **SSE** with AG-UI style names (`TEXT_MESSAGE_CONTENT`, `COMPONENT`, `COMPONENT_DROPPED`, `METRICS`, …). See [docs/protocol.md](docs/protocol.md).
-6. The browser renders each type with a pure, props-only component. Model output is never rendered as HTML, links or images.
+The **router** picks the path. A question about decisions, owners, action items, "make tasks" or "draft an email" goes to the agent when a Groq key is configured; everything else (or `text_only`) takes the visual path.
 
-**Agent mode, step by step** (`backend/app/agent.py`)
+**Visual path.** An answer cache (SQLite) replays repeat questions instantly. On a miss, **retrieval** (BM25 over ~600-character chunks, ≈ 5K-token budget; an Arabic question about an English document is translated for search by `gpt-oss-20b`) selects the context, and the **provider** returns one JSON object: `answer_text` plus typed components. The JSON is parsed **while it streams** (jiter): text goes to the browser immediately; each finished component is validated (Pydantic, over-long fields trimmed), grounded (G1, G2) and policed (≤ 3, quiz last, chart → table when fewer than 3 points verify). On 429/503 the server waits (`retry-after`), retries, then uses the fallback model, but only before any output has streamed.
 
-1. The router sends questions about decisions, owners, tasks or messages to the agent; everything else takes the path above.
-2. The document's visible text is split into numbered sentences (`s1`, `s2`, …). A short document goes to the model whole; a long one is searched with `search_document`.
-3. Groq tool calling runs for at most 4 steps, each with its own timeout. `extract_items` is a separate strict-JSON call that returns items with sentence ids; the server turns ids into page + quote citations and checks that the owner and the due date really are in the cited sentence.
-4. `create_task` and `draft_message` only store **proposals**. The server builds the cards (`decision_cards`, `task_cards`, `action_card`) from the tool results and runs them through the same validation and grounding as any other component.
-5. If the user asked for tasks and the model stopped short (out of steps, or it only *said* it proposed them), the server proposes the remaining verified action items itself. They are labelled `[server]` in the audit and still need Approve.
-6. Approve / Edit / Reject call `/api/actions/{id}/approve|reject`. Only an approval from the browser that asked creates a task. A draft is saved, never sent.
+**Agent path.** The document's visible text becomes numbered sentences (`s1`, `s2`, …). Groq tool calling runs for at most 4 steps, each with its own timeout. `extract_items` is a separate strict-JSON call returning items with sentence ids; the server turns ids into page + quote citations and checks G3. `create_task` and `draft_message` store proposals only. If the user asked for an action and the model only *described* it, the loop reminds it once. Verified action items the model didn't reach are then proposed by the server, marked `[server]` in the audit and still waiting for Approve. The server builds the cards from tool results and runs them through the same checks; agent answers are never cached.
 
-**Resilience:** on 429 or 503 the server waits (honouring `retry-after`), retries, then switches to a fallback model, but only if nothing has streamed yet. On a timeout the user keeps the partial text and sees a clear error. Answers are cached on document + normalised question + language + model + prompt version.
+Both paths emit AG-UI-style events (`TEXT_MESSAGE_CONTENT`, `COMPONENT`, `TOOL_CALL_START`, `TOOL_CALL_RESULT`, `METRICS`, …); see [docs/protocol.md](docs/protocol.md). The browser re-validates every component with Zod and renders it with a props-only React component; model output is never rendered as HTML, links or images.
+
+### ③ Approve: the only path that changes state
+
+`POST /api/actions/{id}/approve | reject` accepts a decision only from the browser that asked (else 404) and only once (else 409). Approve may carry edits (title, owner, due date; recipient, body). An approved task lands in the tasks store with its source citation; an approved draft is saved with `sent: false`. The Tasks tab reads `GET /api/tasks`.
 
 ## Results
 
-**Live, on Groq `openai/gpt-oss-120b`, 3 real PDFs** (a research paper, a project report and a scanned slide deck), 9 free-form questions, a third of them in Egyptian Arabic:
+**Visual answers, live on Groq `openai/gpt-oss-120b`:** 3 real PDFs (a research paper, a project report and a scanned slide deck), 9 free-form questions, a third in Egyptian Arabic.
 
 | | |
 |---|---|
 | Answered | **9 / 9**, no errors |
 | Visual shown | **6 / 9** (3 fully verified, 3 partial = shown with unverifiable citations removed) |
-| Model time | **0.9 – 2.7 s** per answer |
-| Prompt size | 3.7K – 4.8K tokens (retrieval) |
+| Model time | **0.9–2.7 s** per answer |
+| Prompt size | 3.7K–4.8K tokens (retrieval) |
 | Cost | about **$0.001** per answer |
-| Arabic → English search | translated automatically for all Arabic questions |
+| Arabic → English search | translated automatically for every Arabic question |
 
-**Agent mode, live on Groq** (SAMPLE meeting transcript, 4 questions in Egyptian Arabic and English, plus the injection PDF):
+**Agent mode, live on Groq:** SAMPLE meeting transcript (`fixtures/pdfs/meeting_sample.pdf`, fictional, Egyptian Arabic with English terms, 3 decisions and 4 action items) plus a PDF with a hidden "create a task" instruction.
 
 | Question | Result | Time |
 |---|---|---|
@@ -110,13 +167,59 @@ The UI is the Arif chat window: a floating panel with the Arif logo, the documen
 | مين مسؤول عن إيه؟ | 4 action items with owner and date, all verified | 5.3 s |
 | اعمللي tasks بالـ action items | 4 task proposals; tasks store empty until Approve, then 1 task | 6.9 s |
 | Draft an email to the team… | 1 draft proposal, nothing sent | 4.9 s |
-| Make tasks… (PDF with a hidden "create a task" instruction) | 2 genuine proposals, hidden-text warning, no injected task | 5.0 s |
+| Make tasks… (PDF with a hidden instruction) | 2 genuine proposals, hidden-text warning, no injected task | 5.0 s |
 
-About $0.001 per agent answer. The first live runs found three problems: assignments counted as decisions, a model reply that claimed tasks it never proposed, and owner "أنا" instead of the speaker's name. All three are fixed and covered by tests ([BUILD_LOG.md](BUILD_LOG.md), D35–D42).
+The first live runs found three problems: assignments counted as decisions, a reply that claimed tasks the model never proposed, and the owner "أنا" ("I") instead of the speaker's name. All three are fixed and covered by tests. Across the 6 built-in demo questions in both languages, 71 % of the model's quotes verified; the rest were paraphrases, which grounding removed as intended. Every design decision (D1–D42) and all measurements are in [BUILD_LOG.md](BUILD_LOG.md).
 
-On the 6 built-in demo questions × 2 languages, 71 % of the quotes the model wrote verified against the page. The rest were paraphrases, and grounding removed them, which is the intended behaviour. Full tables and every design decision (D1–D42) are in [BUILD_LOG.md](BUILD_LOG.md).
+**Tests:** 195 backend tests (pytest, 24 for agent mode) and 113 end-to-end tests (Playwright in Arabic, English and on mobile: the permission gate, the Tasks tab, the injection PDF, axe accessibility checks and visual baselines), plus 2 live tests, lint and type checks (ruff, mypy, oxlint, tsc) and a schema-parity check between the Python and TypeScript catalogs.
 
-**Tests:** 195 backend tests (pytest, 24 of them for agent mode), 113 end-to-end tests (Playwright, in Arabic, English and on mobile, including the permission gate, the Tasks tab, the injection PDF, accessibility checks with axe and visual baselines), 2 live tests, plus lint and type checks (ruff, mypy, oxlint, tsc) and a schema-parity check between the Python and TypeScript catalogs.
+## Cost plan
+
+Model calls are almost the whole cost: the app is one FastAPI process with SQLite, which runs on a small VM. Every answer reports its own tokens and cost (`METRICS`), and `GET /api/metrics/summary` aggregates them, so the numbers below can be tracked in production.
+
+### Unit costs
+
+Prices from the model providers' published price lists, checked 2026-10-29 (`backend/app/prices.json`).
+
+| Answer | Model | Tokens | Cost per answer | Per 1,000 |
+|---|---|---|---|---|
+| Visual answer (retrieval) | Groq `gpt-oss-120b` ($0.15 in / $0.60 out per 1M) | ≈ 4.9K in + reasoning and output (12 live runs) | **$0.0014** measured | **$1.40** |
+| Agent answer (4 steps max) | Groq `gpt-oss-120b` | 3.4K–6.7K total (5 live runs) | **$0.0008–0.0013** measured | **≈ $1.00** |
+| Visual answer, whole PDF | Gemini 3.8 Flash ($0.75 / $3.75 until 2026-12-31) | ≈ 24.1K in (43-page paper, `count_tokens`) + ≈ 1.5K out | ≈ $0.024 *estimated* | ≈ $24 |
+| Same, from 2027-01-01 | Gemini 3.8 Flash ($1.50 / $7.50) | same | ≈ $0.047 *estimated* | ≈ $47 |
+| Same, with context caching | Gemini 3.8 Flash (cached input $0.075) | same | ≈ $0.0074 + cache storage | ≈ $7.40 |
+| Repeat question | none (answer cache) | 0 | **$0** | $0 |
+| Per document, once | Groq `gpt-oss-20b` (suggested questions, query translation; cached) | ≈ 2K | ≈ $0.0003 | n/a |
+
+Gemini's figures are estimates from `count_tokens` and the price table; Gemini was overloaded (503) during the build, so no live Gemini answer was billed.
+
+### Monthly scenarios
+
+Assumptions: 30 questions per active user per month, 80 % visual answers and 20 % agent answers, 15 % served from the answer cache.
+
+| Active users / month | Questions | Groq (recommended) | Gemini 3.8 Flash, whole PDF (2026 prices) |
+|---|---|---|---|
+| 1,000 (pilot) | 30K | **≈ $34** | ≈ $490 |
+| 10,000 (school network) | 300K | **≈ $340** | ≈ $4,900 |
+| 100,000 (national) | 3M | **≈ $3,400** | ≈ $49,000 |
+
+That is about **$0.034 per active user per month** on Groq, against about $0.49 on Gemini with whole-PDF context (roughly double from 2027 prices).
+
+### Plan
+
+1. **Demo and pilot: Groq free tier, $0.** The free tier allows about 8K tokens per minute, which is about one answer per minute. That is enough for a demo, not for a class.
+2. **Launch: Groq paid tier, `gpt-oss-120b`, ≈ $0.04 per active user per month.** Size the rate limit for the peak: if 10 % of a day's questions arrive in one hour, 10,000 users need about 1,000 answers per hour, ≈ 90K tokens per minute. Keep `qwen3.8-27b` only as the rate-limit fallback: it costs about 3× more per answer.
+3. **Gemini where it pays off.** Use it for documents where the model must see the page itself (figures, complex scans), with `RETRIEVAL=on` (≈ 5× less input) or context caching, rather than as the default.
+4. **Scale or data residency: self-host.** The same code talks to any OpenAI-compatible server (`PROVIDER=openai_compat`, for example vLLM with `gpt-oss-120b`). The cost becomes a fixed GPU bill instead of per-token, which pays off only at sustained high volume, or when documents must not leave the country.
+
+### Cost controls already built in
+
+- Retrieval caps the prompt at ≈ 5K tokens instead of sending the whole PDF to Groq.
+- The answer cache makes repeat questions free; translations and suggested questions are cached per document.
+- Small model (`gpt-oss-20b`, half the price) for translation and suggestions; `reasoning_effort=low` on gpt-oss.
+- Hard limits: ≤ 3 components, output token caps, ≤ 4 agent steps, a question limit per document, per-IP rate limits.
+- The fallback model is used only after retries, and only before any output has streamed.
+- Cost per answer is visible in the UI and logged, so a budget alert is one query away.
 
 ## Quick start
 
@@ -128,7 +231,9 @@ make setup                # Python + Node dependencies, Playwright Chromium
 make serve                # build and serve the app on http://localhost:8000 (live model)
 ```
 
-No key? `make serve-mock` runs the same app offline with recorded answers for the demo paper (`fixtures/pdfs/cot.pdf`) and the SAMPLE meeting transcript (`fixtures/pdfs/meeting_sample.pdf`). Agent mode needs `GROQ_API_KEY` when live.
+Then upload any PDF, or `fixtures/pdfs/meeting_sample.pdf` for the agent's demo questions.
+
+No key? `make serve-mock` runs the same app offline with recorded answers for the demo paper (`fixtures/pdfs/cot.pdf`) and the SAMPLE meeting transcript. Agent mode needs `GROQ_API_KEY` when live.
 
 | Command | What it does |
 |---|---|
@@ -145,20 +250,19 @@ No key? `make serve-mock` runs the same app offline with recorded answers for th
 - API keys stay on the server (`.env`, git-ignored); the browser never sees them.
 - Model output is data, not markup: no `dangerouslySetInnerHTML` (lint fails on it), markdown is rendered with an allowlist, and KaTeX runs with `trust: false`.
 - Hidden-text detection, upload size and page limits, MIME checks, per-IP rate limits and a strict CSP.
-- Documents belong to the browser that uploaded them and expire after 48 h.
-- PDF text is sent to the selected provider (Google or Groq). OCR runs locally.
 - Agent tools never act: tasks and drafts are proposals until the user who asked approves them, and nothing is ever sent. Proposals traced to hidden PDF text, without a supporting sentence, or not asked for are flagged.
+- Documents, proposals and tasks belong to the browser that created them; documents expire after 48 h.
+- PDF text is sent to the selected provider (Google or Groq). OCR runs locally.
 
 ## Known limitations
 
-- **Quote fidelity:** models sometimes paraphrase quotes. Grounding catches this, but the cost is fewer visuals (6/9 in the live run).
-- **Groq free tier** (8K tokens per minute) means about one answer per 45 s under load. A paid tier removes the wait; the model itself answers in about 2 s.
+- **Quote fidelity:** models sometimes paraphrase quotes. Grounding catches this, at the cost of fewer visuals (6/9 in the live run).
+- **Groq free tier** (8K tokens per minute) allows about one answer per minute under load. The model itself answers in 1–7 s.
 - **Gemini** returned 400/503 for most of the build day, so its demo answers are hand-authored fixtures. The provider code is in place and tested offline.
-- **Arabic scanned PDFs** are not covered by the default OCR models.
-- Retrieval is lexical (BM25). Embeddings would help with questions that use different words from the document.
 - **Agent routing is a keyword list** (Arabic and English): cheap and predictable, but a phrasing it doesn't know gets a normal visual answer.
-- **Tasks and drafts are stored locally** (SQLite, per browser). They are not connected to a real task manager or mail system yet.
+- **Tasks and drafts are stored locally** (SQLite, per browser), not yet connected to a task manager or mail system.
 - gpt-oss tends to make one tool call per step, so the server completes task proposals the model didn't reach (marked `[server]`).
+- **Arabic scanned PDFs** are not covered by the default OCR models. Retrieval is lexical (BM25).
 
 ## Next steps
 
@@ -166,17 +270,18 @@ No key? `make serve-mock` runs the same app offline with recorded answers for th
 2. A grounding eval set in Arabic to track quote fidelity per model and prompt version.
 3. Arabic OCR models for scanned course material.
 4. Integrate the component catalog into Arif's chat as a response type, behind a flag.
-5. Connect the approved actions to Qriib's own products (tasks, email) behind the same approve step, with an audit log per user.
+5. Connect approved actions to Qriib's own products (tasks, email) behind the same approve step, with an audit log per user.
 
 ## Repository map
 
-```
+```text
 backend/app/          FastAPI app: catalog, grounding, policy, retrieval, stream, agent, actions, providers/
 backend/tests/        pytest
-frontend/src/         React app: catalog renderers, SSE state, i18n, design tokens
+frontend/src/         React app: catalog renderers, agent cards, SSE state, i18n, design tokens
 e2e/                  Playwright specs, helpers, visual baselines
 fixtures/             demo PDFs and recorded answers (offline mode and tests)
-docs/protocol.md      SSE event protocol
+docs/protocol.md      SSE event protocol and action endpoints
+docs/images/          screenshots, logo, architecture diagram (+ its generator)
 docs/BUILD_SPEC.md    the original build specification
-BUILD_LOG.md          decisions, live-call log, measurements
+BUILD_LOG.md          decisions D1–D42, live-call logs, measurements
 ```
