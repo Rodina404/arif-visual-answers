@@ -56,3 +56,18 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 - **D14 — Diagram layout.** A "snake" flow layout (rows alternate direction, mirrored in RTL), with 1, 2 or 3 nodes per row chosen from the measured width, so labels stay readable on phones. Edge labels are drawn above the nodes.
 - **D15 — Mock replay is compact JSON.** Fixtures are pretty-printed; the mock replays them minified, like a real model. At the spec's 40 chars / 30 ms, q1 (3.7 KB) still takes about 3.2 s in mock mode, above the ≤ 2 s mock target; q2–q6 take ≤ 1.9 s.
 - Known: in the Before/After view, a cached visual answer shows $0 / 0.0 s, so the cost/latency comparison is only meaningful on a first (uncached) run.
+
+## Phase 5 — security
+
+- `curl -I /` shows the CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and `X-Frame-Options: DENY`. The `AIza` grep of `frontend/dist` is empty. `make lint` also runs the `dangerouslySetInnerHTML` grep and the Zod↔Pydantic schema check.
+- Defence in depth for model strings: the server strips URLs from component props (`[link removed]`); the client also defangs URLs in every model string, renders the answer text as plain text, and escapes `<` before react-markdown, so raw HTML shows as literal characters. KaTeX renders through `katex.render` into a ref (`trust:false`, `maxSize:10`, `maxExpand:100`).
+- The `X-Mock-Fixture` header is honoured only by the mock provider, and only names matching `^[a-z0-9_]+/[a-z0-9_]+$`.
+
+## Phase 6 — RTL / bilingual
+
+- Screenshots in AR and EN at 1280 and 390 px: `html[dir][lang]` switch, mirrored header and tables, chart `XAxis reversed` + `YAxis` on the right in RTL, a snake diagram mirrored in RTL, quotes in LTR islands, no horizontal scroll at 390 px, Arabic joining intact (no letter-spacing on Arabic).
+- Known quirk: an Arabic diagram label with inline arithmetic ("23-20=3، 3+6=9") goes through bidi reordering inside SVG `<text>`; SVG has no `<bdi>`. It is readable but not ideal.
+
+## Phase 7 — metrics & cache
+
+- `METRICS` event on every run; the strip shows time · tokens · cost · verified count, and the drawer shows each component's `reason` plus the raw JSON. A repeat question replays from SQLite (`app_cache_hit: true`, 0.0 s in the UI). Cost maths for both price periods is covered in `tests/test_providers.py`.

@@ -10,7 +10,7 @@ export function FormulaCard({ props, verification }: { props: FormulaProps; veri
   const ref = useRef<HTMLSpanElement>(null)
   useEffect(() => {
     if (!ref.current) return
-    // katex.render writes into the element itself: no dangerouslySetInnerHTML. trust:false blocks
+    // katex.render writes into the element itself (no raw-HTML React prop). trust:false blocks
     // \href, \url, \includegraphics and friends; maxSize/maxExpand bound the work.
     katex.render(props.latex, ref.current, {
       displayMode: true,

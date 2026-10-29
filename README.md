@@ -558,7 +558,7 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** `make serve-mock` → upload → q1 renders all components. A quick CLI screenshot shows a sensible layout. The ESLint rule blocks `dangerouslySetInnerHTML`.
 
 ### Phase 5 — Security hardening
-- [ ] CSP and security headers, rate limits, size caps, timeout and fallback, key isolation checks, no rendering of model URLs, KaTeX limits, warnings UI.
+- [x] CSP and security headers, rate limits, size caps, timeout and fallback, key isolation checks, no rendering of model URLs, KaTeX limits, warnings UI.
 - **Accept:** security pytest passes. A manual `curl -I` shows the headers. The `AIza` grep of `dist/` is empty.
 
 ### Phase 6 — Bilingual and RTL
