@@ -566,7 +566,7 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** CLI screenshots in AR and EN at 1280 and 390 widths look correct, with no horizontal scroll. Arabic text has no broken letter joining. Note any issues in `BUILD_LOG.md`.
 
 ### Phase 7 — Metrics panel and caching
-- [ ] `METRICS` event, prices.json, cost calculator, metrics strip and drawer, `/api/metrics/summary`, SQLite answer cache, Files API reuse, optional explicit cache.
+- [x] `METRICS` event, prices.json, cost calculator, metrics strip and drawer, `/api/metrics/summary`, SQLite answer cache, Files API reuse, optional explicit cache.
 - **Accept:** a mock answer shows plausible metrics. A repeat question shows a cache hit in under 300 ms. Pytest covers the cost maths for both price periods.
 
 ### Phase 8 — Playwright suite
