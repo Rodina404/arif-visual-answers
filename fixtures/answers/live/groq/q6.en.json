@@ -1,0 +1,51 @@
+{
+  "answer_text": "A chain-of-thought (CoT) exemplar provides the model with a step‑by‑step reasoning trace that it can mimic when generating its own answer. First, the prompt includes a question and a detailed reasoning chain ending in the correct answer. The model then sees this pattern and, for a new question, reproduces a similar chain of intermediate thoughts before outputting the final answer, improving accuracy on complex tasks.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "diagram",
+      "id": "c1",
+      "lang": "en",
+      "title": "Flow of Chain‑of‑Thought Prompting",
+      "reason": "A diagram clarifies the sequence from exemplar to model reasoning to final answer.",
+      "layout": "flow",
+      "page": null,
+      "nodes": [
+        {
+          "id": "n1",
+          "label": "CoT Exemplar (Q + Reasoning + Answer)"
+        },
+        {
+          "id": "n2",
+          "label": "Model Reads Exemplar"
+        },
+        {
+          "id": "n3",
+          "label": "Model Generates Similar Reasoning Steps"
+        },
+        {
+          "id": "n4",
+          "label": "Model Outputs Final Answer"
+        }
+      ],
+      "edges": [
+        {
+          "from": "n1",
+          "to": "n2",
+          "label": null
+        },
+        {
+          "from": "n2",
+          "to": "n3",
+          "label": null
+        },
+        {
+          "from": "n3",
+          "to": "n4",
+          "label": null
+        }
+      ]
+    }
+  ]
+}

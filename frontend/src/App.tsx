@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { getConfig, type PublicConfig, type UploadedDoc } from './api/client'
+import { getConfig, type ProviderName, type PublicConfig, type UploadedDoc } from './api/client'
 import { AnswerView } from './components/AnswerView'
 import { BeforeAfter } from './components/BeforeAfter'
 import { LangToggle } from './components/LangToggle'
+import { ProviderSwitch } from './components/ProviderSwitch'
 import { QuestionBox } from './components/QuestionBox'
 import { SourcePanel } from './components/SourcePanel'
 import { UploadPanel } from './components/UploadPanel'
@@ -11,6 +12,16 @@ import { AppContext, type SourceRequest } from './state/context'
 import { useAnswer } from './state/useAnswer'
 
 type View = 'ask' | 'compare'
+const PROVIDER_KEY = 'arif.provider'
+
+function storedProvider(): ProviderName | null {
+  try {
+    const v = window.localStorage.getItem(PROVIDER_KEY)
+    return v === 'gemini' || v === 'groq' ? v : null
+  } catch {
+    return null
+  }
+}
 const viewFromPath = (): View => (window.location.pathname.replace(/\/+$/, '') === '/compare' ? 'compare' : 'ask')
 
 export default function App() {
@@ -20,6 +31,7 @@ export default function App() {
   const [config, setConfig] = useState<PublicConfig | null>(null)
   const [source, setSource] = useState<SourceRequest | null>(null)
   const [last, setLast] = useState<{ question: string; textOnly: boolean } | null>(null)
+  const [provider, setProviderState] = useState<ProviderName | null>(storedProvider)
   const { state, ask, stop } = useAnswer()
 
   useEffect(() => {
@@ -27,6 +39,8 @@ export default function App() {
       .then((c) => {
         setConfig(c)
         setDigits(c.digits)
+        // Keep a remembered choice only if that provider is usable on this server.
+        setProviderState((p) => (p && c.providers.some((x) => x.name === p && x.available) ? p : c.provider))
       })
       .catch(() => setConfig(null))
   }, [setDigits])
@@ -42,13 +56,22 @@ export default function App() {
     window.history.pushState(null, '', v === 'compare' ? '/compare' : '/')
   }
 
+  const setProvider = (p: ProviderName) => {
+    setProviderState(p)
+    try {
+      window.localStorage.setItem(PROVIDER_KEY, p)
+    } catch {
+      /* not remembered in private mode */
+    }
+  }
+
   const run = useCallback(
     (question: string, textOnly: boolean) => {
       if (!doc) return
       setLast({ question, textOnly })
-      void ask({ docId: doc.doc_id, question, lang, textOnly })
+      void ask({ docId: doc.doc_id, question, lang, textOnly, provider: provider ?? undefined })
     },
-    [doc, ask, lang],
+    [doc, ask, lang, provider],
   )
 
   const ctx = useMemo(() => ({ docId: doc?.doc_id ?? null, openSource: setSource }), [doc])
@@ -63,7 +86,7 @@ export default function App() {
               <h1 className="m-0 text-lg font-semibold leading-tight">{t('app.title')}</h1>
               <p className="m-0 text-xs text-muted">{t('app.subtitle')}</p>
             </div>
-            <nav aria-label="views" className="flex items-center gap-2">
+            <nav aria-label="views" className="flex flex-wrap items-center gap-2">
               {(['ask', 'compare'] as const).map((v) => (
                 <a
                   key={v}
@@ -79,6 +102,9 @@ export default function App() {
                   {t(`tab.${v}`)}
                 </a>
               ))}
+              {config && provider ? (
+                <ProviderSwitch providers={config.providers} value={provider} onChange={setProvider} />
+              ) : null}
               <LangToggle />
             </nav>
           </div>
@@ -106,7 +132,7 @@ export default function App() {
               )}
             </div>
           ) : (
-            <BeforeAfter docId={doc?.doc_id ?? null} />
+            <BeforeAfter docId={doc?.doc_id ?? null} provider={provider ?? undefined} />
           )}
         </main>
 

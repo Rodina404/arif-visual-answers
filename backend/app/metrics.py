@@ -32,6 +32,7 @@ def price_for(model: str, on: date | None = None) -> dict[str, float] | None:
 
 
 def cost_usd(model: str, usage: Usage, on: date | None = None) -> dict[str, Any]:
+    # Thinking tokens are billed as output for both Gemini and Groq.
     p = price_for(model, on)
     table_date = price_table()["price_table_date"]
     if p is None:  # self-hosted or unknown model: no per-token price
@@ -80,6 +81,7 @@ def build_metrics(
     schema_mode: str,
     fallback_used: bool,
     mode: str,
+    retrieval: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "mode": mode,
@@ -103,6 +105,7 @@ def build_metrics(
         "cache": {"app_cache_hit": app_cache_hit, "gemini_cached_tokens": usage.cached_input},
         "schema_mode": schema_mode,
         "fallback_used": fallback_used,
+        "retrieval": retrieval or {"retrieval": "off"},
     }
 
 

@@ -80,5 +80,12 @@
   "compare.after": "الإجابة المرئية",
   "compare.diff": "المرئية مقارنة بالنص: التكلفة {cost} · الوقت {time}",
   "compare.ask": "شغّل الاتنين",
-  "compare.pick": "اختار سؤال وشغّل الإجابتين جنب بعض."
+  "compare.pick": "اختار سؤال وشغّل الإجابتين جنب بعض.",
+  "provider.label": "مزوّد الموديل",
+  "provider.unavailable": "{name} مش متظبط (مافيش API key)",
+  "metrics.retrieval": "اللي اتبعت للموديل",
+  "metrics.retrievalPages": "{n} صفحة اتجابت (حوالي {tokens} توكن): {pages}",
+  "metrics.retrievalOff": "الملف كله",
+  "error.provider": "مزوّد الموديل ده مش متظبط.",
+  "warn.RATE_LIMIT_WAIT": "وصلنا لحد الطلبات عند المزوّد؛ هنستنى ثواني ونجرّب تاني."
 }

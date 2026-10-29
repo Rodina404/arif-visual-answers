@@ -15,5 +15,6 @@ export function errorMessage(t: (k: string) => string, err?: { code: string; sta
   if (err.status === 429 || err.code === 'RATE_LIMITED') return t('error.rate')
   if (err.code === 'TIMEOUT') return t('error.timeout')
   if (err.code === 'NETWORK') return t('error.network')
+  if (err.code === 'PROVIDER_UNAVAILABLE') return t('error.provider')
   return t('error.generic')
 }

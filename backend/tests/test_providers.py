@@ -160,3 +160,10 @@ def test_metrics_summary_percentiles():
         )
     s = log.summary()["by_mode"]["visual"]
     assert s["latency_total_ms"]["p50"] == 300 and s["count"] == 5 and s["cost_usd_mean"] == 0.01
+
+
+def test_groq_prices():
+    u = Usage(input=5_000, output=1_000, thinking=200)
+    c = cost_usd("openai/gpt-oss-120b", u, date(2026, 10, 29))
+    assert c["total"] == pytest.approx(5_000 * 0.15 / 1e6 + 1_200 * 0.60 / 1e6)
+    assert cost_usd("qwen/qwen3.8-27b", u)["total"] > 5 * c["total"]

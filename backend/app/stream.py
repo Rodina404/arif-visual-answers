@@ -111,6 +111,7 @@ class _RunState:
     counts: dict[str, int] = field(default_factory=dict)
     cacheable: list[Event] = field(default_factory=list)
     errored: bool = False
+    meta: dict[str, Any] = field(default_factory=dict)
 
     def add_usage(self, u: Usage | None) -> None:
         if u:
@@ -125,16 +126,45 @@ class _RunState:
         self.counts[key] = self.counts.get(key, 0) + 1
 
 
+def _max_out(ctx: AskContext) -> int:
+    return int(getattr(ctx.provider, "max_output_tokens", ctx.settings.max_output_tokens))
+
+
+def provider_label(provider: LLMProvider) -> str:
+    """'gemini', 'groq', 'openai_compat', or e.g. 'groq (mock)' when the mock stands in for it."""
+    as_provider = getattr(provider, "as_provider", None)
+    return f"{as_provider} (mock)" if provider.name == "mock" and as_provider else provider.name
+
+
+def schema_mode(ctx: AskContext) -> str:
+    """Groq always gets its own strict schema through the API; others follow SCHEMA_MODE."""
+    if ctx.provider.name == "groq" or getattr(ctx.provider, "as_provider", None) == "groq":
+        return "strict"
+    return ctx.settings.schema_mode
+
+
 def _extra(ctx: AskContext) -> dict[str, Any]:
     return {"mock_fixture": ctx.mock_fixture} if ctx.provider.name == "mock" else {}
 
 
 async def _resilient(
-    ctx: AskContext, st: _RunState, make: Callable[[str], AsyncIterator[ProviderDelta]], events: list[Event]
+    ctx: AskContext,
+    st: _RunState,
+    make: Callable[[str], AsyncIterator[ProviderDelta]],
+    events: list[Event],
+    deadline: float | None = None,
 ) -> AsyncIterator[ProviderDelta]:
-    """Retry 429/503 with backoff + jitter (2 retries), then once on FALLBACK_MODEL. Only before output."""
-    models = [ctx.settings.model] * 3 + [ctx.settings.fallback_model]
-    for attempt, model in enumerate(models):
+    """Retry 429/503 (2 retries), then once on the provider's fallback model. Only before any output.
+
+    A 429 waits exactly its retry-after when that fits (RATE_LIMIT_MAX_WAIT_S and the request deadline);
+    otherwise it goes straight to the fallback model, which has its own per-model token bucket.
+    """
+    primary, fallback = ctx.provider.model, ctx.provider.fallback_model
+    models = [primary] * 3 + ([fallback] if fallback and fallback != primary else [])
+    loop = asyncio.get_running_loop()
+    attempt = 0
+    while attempt < len(models):
+        model = models[attempt]
         started = False
         try:
             st.model = model
@@ -143,15 +173,33 @@ async def _resilient(
                 yield d
             return
         except ProviderError as exc:
-            log.warning("attempt %d on %s failed: %s %s", attempt + 1, model, exc.status, exc.message[:200])
-            if started or not exc.retryable or attempt == len(models) - 1:
+            log.warning("attempt %d on %s failed: %s %s", attempt + 1, model, exc.status, exc.message[:500])
+            last = attempt == len(models) - 1
+            if started or not exc.retryable or last:
                 raise
-            if attempt < 2:
-                await ctx.sleep(BACKOFF_BASE_S * (2**attempt) + random.uniform(0, 0.25))
-            else:
+            wait = exc.retry_after if exc.retry_after is not None else BACKOFF_BASE_S * (2**attempt)
+            wait += random.uniform(0, 0.25)
+            left = (deadline - loop.time() - 3) if deadline is not None else float("inf")
+            next_is_primary = models[attempt + 1] == primary
+            if next_is_primary and (wait > ctx.settings.rate_limit_max_wait_s or wait > left):
+                # Waiting out this model's limit would take too long: try the fallback model now.
+                attempt = len(models) - 2 if fallback and fallback != primary else len(models) - 1
+                if attempt == len(models) - 1 and models[-1] == primary:
+                    raise
+            elif next_is_primary:
+                if exc.retry_after is not None:
+                    events.append(
+                        ("WARNING", {"code": "RATE_LIMIT_WAIT", "message": f"Rate limited; retrying in {wait:.0f}s."})
+                    )
+                await ctx.sleep(wait)
+            attempt += 1
+            if models[attempt] != primary:
                 st.fallback_used = True
                 events.append(
-                    ("WARNING", {"code": "FALLBACK_MODEL_USED", "message": f"Primary model busy; used {models[-1]}."})
+                    (
+                        "WARNING",
+                        {"code": "FALLBACK_MODEL_USED", "message": f"Primary model busy; used {models[attempt]}."},
+                    )
                 )
 
 
@@ -248,12 +296,12 @@ class VisualRun:
             sha256=ctx.doc.sha256,
             question=ctx.question,
             lang=ctx.lang,
-            model=ctx.settings.model,
+            model=f"{provider_label(ctx.provider)}:{ctx.provider.model}",
             prompt_version=ctx.settings.prompt_version,
-            mode=f"visual:{ctx.settings.schema_mode}:{int(ctx.text_only)}",
+            mode=f"visual:{schema_mode(ctx)}:{int(ctx.text_only)}:{ctx.settings.retrieval}",
         )
         hit = None if ctx.mock_fixture or ctx.no_cache else ctx.cache.get(key)
-        st.model = ctx.settings.model
+        st.model = ctx.provider.model
         yield self._started(cached=hit is not None)
         if hit is not None:
             for e in hit:
@@ -312,7 +360,8 @@ class VisualRun:
                 "run_id": self.st.run_id,
                 "doc_id": self.ctx.doc.doc_id,
                 "lang": self.ctx.lang,
-                "model": self.ctx.settings.model,
+                "model": self.ctx.provider.model,
+                "provider": provider_label(self.ctx.provider),
                 "cached": cached,
             },
         )
@@ -320,13 +369,14 @@ class VisualRun:
     def _metrics(self, app_cache_hit: bool) -> Event:
         m = build_metrics(
             model=self.st.model,
-            provider=self.ctx.provider.name,
+            provider=provider_label(self.ctx.provider),
             thinking_level=self.ctx.settings.thinking_level,
             usage=Usage() if app_cache_hit else self.st.usage,
             timer=self.st.timer,
             counts=self.st.counts,
             app_cache_hit=app_cache_hit,
-            schema_mode=self.ctx.settings.schema_mode,
+            schema_mode=schema_mode(self.ctx),
+            retrieval=self.st.meta,
             fallback_used=self.st.fallback_used,
             mode="visual",
         )
@@ -342,25 +392,28 @@ class VisualRun:
         buf = ""
 
         def make(model: str) -> AsyncIterator[ProviderDelta]:
-            mode = ctx.settings.schema_mode
+            mode = schema_mode(ctx)
             return ctx.provider.stream_structured(
                 system=prompts.json_mode_system() if mode == "json" else prompts.VISUAL_SYSTEM,
                 doc=ctx.handle,
                 question=ctx.question,
                 schema={"flat": flat_answer_schema(), "json": None}.get(mode, visual_answer_schema()),
                 lang=ctx.lang,
-                max_output_tokens=ctx.settings.max_output_tokens,
+                max_output_tokens=_max_out(ctx),
                 model=model,
                 text_only=ctx.text_only,
                 **_extra(ctx),
             )
 
         try:
-            async for d in _with_deadline(_resilient(ctx, st, make, pending), self._deadline()):
+            deadline = self._deadline()
+            async for d in _with_deadline(_resilient(ctx, st, make, pending, deadline), deadline):
                 for e in pending:
                     yield e
                 pending.clear()
                 st.add_usage(d.usage)
+                if d.meta:
+                    st.meta.update(d.meta)
                 if not d.text_delta:
                     continue
                 if not buf:
@@ -409,17 +462,19 @@ class VisualRun:
                 question=ctx.question,
                 schema=plan_schema(),
                 lang=ctx.lang,
-                max_output_tokens=ctx.settings.max_output_tokens,
+                max_output_tokens=_max_out(ctx),
                 model=model,
                 text_only=ctx.text_only,
                 **_extra(ctx),
             )
 
-        async for d in _with_deadline(_resilient(ctx, st, make_plan, pending), deadline):
+        async for d in _with_deadline(_resilient(ctx, st, make_plan, pending, deadline), deadline):
             for e in pending:
                 yield e
             pending.clear()
             st.add_usage(d.usage)
+            if d.meta:
+                st.meta.update(d.meta)
             if d.text_delta:
                 buf += d.text_delta
                 state = parse_partial(buf)
@@ -465,14 +520,16 @@ class VisualRun:
                     question=ctx.question,
                     schema=component_schema(kind),
                     lang=ctx.lang,
-                    max_output_tokens=ctx.settings.max_output_tokens,
+                    max_output_tokens=_max_out(ctx),
                     model=model,
                     intent=intent,
                     **_extra(ctx),
                 )
 
-            async for d in _with_deadline(_resilient(ctx, st, make_fill, pending), deadline):
+            async for d in _with_deadline(_resilient(ctx, st, make_fill, pending, deadline), deadline):
                 st.add_usage(d.usage)
+                if d.meta:
+                    st.meta.update(d.meta)
                 if d.text_delta:
                     cbuf += d.text_delta
             for e in pending:
@@ -503,15 +560,22 @@ class TextRun:
             sha256=ctx.doc.sha256,
             question=ctx.question,
             lang=ctx.lang,
-            model=ctx.settings.model,
+            model=f"{provider_label(ctx.provider)}:{ctx.provider.model}",
             prompt_version=ctx.settings.prompt_version,
             mode="text",
         )
         hit = None if ctx.no_cache else ctx.cache.get(key)
-        st.model = ctx.settings.model
+        st.model = ctx.provider.model
         yield (
             "RUN_STARTED",
-            {"run_id": st.run_id, "doc_id": ctx.doc.doc_id, "lang": ctx.lang, "model": st.model, "cached": bool(hit)},
+            {
+                "run_id": st.run_id,
+                "doc_id": ctx.doc.doc_id,
+                "lang": ctx.lang,
+                "model": st.model,
+                "provider": provider_label(ctx.provider),
+                "cached": bool(hit),
+            },
         )
         if hit:
             for e in hit:
@@ -529,7 +593,7 @@ class TextRun:
                 doc=ctx.handle,
                 question=ctx.question,
                 lang=ctx.lang,
-                max_output_tokens=ctx.settings.max_output_tokens,
+                max_output_tokens=_max_out(ctx),
                 model=model,
                 **_extra(ctx),
             )
@@ -537,11 +601,13 @@ class TextRun:
         deadline = asyncio.get_running_loop().time() + ctx.settings.request_timeout_s
         started = False
         try:
-            async for d in _with_deadline(_resilient(ctx, st, make, pending), deadline):
+            async for d in _with_deadline(_resilient(ctx, st, make, pending, deadline), deadline):
                 for e in pending:
                     yield e
                 pending.clear()
                 st.add_usage(d.usage)
+                if d.meta:
+                    st.meta.update(d.meta)
                 if d.text_delta:
                     if not started:
                         started = True
@@ -572,8 +638,9 @@ class TextRun:
     def _metrics(self, hit: bool) -> Event:
         m = build_metrics(
             model=self.st.model,
-            provider=self.ctx.provider.name,
+            provider=provider_label(self.ctx.provider),
             thinking_level=self.ctx.settings.thinking_level,
+            retrieval=self.st.meta,
             usage=Usage() if hit else self.st.usage,
             timer=self.st.timer,
             counts={},

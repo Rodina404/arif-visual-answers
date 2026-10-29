@@ -163,3 +163,26 @@ def test_selector_one_quiz_only():
     s = Selector()
     s.offer(_o("quiz", 1))
     assert s.offer(_o("quiz", 2))[0].drop_reason == "only_one_quiz"
+
+
+def test_overlong_strings_are_truncated_not_dropped(doc):
+    c = copy.deepcopy(Q1["components"][0])
+    c["items"][1]["attributes"][2]["value"] = "9 (correct) " + "x" * 90
+    c["title"] = "T" * 95
+    o = ComponentProcessor(doc).process(c, 0)
+    assert not o.dropped and o.truncated == 2
+    assert len(o.props["title"]) == 80 and o.props["title"].endswith("…")
+    assert o.component_event()["truncated_fields"] == 2
+
+
+def test_overlong_lists_are_trimmed(doc):
+    s = copy.deepcopy(Q1["components"][1])
+    s["steps"] = s["steps"] * 3  # 12 steps, max 8
+    o = ComponentProcessor(doc).process(s, 0)
+    assert not o.dropped and len(o.props["steps"]) == 8
+
+
+def test_other_validation_errors_still_drop(doc):
+    c = copy.deepcopy(Q1["components"][0])
+    c["items"] = c["items"][:1]  # min 2 items: not repairable
+    assert ComponentProcessor(doc).process(c, 0).drop_reason == "invalid"

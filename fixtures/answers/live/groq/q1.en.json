@@ -1,0 +1,76 @@
+{
+  "answer_text": "Chain-of-Thought (CoT) prompting supplies a few examples that include a step‑by‑step reasoning chain between the input and the answer, while standard prompting only gives input‑output pairs. The CoT format triggers multi‑step reasoning in large models, leading to much higher accuracy on arithmetic, commonsense, and symbolic tasks, especially for models of sufficient scale, whereas standard prompting often yields lower performance and shows little benefit for smaller models.",
+  "components": [
+    {
+      "id": "c1",
+      "items": [
+        {
+          "attributes": [
+            {
+              "citation": {
+                "page": 2,
+                "quote": "a prompt that consists of triples: (input, chain of thought, output). A chain of thought is a series of intermediate natural language reasoning steps"
+              },
+              "key": "Format",
+              "value": "input → reasoning steps → output"
+            },
+            {
+              "citation": {
+                "page": 4,
+                "quote": "chain-of-thought prompting improves performance on a range of arithmetic, commonsense, and symbolic reasoning tasks. The empirical gains can be striking."
+              },
+              "key": "Performance boost",
+              "value": "Large gains on arithmetic, commonsense, symbolic tasks for large models"
+            },
+            {
+              "citation": {
+                "page": 4,
+                "quote": "chain-of-thought prompting does not positively impact performance for small models, and only yields performance gains when used with models of ..."
+              },
+              "key": "Model scale effect",
+              "value": "Benefits appear only in sufficiently large models"
+            }
+          ],
+          "name": "Chain‑of‑Thought Prompting",
+          "summary": "Provides input, a chain of intermediate reasoning steps, and the final output."
+        },
+        {
+          "attributes": [
+            {
+              "citation": {
+                "page": 1,
+                "quote": "Standard Prompting"
+              },
+              "key": "Format",
+              "value": "input → output"
+            },
+            {
+              "citation": {
+                "page": 6,
+                "quote": "performs about the same as the baseline, which suggests that ... the sequential reasoning embodied in the chain of thought is ..."
+              },
+              "key": "Performance boost",
+              "value": "Modest or no improvement compared to CoT"
+            },
+            {
+              "citation": {
+                "page": 4,
+                "quote": "chain-of-thought prompting does not positively impact performance for small models"
+              },
+              "key": "Model scale effect",
+              "value": "Little impact regardless of model size"
+            }
+          ],
+          "name": "Standard Prompting",
+          "summary": "Shows only input‑output examples without explicit reasoning steps."
+        }
+      ],
+      "lang": "en",
+      "reason": "Shows the key differences in format and impact on model performance.",
+      "title": "Chain‑of‑Thought vs. Standard Prompting",
+      "type": "comparison"
+    }
+  ],
+  "language": "en",
+  "needs_visual": true
+}

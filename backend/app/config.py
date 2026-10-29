@@ -20,7 +20,8 @@ def _int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Settings:
-    llm_provider: str = field(default_factory=lambda: os.getenv("LLM_PROVIDER", "gemini"))
+    # PROVIDER=gemini|groq (LLM_PROVIDER is the older name and still works; openai_compat|mock too).
+    llm_provider: str = field(default_factory=lambda: os.getenv("PROVIDER") or os.getenv("LLM_PROVIDER") or "gemini")
     gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""), repr=False)
     model: str = field(default_factory=lambda: os.getenv("MODEL", "gemini-3.8-flash"))
     fallback_model: str = field(default_factory=lambda: os.getenv("FALLBACK_MODEL", "gemini-3.1-flash-lite"))
@@ -30,13 +31,26 @@ class Settings:
     max_output_tokens: int = field(default_factory=lambda: _int("MAX_OUTPUT_TOKENS", 4096))
     request_timeout_s: int = field(default_factory=lambda: _int("REQUEST_TIMEOUT_S", 45))
     enable_explicit_cache: bool = field(default_factory=lambda: _bool("ENABLE_EXPLICIT_CACHE"))
-    prompt_version: str = field(default_factory=lambda: os.getenv("PROMPT_VERSION", "v1"))
+    prompt_version: str = field(default_factory=lambda: os.getenv("PROMPT_VERSION", "v2"))
 
     openai_compat_base_url: str = field(
         default_factory=lambda: os.getenv("OPENAI_COMPAT_BASE_URL", "http://localhost:8001/v1")
     )
     openai_compat_model: str = field(default_factory=lambda: os.getenv("OPENAI_COMPAT_MODEL", ""))
     openai_compat_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_COMPAT_API_KEY", ""), repr=False)
+
+    groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""), repr=False)
+    groq_model: str = field(default_factory=lambda: os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"))
+    groq_fallback_model: str = field(default_factory=lambda: os.getenv("GROQ_FALLBACK_MODEL", "qwen/qwen3.8-27b"))
+    groq_base_url: str = field(default_factory=lambda: os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1"))
+    groq_max_output_tokens: int = field(default_factory=lambda: _int("GROQ_MAX_OUTPUT_TOKENS", 2400))
+    groq_schema: str = field(default_factory=lambda: os.getenv("GROQ_SCHEMA", "union"))  # union | flat
+
+    # Retrieval: send only the most relevant chunks. auto = on for groq/openai_compat, off for gemini
+    # (which reads the whole PDF through the Files API).
+    retrieval: str = field(default_factory=lambda: os.getenv("RETRIEVAL", "auto"))
+    retrieval_max_prompt_tokens: int = field(default_factory=lambda: _int("RETRIEVAL_MAX_PROMPT_TOKENS", 5800))
+    rate_limit_max_wait_s: int = field(default_factory=lambda: _int("RATE_LIMIT_MAX_WAIT_S", 30))
 
     mock_llm: bool = field(default_factory=lambda: _bool("MOCK_LLM"))
     mock_delay_ms: int = field(default_factory=lambda: _int("MOCK_DELAY_MS", 30))
@@ -60,6 +74,13 @@ class Settings:
     @property
     def provider_name(self) -> str:
         return "mock" if self.mock_llm else self.llm_provider
+
+    def retrieval_on(self, provider: str) -> bool:
+        if self.retrieval in ("on", "1", "true"):
+            return True
+        if self.retrieval in ("off", "0", "false"):
+            return False
+        return provider in ("groq", "openai_compat")
 
 
 def get_settings() -> Settings:

@@ -20,8 +20,8 @@ from . import security
 from .cache import AnswerCache
 from .config import Settings, get_settings
 from .metrics import MetricsLog
-from .providers import get_provider
-from .providers.base import ProviderDocHandle, ProviderError
+from .providers import SELECTABLE, available, get_provider
+from .providers.base import LLMProvider, ProviderDocHandle, ProviderError
 from .stream import AskContext, TextRun, VisualRun, sse
 from .upload import DocStore, StoredDoc, UploadError
 
@@ -35,6 +35,7 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
     lang: Literal["ar", "en"] = "ar"
     text_only: bool = False
+    provider: Literal["gemini", "groq"] | None = None  # the UI's provider switch; default is PROVIDER
 
 
 def _error(code: str, message: str, status: int) -> JSONResponse:
@@ -44,11 +45,21 @@ def _error(code: str, message: str, status: int) -> JSONResponse:
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     store = DocStore(settings)
-    provider = get_provider(settings)
+    default_name = settings.llm_provider
+    providers: dict[str, LLMProvider] = {}
+
+    def provider_for(name: str | None) -> LLMProvider:
+        name = name or default_name
+        if name not in providers:
+            providers[name] = get_provider(settings, name)
+        return providers[name]
+
+    provider = provider_for(None)
     cache = AnswerCache(settings.data_dir / "cache.sqlite")
     metrics = MetricsLog()
-    handles: dict[str, ProviderDocHandle] = {}
-    preparing: dict[str, asyncio.Task[ProviderDocHandle]] = {}
+    # (provider name, doc_id) -> handle; each provider prepares a document its own way.
+    handles: dict[tuple[str, str], ProviderDocHandle] = {}
+    preparing: dict[tuple[str, str], asyncio.Task[ProviderDocHandle]] = {}
     limiter = Limiter(key_func=get_remote_address)
 
     @contextlib.asynccontextmanager
@@ -61,7 +72,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 store.cleanup()
 
         task = asyncio.create_task(hourly())
-        log.info("provider=%s model=%s schema_mode=%s", provider.name, settings.model, settings.schema_mode)
+        log.info(
+            "provider=%s model=%s schema_mode=%s retrieval=%s",
+            default_name,
+            provider.model,
+            settings.schema_mode,
+            settings.retrieval,
+        )
         yield
         task.cancel()
         cache.close()
@@ -74,23 +91,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     security.install(app, settings)
     app.state.limiter = limiter
 
-    async def _prepare(doc: StoredDoc) -> ProviderDocHandle:
-        handle = await provider.prepare_document(doc)
-        handles[doc.doc_id] = handle
+    async def _prepare(doc: StoredDoc, name: str) -> ProviderDocHandle:
+        p = provider_for(name)
+        handle = await p.prepare_document(doc)
+        handles[(name, doc.doc_id)] = handle
         store.save(doc)
         try:
-            doc.token_count = await provider.count_tokens(handle)
+            doc.token_count = await p.count_tokens(handle)
             log.info("doc %s: %s pages, %s tokens (count_tokens)", doc.doc_id, doc.page_count, doc.token_count)
         except Exception as exc:  # token counting is informational only
             log.warning("count_tokens failed: %s", exc)
         return handle
 
-    async def handle_for(doc: StoredDoc) -> ProviderDocHandle:
-        if doc.doc_id in handles:
-            return handles[doc.doc_id]
-        task = preparing.get(doc.doc_id)
+    async def handle_for(doc: StoredDoc, name: str) -> ProviderDocHandle:
+        key = (name, doc.doc_id)
+        if key in handles:
+            return handles[key]
+        task = preparing.get(key)
         if task is None or (task.done() and task.exception() is not None):
-            task = preparing[doc.doc_id] = asyncio.create_task(_prepare(doc))
+            task = preparing[key] = asyncio.create_task(_prepare(doc, name))
         return await task
 
     @app.exception_handler(UploadError)
@@ -108,11 +127,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/config")
     async def public_config() -> dict[str, Any]:
+        ok = available(settings)
+        models = {
+            "gemini": settings.model,
+            "groq": settings.groq_model,
+        }
         return {
-            "provider": provider.name,
-            "model": settings.model,
+            "provider": default_name if default_name in SELECTABLE else "gemini",
+            "providers": [{"name": n, "model": models[n], "available": ok[n]} for n in SELECTABLE],
+            "model": provider.model,
             "digits": settings.digits,
-            "mock": provider.name == "mock",
+            "mock": settings.mock_llm,
             "max_upload_mb": settings.max_upload_mb,
             "max_pages": settings.max_pages,
         }
@@ -123,7 +148,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         limit = settings.max_upload_mb * 1024 * 1024
         data = await file.read(limit + 1)
         doc = await asyncio.to_thread(store.add, data, file.filename or "document.pdf", file.content_type)
-        preparing[doc.doc_id] = asyncio.create_task(_prepare(doc))
+        preparing[(default_name, doc.doc_id)] = asyncio.create_task(_prepare(doc, default_name))
         return {
             "doc_id": doc.doc_id,
             "pages": doc.page_count,
@@ -148,18 +173,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return _error("NOT_FOUND", "Unknown document. Please upload it again.", 404)
         if doc.questions_asked >= settings.max_questions_per_doc:
             return _error("QUESTION_LIMIT", "This document has reached its question limit.", 429)
+        name = body.provider or default_name
+        if not available(settings).get(name, name == default_name):
+            return _error("PROVIDER_UNAVAILABLE", f"{name} is not configured (missing API key).", 400)
         doc.questions_asked += 1
+        p = provider_for(name)
         try:
-            handle = await handle_for(doc)
+            handle = await handle_for(doc, name)
         except ProviderError as exc:
             return _error(exc.code, "The model provider could not read the document.", 502)
-        mock = provider.name == "mock"
+        mock = p.name == "mock"
         forced = request.headers.get("x-mock-fixture") if mock else None
         # Tests can bypass the answer cache to see streaming; never honoured outside mock mode.
         no_cache = mock and request.headers.get("x-no-cache") == "1"
         return AskContext(
             settings=settings,
-            provider=provider,
+            provider=p,
             doc=doc,
             handle=handle,
             question=body.question.strip(),

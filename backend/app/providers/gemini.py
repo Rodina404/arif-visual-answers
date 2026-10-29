@@ -10,6 +10,7 @@ from typing import Any
 from google import genai
 from google.genai import errors, types
 
+from .. import retrieval
 from ..config import Settings
 from ..prompts import DOC_END, DOC_START, question_block
 from ..upload import StoredDoc
@@ -62,10 +63,21 @@ class GeminiProvider:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.client = genai.Client(api_key=settings.gemini_api_key)
+        self.model = settings.model
+        self.fallback_model = settings.fallback_model
         # sha256 -> {file_uri, mime_type, uploaded_at, cache_name}
         self._files: dict[str, dict[str, Any]] = {}
+        self._docs: dict[str, StoredDoc] = {}
+
+    @property
+    def retrieval(self) -> bool:
+        return self.settings.retrieval_on(self.name)
 
     async def prepare_document(self, doc: StoredDoc) -> ProviderDocHandle:
+        self._docs[doc.doc_id] = doc
+        if self.retrieval:
+            # Retrieval sends extracted text per question; no Files API upload is needed.
+            return ProviderDocHandle(self.name, doc.doc_id, doc.sha256, {"retrieval": True})
         entry = self._files.get(doc.sha256) or doc.provider_handles.get(self.name)
         if not entry or time.time() - entry["uploaded_at"] > FILE_MAX_AGE_S:
             try:
@@ -79,6 +91,20 @@ class GeminiProvider:
         self._files[doc.sha256] = entry
         doc.provider_handles[self.name] = entry
         return ProviderDocHandle(self.name, doc.doc_id, doc.sha256, dict(entry))
+
+    def _retrieved_parts(self, doc: ProviderDocHandle, question: str, system: str) -> tuple[list[types.Part], dict]:
+        stored = self._docs[doc.doc_id]
+        fixed = retrieval.estimate_tokens(system) + retrieval.estimate_tokens(question) + 60
+        budget = max(self.settings.retrieval_max_prompt_tokens - fixed, 800)
+        r = retrieval.retrieve(stored, question, budget)
+        meta = {
+            "retrieval": "bm25",
+            "pages": r.pages,
+            "chunks": r.chunks,
+            "context_tokens_est": r.est_tokens,
+            "prompt_budget": self.settings.retrieval_max_prompt_tokens,
+        }
+        return [types.Part(text=DOC_START), types.Part(text=r.text), types.Part(text=DOC_END)], meta
 
     def _doc_parts(self, doc: ProviderDocHandle) -> list[types.Part]:
         return [
@@ -110,10 +136,23 @@ class GeminiProvider:
         return cache.name
 
     async def _stream(
-        self, *, system: str, doc: ProviderDocHandle, prompt: str, model: str, config: dict[str, Any]
+        self,
+        *,
+        system: str,
+        doc: ProviderDocHandle,
+        prompt: str,
+        model: str,
+        config: dict[str, Any],
+        question: str = "",
     ) -> AsyncIterator[ProviderDelta]:
-        cache_name = await self._explicit_cache(doc, system, model)
-        parts = [types.Part(text=prompt)] if cache_name else [*self._doc_parts(doc), types.Part(text=prompt)]
+        meta: dict[str, Any] = {"retrieval": "off"}
+        if doc.data.get("retrieval"):
+            cache_name = None
+            doc_parts, meta = self._retrieved_parts(doc, question, system)
+            parts = [*doc_parts, types.Part(text=prompt)]
+        else:
+            cache_name = await self._explicit_cache(doc, system, model)
+            parts = [types.Part(text=prompt)] if cache_name else [*self._doc_parts(doc), types.Part(text=prompt)]
         kwargs: dict[str, Any] = {
             "thinking_config": types.ThinkingConfig(thinking_level=_THINKING[self.settings.thinking_level]),
             "media_resolution": _RESOLUTION.get(self.settings.media_resolution),
@@ -139,7 +178,7 @@ class GeminiProvider:
                 )
                 if text:
                     yield ProviderDelta(text_delta=text)
-            yield ProviderDelta(usage=usage, finish_reason=finish)
+            yield ProviderDelta(usage=usage, finish_reason=finish, meta=meta)
         except ProviderError:
             raise
         except Exception as exc:
@@ -162,7 +201,8 @@ class GeminiProvider:
             system=system,
             doc=doc,
             prompt=question_block(question, lang, text_only=text_only, intent=intent),
-            model=model or self.settings.model,
+            question=question,
+            model=model or self.model,
             config={
                 "response_mime_type": "application/json",
                 # SCHEMA_MODE=json sends no schema (it is in the system prompt instead).
@@ -186,13 +226,16 @@ class GeminiProvider:
             system=system,
             doc=doc,
             prompt=question_block(question, lang),
-            model=model or self.settings.model,
+            question=question,
+            model=model or self.model,
             config={"max_output_tokens": max_output_tokens},
         ):
             yield d
 
     async def count_tokens(self, doc: ProviderDocHandle) -> int:
+        if doc.data.get("retrieval"):
+            return retrieval.estimate_tokens("".join(p.visible_text for p in self._docs[doc.doc_id].pages))
         resp = await self.client.aio.models.count_tokens(
-            model=self.settings.model, contents=[types.Content(role="user", parts=self._doc_parts(doc))]
+            model=self.model, contents=[types.Content(role="user", parts=self._doc_parts(doc))]
         )
         return resp.total_tokens or 0

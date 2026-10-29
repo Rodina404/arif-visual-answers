@@ -1,0 +1,56 @@
+{
+  "answer_text": "Here are flashcards covering the main concepts of chain-of-thought prompting from the paper.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "flashcards",
+      "id": "c1",
+      "lang": "en",
+      "title": "Key ideas of chain-of-thought prompting",
+      "reason": "Flashcards help memorize the core concepts efficiently.",
+      "cards": [
+        {
+          "front": "What is chain-of-thought prompting?",
+          "back": "A method that provides a few demonstrations of intermediate reasoning steps (chain of thought) as few‑shot exemplars, enabling large language models to solve complex problems.",
+          "page": 1
+        },
+        {
+          "front": "Why does chain-of-thought improve reasoning?",
+          "back": "It lets models decompose multi‑step problems, allocates more computation to harder tasks, and offers an interpretable window into the model’s reasoning path.",
+          "page": 3
+        },
+        {
+          "front": "What are two limitations of prior rationale‑augmented training methods?",
+          "back": "They are costly to create high‑quality rationales and are more complex than simple input‑output pairs used in standard machine learning.",
+          "page": 2
+        },
+        {
+          "front": "How does chain-of-thought compare to standard few‑shot prompting?",
+          "back": "Standard prompting works poorly on reasoning tasks and does not improve much with model scale, whereas chain‑of‑thought leverages model size to unlock emergent reasoning abilities.",
+          "page": 2
+        },
+        {
+          "front": "What empirical results support chain-of-thought?",
+          "back": "Figures show that models like PaLM 540B achieve state‑of‑the‑art performance on GSM8K and other arithmetic, commonsense, and symbolic reasoning benchmarks.",
+          "page": 1
+        },
+        {
+          "front": "What does the paper suggest about robustness of chain‑of‑thought?",
+          "back": "Accuracy can vary with exemplar permutation, but overall it remains more stable than standard prompting across different annotator selections.",
+          "page": 6
+        },
+        {
+          "front": "What future directions are mentioned?",
+          "back": "Investigate which pretraining data, architecture, and optimization factors causally enable chain‑of‑thought reasoning abilities.",
+          "page": 16
+        },
+        {
+          "front": "Example of a correct chain‑of‑thought plan (SayCan task)",
+          "back": "For spilling coke: find(coke) → pick(coke) → find(trash) → put(coke) → find(sponge) → pick(sponge) → find(table) → put(sponge).",
+          "page": 34
+        }
+      ]
+    }
+  ]
+}

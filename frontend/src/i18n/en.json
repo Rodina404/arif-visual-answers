@@ -80,5 +80,12 @@
   "compare.after": "Visual answer",
   "compare.diff": "Visual answer vs text: {cost} cost · {time} time",
   "compare.ask": "Run both",
-  "compare.pick": "Pick a question and run both answers side by side."
+  "compare.pick": "Pick a question and run both answers side by side.",
+  "provider.label": "Model provider",
+  "provider.unavailable": "{name} is not configured (no API key)",
+  "metrics.retrieval": "Context sent",
+  "metrics.retrievalPages": "{n} pages retrieved ({tokens} tokens est.): {pages}",
+  "metrics.retrievalOff": "Whole document",
+  "error.provider": "That model provider is not configured.",
+  "warn.RATE_LIMIT_WAIT": "The provider's rate limit was hit; waiting a few seconds and retrying."
 }

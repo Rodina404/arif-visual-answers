@@ -1,0 +1,968 @@
+{
+  "provider": "groq",
+  "summary": {
+    "runs": 12,
+    "errors": 0,
+    "components": 7,
+    "verified": 5,
+    "grounding_pass_rate": 0.714,
+    "components_dropped": 2,
+    "citations_dropped": 4,
+    "latency_p50_s": 38.7,
+    "latency_max_s": 50.6,
+    "mean_prompt_tokens": 4901,
+    "mean_cost_usd": 0.00137,
+    "fallback_used": 1
+  },
+  "runs": [
+    {
+      "qid": "q1",
+      "lang": "ar",
+      "provider": "groq",
+      "wall_s": 2.4,
+      "error": null,
+      "warnings": [],
+      "types": [
+        "comparison"
+      ],
+      "statuses": [
+        "partial"
+      ],
+      "citations_dropped": 1,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4880,
+          "cached_input": 0,
+          "output": 618,
+          "thinking": 86,
+          "total": 5584
+        },
+        "cost_usd": {
+          "input": 0.000732,
+          "cached_input": 0.0,
+          "output": 0.000422,
+          "total": 0.001154,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 2358,
+          "first_component": 2369,
+          "total": 2370
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 0,
+          "partial": 1,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            28
+          ],
+          "chunks": 14,
+          "context_tokens_est": 2418,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 2281,
+          "remaining_tokens_per_minute": "2300"
+        }
+      },
+      "answer_chars": 310,
+      "saved": "fixtures/answers/live/groq/q1.ar.json"
+    },
+    {
+      "qid": "q1",
+      "lang": "en",
+      "provider": "groq",
+      "wall_s": 26.8,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [
+        "comparison"
+      ],
+      "statuses": [
+        "partial"
+      ],
+      "citations_dropped": 3,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 5066,
+          "cached_input": 0,
+          "output": 685,
+          "thinking": 65,
+          "total": 5816
+        },
+        "cost_usd": {
+          "input": 0.00076,
+          "cached_input": 0.0,
+          "output": 0.00045,
+          "total": 0.00121,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 26737,
+          "first_component": 26762,
+          "total": 26762
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 0,
+          "partial": 1,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            8,
+            11,
+            18,
+            23
+          ],
+          "chunks": 16,
+          "context_tokens_est": 2416,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 2332,
+          "remaining_tokens_per_minute": "80"
+        }
+      },
+      "answer_chars": 478,
+      "saved": "fixtures/answers/live/groq/q1.en.json"
+    },
+    {
+      "qid": "q2",
+      "lang": "ar",
+      "provider": "groq",
+      "wall_s": 50.6,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT",
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [],
+      "statuses": [],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [
+        "chart:invalid"
+      ],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 5846,
+          "cached_input": 0,
+          "output": 466,
+          "thinking": 199,
+          "total": 6511
+        },
+        "cost_usd": {
+          "input": 0.000877,
+          "cached_input": 0.0,
+          "output": 0.000399,
+          "total": 0.001276,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 50557,
+          "first_component": null,
+          "total": 50559
+        },
+        "components": {
+          "emitted": 0,
+          "dropped": 1,
+          "verified": 0,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            16,
+            21,
+            22
+          ],
+          "chunks": 14,
+          "context_tokens_est": 2420,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 2697,
+          "remaining_tokens_per_minute": "183"
+        }
+      },
+      "answer_chars": 216,
+      "saved": "fixtures/answers/live/groq/q2.ar.json"
+    },
+    {
+      "qid": "q2",
+      "lang": "en",
+      "provider": "groq",
+      "wall_s": 44.7,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [
+        "chart"
+      ],
+      "statuses": [
+        "verified"
+      ],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 5511,
+          "cached_input": 0,
+          "output": 784,
+          "thinking": 316,
+          "total": 6611
+        },
+        "cost_usd": {
+          "input": 0.000827,
+          "cached_input": 0.0,
+          "output": 0.00066,
+          "total": 0.001487,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 44714,
+          "first_component": 44733,
+          "total": 44733
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 1,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            11,
+            16,
+            21,
+            23,
+            37
+          ],
+          "chunks": 18,
+          "context_tokens_est": 2418,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 4327,
+          "remaining_tokens_per_minute": "150"
+        }
+      },
+      "answer_chars": 312,
+      "saved": "fixtures/answers/live/groq/q2.en.json"
+    },
+    {
+      "qid": "q3",
+      "lang": "ar",
+      "provider": "groq",
+      "wall_s": 44.6,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT",
+        "RATE_LIMIT_WAIT",
+        "FALLBACK_MODEL_USED"
+      ],
+      "types": [
+        "table"
+      ],
+      "statuses": [
+        "verified"
+      ],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "qwen/qwen3.8-27b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 3430,
+          "cached_input": 0,
+          "output": 453,
+          "thinking": 0,
+          "total": 3883
+        },
+        "cost_usd": {
+          "input": 0.002744,
+          "cached_input": 0.0,
+          "output": 0.001812,
+          "total": 0.004556,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 44632,
+          "first_component": 44646,
+          "total": 44646
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 1,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": true,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            7,
+            8,
+            9,
+            13,
+            16,
+            18,
+            20,
+            26
+          ],
+          "chunks": 15,
+          "context_tokens_est": 2432,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 1458,
+          "remaining_tokens_per_minute": "4395"
+        }
+      },
+      "answer_chars": 215,
+      "saved": "fixtures/answers/live/groq/q3.ar.json"
+    },
+    {
+      "qid": "q3",
+      "lang": "en",
+      "provider": "groq",
+      "wall_s": 1.6,
+      "error": null,
+      "warnings": [],
+      "types": [],
+      "statuses": [],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [
+        "table:insufficient_verified_rows"
+      ],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4840,
+          "cached_input": 0,
+          "output": 459,
+          "thinking": 14,
+          "total": 5313
+        },
+        "cost_usd": {
+          "input": 0.000726,
+          "cached_input": 0.0,
+          "output": 0.000284,
+          "total": 0.00101,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 1552,
+          "first_component": null,
+          "total": 1575
+        },
+        "components": {
+          "emitted": 0,
+          "dropped": 1,
+          "verified": 0,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            9,
+            13,
+            18,
+            19,
+            26
+          ],
+          "chunks": 17,
+          "context_tokens_est": 2427,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 1515,
+          "remaining_tokens_per_minute": "305"
+        }
+      },
+      "answer_chars": 166,
+      "saved": "fixtures/answers/live/groq/q3.en.json"
+    },
+    {
+      "qid": "q4",
+      "lang": "ar",
+      "provider": "groq",
+      "wall_s": 38.7,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [],
+      "statuses": [],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4901,
+          "cached_input": 2816,
+          "output": 105,
+          "thinking": 34,
+          "total": 5040
+        },
+        "cost_usd": {
+          "input": 0.000313,
+          "cached_input": 0.000422,
+          "output": 8.3e-05,
+          "total": 0.000819,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 38653,
+          "first_component": null,
+          "total": 38658
+        },
+        "components": {
+          "emitted": 0,
+          "dropped": 0,
+          "verified": 0,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 2816
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            5,
+            6,
+            9,
+            10,
+            11,
+            15,
+            18,
+            27,
+            30,
+            42
+          ],
+          "chunks": 18,
+          "context_tokens_est": 2434,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 1113,
+          "remaining_tokens_per_minute": "209"
+        }
+      },
+      "answer_chars": 153,
+      "saved": "fixtures/answers/live/groq/q4.ar.json"
+    },
+    {
+      "qid": "q4",
+      "lang": "en",
+      "provider": "groq",
+      "wall_s": 17.5,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [],
+      "statuses": [],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4930,
+          "cached_input": 0,
+          "output": 84,
+          "thinking": 67,
+          "total": 5081
+        },
+        "cost_usd": {
+          "input": 0.00074,
+          "cached_input": 0.0,
+          "output": 9.1e-05,
+          "total": 0.00083,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 17488,
+          "first_component": null,
+          "total": 17491
+        },
+        "components": {
+          "emitted": 0,
+          "dropped": 0,
+          "verified": 0,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            5,
+            6,
+            9,
+            12,
+            14,
+            15,
+            18,
+            28,
+            30,
+            31,
+            38
+          ],
+          "chunks": 17,
+          "context_tokens_est": 2430,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 1374,
+          "remaining_tokens_per_minute": "287"
+        }
+      },
+      "answer_chars": 133,
+      "saved": "fixtures/answers/live/groq/q4.en.json"
+    },
+    {
+      "qid": "q5",
+      "lang": "ar",
+      "provider": "groq",
+      "wall_s": 38.1,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [
+        "flashcards"
+      ],
+      "statuses": [
+        "verified"
+      ],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4906,
+          "cached_input": 0,
+          "output": 714,
+          "thinking": 79,
+          "total": 5699
+        },
+        "cost_usd": {
+          "input": 0.000736,
+          "cached_input": 0.0,
+          "output": 0.000476,
+          "total": 0.001212,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 38030,
+          "first_component": 38049,
+          "total": 38049
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 1,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            17
+          ],
+          "chunks": 16,
+          "context_tokens_est": 2425,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 2296,
+          "remaining_tokens_per_minute": "164"
+        }
+      },
+      "answer_chars": 94,
+      "saved": "fixtures/answers/live/groq/q5.ar.json"
+    },
+    {
+      "qid": "q5",
+      "lang": "en",
+      "provider": "groq",
+      "wall_s": 45.2,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT",
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [
+        "flashcards"
+      ],
+      "statuses": [
+        "verified"
+      ],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4993,
+          "cached_input": 0,
+          "output": 623,
+          "thinking": 31,
+          "total": 5647
+        },
+        "cost_usd": {
+          "input": 0.000749,
+          "cached_input": 0.0,
+          "output": 0.000392,
+          "total": 0.001141,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 45188,
+          "first_component": 45190,
+          "total": 45190
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 1,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            3,
+            6,
+            14,
+            15,
+            16,
+            34,
+            41
+          ],
+          "chunks": 15,
+          "context_tokens_est": 2431,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 2028,
+          "remaining_tokens_per_minute": "167"
+        }
+      },
+      "answer_chars": 92,
+      "saved": "fixtures/answers/live/groq/q5.en.json"
+    },
+    {
+      "qid": "q6",
+      "lang": "ar",
+      "provider": "groq",
+      "wall_s": 40.0,
+      "error": null,
+      "warnings": [
+        "RATE_LIMIT_WAIT",
+        "RATE_LIMIT_WAIT"
+      ],
+      "types": [],
+      "statuses": [],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4791,
+          "cached_input": 2816,
+          "output": 173,
+          "thinking": 37,
+          "total": 5001
+        },
+        "cost_usd": {
+          "input": 0.000296,
+          "cached_input": 0.000422,
+          "output": 0.000126,
+          "total": 0.000845,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 40027,
+          "first_component": null,
+          "total": 40029
+        },
+        "components": {
+          "emitted": 0,
+          "dropped": 0,
+          "verified": 0,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 2816
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            11,
+            25
+          ],
+          "chunks": 17,
+          "context_tokens_est": 2424,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 1060,
+          "remaining_tokens_per_minute": "473"
+        }
+      },
+      "answer_chars": 362,
+      "saved": "fixtures/answers/live/groq/q6.ar.json"
+    },
+    {
+      "qid": "q6",
+      "lang": "en",
+      "provider": "groq",
+      "wall_s": 1.5,
+      "error": null,
+      "warnings": [],
+      "types": [
+        "diagram"
+      ],
+      "statuses": [
+        "verified"
+      ],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "openai/gpt-oss-120b",
+        "provider": "groq",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 4720,
+          "cached_input": 3072,
+          "output": 362,
+          "thinking": 18,
+          "total": 5100
+        },
+        "cost_usd": {
+          "input": 0.000247,
+          "cached_input": 0.000461,
+          "output": 0.000228,
+          "total": 0.000936,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": 1513,
+          "first_component": 1515,
+          "total": 1515
+        },
+        "components": {
+          "emitted": 1,
+          "dropped": 0,
+          "verified": 1,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 3072
+        },
+        "schema_mode": "strict",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "bm25",
+          "pages": [
+            1,
+            3,
+            4,
+            6,
+            7,
+            8,
+            18,
+            28,
+            39
+          ],
+          "chunks": 14,
+          "context_tokens_est": 2344,
+          "prompt_budget": 5800,
+          "streamed": false,
+          "upstream_ms": 1390,
+          "remaining_tokens_per_minute": "2940"
+        }
+      },
+      "answer_chars": 420,
+      "saved": "fixtures/answers/live/groq/q6.en.json"
+    }
+  ]
+}

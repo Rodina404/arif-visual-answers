@@ -1,3 +1,4 @@
+import type { ProviderName } from '../api/client'
 import { useI18n } from '../i18n/context'
 import { useAnswer } from '../state/useAnswer'
 import { AnswerText } from './AnswerText'
@@ -7,7 +8,7 @@ import { MetricsStrip } from './MetricsStrip'
 import { QuestionBox } from './QuestionBox'
 
 /** Same model, same question: a simulated text-only answer (left) vs the visual answer (right). */
-export function BeforeAfter({ docId }: { docId: string | null }) {
+export function BeforeAfter({ docId, provider }: { docId: string | null; provider?: ProviderName }) {
   const { t, lang, num } = useI18n()
   const before = useAnswer()
   const after = useAnswer()
@@ -15,8 +16,8 @@ export function BeforeAfter({ docId }: { docId: string | null }) {
 
   const run = (question: string) => {
     if (!docId) return
-    void before.ask({ docId, question, lang, endpoint: '/api/ask_text' })
-    void after.ask({ docId, question, lang })
+    void before.ask({ docId, question, lang, endpoint: '/api/ask_text', provider })
+    void after.ask({ docId, question, lang, provider })
   }
 
   const mb = before.state.metrics

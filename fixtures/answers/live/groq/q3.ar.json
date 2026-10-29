@@ -1,0 +1,90 @@
+{
+  "answer_text": "بجّروا على 5 benchmarks للمسائل الرياضية (GSM8K, SVAMP, ASDiv, AQuA, MAWPS) و5 لتفكير commonsense. بالنسبة للموديلات، اختبروا GPT-3 (بتحقيقات مختلفة: 350M لحد 175B) موديلات PaLM (في حدود الـ 100B parameters) وLaMDA.",
+  "components": [
+    {
+      "type": "table",
+      "columns": [
+        "النوع",
+        "اسم الـ Benchmark"
+      ],
+      "id": "c1",
+      "lang": "ar",
+      "reason": "ترتيب الـ benchmarks في جدول يسهل رؤية التوزيع بين الرياضيات والـ commonsense reasoning.",
+      "rows": [
+        {
+          "cells": [
+            "رياضيات",
+            "GSM8K"
+          ],
+          "citation": {
+            "page": 3,
+            "quote": "GSM8K benchmark of math word problems"
+          }
+        },
+        {
+          "cells": [
+            "رياضيات",
+            "SVAMP"
+          ],
+          "citation": {
+            "page": 3,
+            "quote": "the SVAMP dataset of math word problems"
+          }
+        },
+        {
+          "cells": [
+            "رياضيات",
+            "ASDiv"
+          ],
+          "citation": {
+            "page": 3,
+            "quote": "the ASDiv dataset of diverse math word problems"
+          }
+        },
+        {
+          "cells": [
+            "رياضيات",
+            "AQuA"
+          ],
+          "citation": {
+            "page": 3,
+            "quote": "the AQuA dataset of algebraic word problems"
+          }
+        },
+        {
+          "cells": [
+            "رياضيات",
+            "MAWPS"
+          ],
+          "citation": {
+            "page": 3,
+            "quote": "the MAWPS benchmark"
+          }
+        },
+        {
+          "cells": [
+            "Commonsense",
+            "CSQA"
+          ],
+          "citation": {
+            "page": 7,
+            "quote": "The popular CSQA (Talmor et al., 2019)"
+          }
+        },
+        {
+          "cells": [
+            "Commonsense",
+            "StrategyQA"
+          ],
+          "citation": {
+            "page": 7,
+            "quote": "StrategyQA (Geva et al., 2021)"
+          }
+        }
+      ],
+      "title": "الـ Benchmarks اللي اتختبرت في البايبير"
+    }
+  ],
+  "language": "ar",
+  "needs_visual": true
+}

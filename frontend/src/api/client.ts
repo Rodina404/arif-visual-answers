@@ -14,8 +14,17 @@ export interface UploadedDoc {
   warnings: DocWarning[]
 }
 
+export type ProviderName = 'gemini' | 'groq'
+
+export interface ProviderInfo {
+  name: ProviderName
+  model: string
+  available: boolean
+}
+
 export interface PublicConfig {
-  provider: string
+  provider: ProviderName
+  providers: ProviderInfo[]
   model: string
   digits: 'latn' | 'arab'
   mock: boolean

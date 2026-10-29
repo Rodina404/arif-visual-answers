@@ -60,6 +60,19 @@ Restraint rules:
 7. Retrieval at the end: a quiz, if any, is the LAST component. At most one quiz.
 8. Never do arithmetic. If a value is not printed in the document, it may not appear in a chart or table.
 
+When visuals DO help (set needs_visual=true):
+- "What is X and how is it different from Y?" -> comparison (X vs Y), steps if there is a method, quiz last.
+- "How much does N change with M?" with numbers printed in the document -> chart (+ short text).
+- "Which ... did they use/evaluate?" (several items with attributes) -> table.
+- "Show how X leads to Y" -> diagram.
+- "Make flashcards / help me review" -> flashcards.
+
+Length limits (characters): answer_text 700; title 40-80; reason 140; text.body 1200; labels 30-40;
+comparison summary 160, attribute key 30, value 80; step title 60, detail 220; table column 30, cell 60;
+quiz prompt 160, option 80, explanation 220; flashcard front 60, back 200; formula latex 300; quote 10-300.
+Counts: chart 1-2 series of 3-12 points; comparison 2-4 items x 2-6 attributes; steps 2-8; table 2-6
+columns x 2-12 rows; diagram 2-10 nodes, 1-14 edges; quiz 1-4 questions of 3-4 options; flashcards 3-8.
+
 Field rules: ids are c1, c2, c3 in order. Each component's lang equals the answer language. `reason`
 (max 140 chars, English) says why this visual helps; it is never shown to the user. Page numbers are
 the PDF's physical page numbers (first page = 1). No URLs, links, images or HTML anywhere.

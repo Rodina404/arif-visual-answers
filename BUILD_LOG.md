@@ -18,8 +18,9 @@ Counted as **requests that reached the API** (a call that retried counts once pe
 | 11 | 2026-10-29 | `diag_gemini.py base` (thinking=low, no schema, no PDF) | 3.8-flash | 503 UNAVAILABLE (high demand) |
 | 12 | 2026-10-29 | q1 AR, real pipeline, `SCHEMA_MODE=json` | 3.8-flash | accepted (no 400), but **no chunk in 150 s** → client timeout |
 | 13 | 2026-10-29 | `diag_gemini.py base` | 3.8-flash | 503 UNAVAILABLE (high demand) |
+| 14 | 2026-10-29 | q1 AR via `record_live.py --provider gemini --retrieval on` | 3.8-flash | no response in 240 s → timeout |
 
-**13 of 15 used; 2 left for the user** (e.g. `make test-live` = 1 call once the model is healthy).
+**14 of 15 used; 1 left for the user** (e.g. `make test-live` = 1 call once the model is healthy).
 
 **Conclusion.** Validation runs before the capacity check: the schema requests (1, 2, 4, 10) are rejected with 400, while the no-schema requests (11, 13) pass validation and hit 503. So `response_json_schema` with this catalog is rejected, and the thinking config is fine. `SCHEMA_MODE=json` (no API schema; schema text in the cached system prompt; strict Pydantic validation unchanged) is now the default. It passed validation in call 12 but couldn't be measured end to end because of the overload. **No live answer, latency or cost was measured.** Stop rule 3 (billing/permission) does not apply, so the build continued in mock mode.
 
@@ -119,3 +120,58 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 ### Final checks (2026-10-29)
 
 - `make lint`: pass. `make test-backend`: **124 passed**. `make e2e`: **90 passed, twice in a row** (cache-timing now runs alone in its own project after the parallel ones; it once measured a cache hit at 301 ms while 4 workers were parsing PDFs, just over the 300 ms limit).
+
+## Groq provider + retrieval (2026-10-29, after hand-off)
+
+### Model check (Groq `GET /models`, no generation)
+
+Chat models on the account: `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `openai/gpt-oss-safeguard-20b`, `qwen/qwen3.8-27b`, `allam-2-7b` (4K context). Per Groq's structured-outputs docs, strict `json_schema` works on gpt-oss-120b/20b and qwen3.8-27b, **but not together with streaming**. The free tier is listed at 8K TPM / 30 RPM / 1K RPD for all three. Prices (console.groq.com/docs/models): gpt-oss-120b $0.15 in / $0.60 out per 1M tokens; **qwen3.8-27b is a *preview* model** ("evaluation purposes only") at $0.80 / $4.00. It is kept as the rate-limit fallback only.
+
+### Decisions
+
+- **D19 — Groq is a thin subclass of the OpenAI-compatible provider** (`providers/groq.py`). Structured answers are one **non-streamed** call with strict `json_schema` (Groq can't stream structured outputs); the JSON then goes through the same parse → validate → ground → policy → SSE pipeline, so time to first token equals the total time. The "Before" prose answer does stream. `reasoning_effort=low` for gpt-oss (reasoning tokens count against TPM).
+- **D20 — Strict schema** (`catalog.strict_schema`): every property is required, optional ones become nullable, every object has `additionalProperties: false`, and length/count keywords plus descriptions are removed (their limits move into one compact line of the system prompt). The union schema is ~6.3 KB ≈ 1.9K tokens (2.9K with descriptions). Strict-mode nulls are stripped before Pydantic validation.
+- **D21 — Retrieval** (`app/retrieval.py`): ~600-character chunks, BM25 (no new dependency), query expansion (a small Egyptian-Arabic→English glossary for common question words, plus English synonyms such as size→scale), a numeric-density boost for quantitative questions, "Table N:" captions pulling in their table body, a mild early-page prior (×1.5 on page 1 → ×1.0 on the last page), and page 1's first chunk always included. Chunks are packed in page order with `[[page N]]` markers until the estimated budget is used. Grounding still checks quotes against the full page text.
+  - **Recall** against the pages the hand-authored fixtures cite, at the real ~2.2K-token context budget: **23/28**. Every question's key page is retrieved (q2 → Table 2 on page 21 with the PaLM rows, in both languages). Misses: q3-EN pages 7–8 (commonsense/symbolic sections), q5 page 21 (both languages), q5-AR page 3.
+  - Embeddings were considered (cross-lingual quality) but not added: a local multilingual model would mean a ~220 MB download and onnxruntime, and a hosted embedding API would send the document to another service, which is the opposite of the sovereignty story.
+  - `RETRIEVAL=auto` turns it on for Groq/openai_compat; `RETRIEVAL=on` also applies it to Gemini (text instead of a Files API upload).
+- **D22 — Token budget.** `RETRIEVAL_MAX_PROMPT_TOKENS=5800` is an *estimate* (chars/3.6 for prose, /3.2 for schema JSON). Live Groq prompts measured **~13% below** the estimate (the first call: 4,796 real vs 5,500 estimated), so real prompts stay under 6,000. Groq's 429 body showed "Requested 5482" for a 5,066-token prompt, so `max_tokens` (2,400) is **not** reserved in full against TPM.
+- **D23 — 429 handling.** `retry-after` (seconds) or `x-ratelimit-reset-tokens` (`2m59.56s`) is parsed into `ProviderError.retry_after`. The retry loop waits exactly that long when it fits (`RATE_LIMIT_MAX_WAIT_S=30` and the request deadline, with a `WARNING RATE_LIMIT_WAIT`). Otherwise it jumps straight to the fallback model, which has its own per-model token bucket. If both are limited, the result is `RUN_ERROR RATE_LIMITED`. Verified live: a 24.5 s retry-after was waited out and the retry succeeded.
+- **D24 — Provider switch.** `PROVIDER=gemini|groq` (`LLM_PROVIDER` still accepted). `/api/ask` takes an optional `provider`; `/api/config` lists providers with their model and availability (key present). The header has a Gemini|Groq switch, remembered in localStorage and disabled for providers without a key. Metrics show the provider · model badge and the retrieved pages. In mock mode the mock answers *as* the chosen provider and replays `fixtures/answers/live/<provider>/` when a live recording exists, so the live Groq answers can be demoed offline. The answer cache key includes provider + model.
+- **D25 — Positive visual guidance in the prompt (`PROMPT_VERSION=v2`).** The first live Groq answer to q1 was correct but `needs_visual=false`: with low reasoning effort, gpt-oss followed the text-only restraint example too literally. The prompt now maps question shapes to components (compare → comparison, how much → chart, which … → table, show how → diagram, review → flashcards).
+- **D26 — Over-long strings are truncated, not dropped.** Neither Gemini nor Groq enforces `maxLength`. A live Groq comparison was dropped as `invalid` because one value was 86 characters against a limit of 80. Now `string_too_long` / `too_long` errors are repaired (cut to the limit with "…", lists trimmed) and the component is validated again; any other error still drops it. The event reports `truncated_fields`. Quotes stay verbatim prefixes, so grounding is unaffected.
+
+### Live results per provider (2026-10-29)
+
+**Groq — `openai/gpt-oss-120b` (fallback `qwen/qwen3.8-27b`), retrieval on, strict schema, `PROMPT_VERSION=v2`.** 12 live answers saved in `fixtures/answers/live/groq/` (the raw model JSON) + `report.json`. "total s" is wall time **including rate-limit waits**; the model's own time is `upstream_ms`.
+
+| Q | lang | model | total s | prompt tok (est budget) | out+think tok | cost $ | pages sent | components | verified | citations dropped | dropped |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| q1 | ar | openai/gpt-oss-120b | 2.4 | 4880 (5800) | 704 | 0.0012 | 1,2,3,4,5,6,7,8,9,28 | comparison | 0/1 | 1 | — |
+| q1 | en | openai/gpt-oss-120b | 26.8 | 5066 (5800) | 750 | 0.0012 | 1,2,4,5,6,7,8,11,18,23 | comparison | 0/1 | 3 | — |
+| q2 | ar | openai/gpt-oss-120b | 50.6 | 5846 (5800) | 665 | 0.0013 | 1,2,4,5,6,7,16,21,22 | text only | 0/0 | 0 | chart:invalid |
+| q2 | en | openai/gpt-oss-120b | 44.7 | 5511 (5800) | 1100 | 0.0015 | 1,2,4,5,6,7,11,16,21,23,37 | chart | 1/1 | 0 | — |
+| q3 | ar | qwen/qwen3.8-27b (fallback) | 44.6 | 3430 (5800) | 453 | 0.0046 | 1,2,3,4,7,8,9,13,16,18,20,26 | table | 1/1 | 0 | — |
+| q3 | en | openai/gpt-oss-120b | 1.6 | 4840 (5800) | 473 | 0.0010 | 1,2,3,4,5,6,7,9,13,18,19,26 | text only | 0/0 | 0 | table:insufficient_verified_rows |
+| q4 | ar | openai/gpt-oss-120b | 38.7 | 4901 (5800) | 139 | 0.0008 | 1,2,5,6,9,10,11,15,18,27,30,42 | text only | 0/0 | 0 | — |
+| q4 | en | openai/gpt-oss-120b | 17.5 | 4930 (5800) | 151 | 0.0008 | 1,2,5,6,9,12,14,15,18,28,30,31,38 | text only | 0/0 | 0 | — |
+| q5 | ar | openai/gpt-oss-120b | 38.0 | 4906 (5800) | 793 | 0.0012 | 1,2,3,4,5,6,7,17 | flashcards | 1/1 | 0 | — |
+| q5 | en | openai/gpt-oss-120b | 45.2 | 4993 (5800) | 654 | 0.0011 | 1,2,3,6,14,15,16,34,41 | flashcards | 1/1 | 0 | — |
+| q6 | ar | openai/gpt-oss-120b | 40.0 | 4791 (5800) | 210 | 0.0008 | 1,2,3,4,5,6,7,8,9,11,25 | text only | 0/0 | 0 | — |
+| q6 | en | openai/gpt-oss-120b | 1.5 | 4720 (5800) | 380 | 0.0009 | 1,3,4,6,7,8,18,28,39 | diagram | 1/1 | 0 | — |
+
+| Groq summary | value |
+|---|---|
+| Model time per answer (`upstream_ms`) | **p50 1.8 s, max 4.3 s** (non-streamed, so time to first token = total) |
+| Wall time per answer | p50 38.7 s, max 50.6 s: **dominated by 429 waits** (8K TPM vs ~5.3–6.7K tokens requested per answer ⇒ ~1 answer per 45 s); 10 of 12 runs waited at least once, 1 switched to the qwen fallback |
+| Prompt tokens (real, from usage) | mean 4,901, **max 5,846** (q2-AR: numeric table, estimate was low; the estimator now counts digits at ~2 chars/token) |
+| Cost | mean **$0.0014** per answer (gpt-oss-120b); the qwen fallback answer cost $0.0046 |
+| Components | 9 produced → **5 verified, 2 partial (shown), 2 dropped**; 3 answers text-only by the model's choice (q4 ×2 correctly; q6-AR should have been a diagram) |
+| Grounding pass rate | **components: 5/7 shown fully verified (71%), 5/9 produced (56%)**; **citations: 24/34 quotes verified (71%)** |
+| Dropped by grounding/validation | q2-AR chart: every quote was a 7-character cell fragment ("20B 4.4", min 10) and the series mixed model families: correctly rejected. q3-EN table: 2 of 3 row quotes paraphrased (fuzzy 68/57): correctly rejected (needs ≥ 2 verified rows) |
+| Errors | 1 in the first pass (q6-EN: Groq's own validator rejected the model's JSON, `json_validate_failed`). Now retried as `OUTPUT_INVALID`; a rerun of q6-EN gave a verified diagram in 1.5 s |
+
+**Gemini — `gemini-3.8-flash`.** Not measurable: the one extra live call (q1-AR, `RETRIEVAL=on`, call 14 of 15) got **no response in 240 s** (timeout), continuing the 503 / hang pattern from earlier. 1 Gemini call remains. Mock-mode Gemini figures are in the Phase 10 section.
+
+**Takeaways for the interview.** (1) Groq answers in ~2 s of model time, which is fast enough for the live demo, but the free tier's 8K TPM allows about one full answer per 45 s; ask Groq questions about a minute apart, or the second one will wait (up to 30 s) or switch to the qwen fallback. (2) Grounding visibly earns its keep on live output: 10 of 34 live quotes failed verification and were removed or downgraded, never shown as verified. (3) Retrieval kept every live prompt under 6,000 real tokens, and the key page was sent in all 12 runs (e.g. page 21 for q2).
+

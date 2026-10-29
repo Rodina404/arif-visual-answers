@@ -9,6 +9,10 @@ export function MetricsStrip({ m }: { m: Metrics }) {
   const verified = m.components.verified
   return (
     <p data-testid="metrics-strip" className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted tabular-nums">
+      <bdi data-testid="metric-provider" className="rounded bg-raised px-1.5 font-semibold text-ink">
+        {m.provider} · {m.model}
+      </bdi>
+      <span aria-hidden>·</span>
       <bdi data-testid="metric-time">⏱ {num(secs, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}s</bdi>
       <span aria-hidden>·</span>
       <bdi>

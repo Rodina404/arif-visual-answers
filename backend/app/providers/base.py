@@ -26,6 +26,7 @@ class ProviderDelta:
     text_delta: str | None = None
     usage: Usage | None = None
     finish_reason: str | None = None
+    meta: dict[str, Any] | None = None  # e.g. retrieval details, shown in the metrics drawer
 
 
 @dataclass
@@ -37,16 +38,45 @@ class ProviderDocHandle:
 
 
 class ProviderError(Exception):
-    def __init__(self, code: str, message: str, status: int | None = None, retryable: bool = False):
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        status: int | None = None,
+        retryable: bool = False,
+        retry_after: float | None = None,
+    ):
         super().__init__(message)
         self.code = code
         self.message = message
         self.status = status
         self.retryable = retryable
+        self.retry_after = retry_after  # seconds, from a 429's retry-after header
+
+
+def parse_duration(value: str | None) -> float | None:
+    """'7.66s', '2m59.56s', '120', '850ms' -> seconds."""
+    if not value:
+        return None
+    value = value.strip()
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    import re
+
+    total = 0.0
+    matched = False
+    for num, unit in re.findall(r"([\d.]+)(ms|h|m|s)", value):
+        matched = True
+        total += float(num) * {"ms": 0.001, "s": 1, "m": 60, "h": 3600}[unit]
+    return total if matched else None
 
 
 class LLMProvider(Protocol):
     name: str
+    model: str  # primary model id, shown in metrics
+    fallback_model: str  # used after retries on 429/503
 
     async def prepare_document(self, doc: StoredDoc) -> ProviderDocHandle: ...
 

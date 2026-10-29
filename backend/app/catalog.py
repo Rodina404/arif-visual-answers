@@ -370,3 +370,76 @@ def project_component(raw: dict[str, Any]) -> dict[str, Any]:
         return raw
     names = {f.alias or n for n, f in model.model_fields.items()}
     return {k: v for k, v in raw.items() if k in names}
+
+
+# ---------------------------------------------------------------------------------------------
+# Groq / OpenAI-style strict schema
+
+
+def _strictify(node: Any) -> Any:
+    """Strict structured outputs: every property required, optional ones nullable, no extra keys.
+
+    Length/count keywords become description hints (Groq does not document them for strict mode);
+    Pydantic still enforces the real limits after the model answers.
+    """
+    if isinstance(node, list):
+        return [_strictify(v) for v in node]
+    if not isinstance(node, dict):
+        return node
+    out: dict[str, Any] = {}
+    hints: list[str] = []
+    for k, v in node.items():
+        if k in ("minItems", "maxItems"):
+            hints.append(f"{'min' if k == 'minItems' else 'max'} {v} items")
+            continue
+        out[k] = _strictify(v)
+    if hints:
+        out["description"] = (out.get("description", "") + " (" + ", ".join(hints) + ")").strip()
+    if out.get("type") == "object" and "properties" in out:
+        required = set(node.get("required", []))
+        props = {}
+        for name, sub in out["properties"].items():
+            if name not in required:
+                sub = _nullable(sub)
+            props[name] = sub
+        out["properties"] = props
+        out["required"] = list(props)
+        out["additionalProperties"] = False
+    return out
+
+
+def _nullable(sub: dict[str, Any]) -> dict[str, Any]:
+    t = sub.get("type")
+    if isinstance(t, str) and t not in ("object", "array") and "enum" not in sub:
+        return {**sub, "type": [t, "null"]}
+    return {"anyOf": [sub, {"type": "null"}]}
+
+
+def _drop_descriptions(node: Any) -> Any:
+    if isinstance(node, dict):
+        return {k: _drop_descriptions(v) for k, v in node.items() if k != "description"}
+    if isinstance(node, list):
+        return [_drop_descriptions(v) for v in node]
+    return node
+
+
+def strict_schema(kind: str = "union", descriptions: bool = False) -> dict[str, Any]:
+    """Schema for providers with strict structured outputs (Groq). kind: union (anyOf per type) | flat.
+
+    Descriptions are dropped by default: they cost ~700 input tokens and the system prompt already
+    lists every limit, which matters under Groq's 8K tokens-per-minute budget.
+    """
+    base = visual_answer_schema()
+    if kind == "flat":
+        base["properties"]["components"] = {"type": "array", "maxItems": 3, "items": flat_component_schema()}
+    out = _strictify(base)
+    return out if descriptions else _drop_descriptions(out)
+
+
+def strip_nulls(value: Any) -> Any:
+    """Strict-mode output carries explicit nulls for absent optional fields; drop them before validation."""
+    if isinstance(value, dict):
+        return {k: strip_nulls(v) for k, v in value.items() if v is not None}
+    if isinstance(value, list):
+        return [strip_nulls(v) for v in value]
+    return value

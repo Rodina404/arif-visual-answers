@@ -1,0 +1,46 @@
+{
+  "answer_text": "ده مجموعة من الفلاش كاردز لتلخيص الأفكار الأساسية في الورقة عن الـ Chain‑of‑Thought Prompting.",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "flashcards",
+      "id": "c1",
+      "lang": "ar",
+      "title": "Flashcards – الأفكار الأساسية",
+      "reason": "Flashcards تساعد على مراجعة سريعة للملخصات الأساسية.",
+      "cards": [
+        {
+          "front": "ما هو هدف الـ Chain‑of‑Thought Prompting؟",
+          "back": "تحسين قدرة النماذج الكبيرة على حل مهام التفكير المعقدة عن طريق توليد خطوات تفكير وسطية.\n\"We explore how generating a chain of thought—a series of intermediate reasoning steps—significantly improves the ability of large language models to perform complex reasoning.\" (صفحة 1)",
+          "page": 1
+        },
+        {
+          "front": "ما هو الأداء الذي حققته PaLM 540B مع 8 أمثلة فقط؟",
+          "back": "وصل إلى أفضل دقة على benchmark GSM8K، متفوقًا حتى على GPT‑3 المدرب مع verifier.\n\"prompting a PaLM 540B with just eight chain-of-thought exemplars achieves state-of-the-art accuracy on the GSM8K benchmark\" (صفحة 1)",
+          "page": 1
+        },
+        {
+          "front": "متى يصبح الـ Chain‑of‑Thought فعالًا؟",
+          "back": "فقط مع نماذج كبيرة الحجم؛ لا يضيف فائدة للنماذج الصغيرة.\n\"chain-of-thought prompting does not positively impact performance for small models, and only yields performance gains when used with models of\" (صفحة 4)",
+          "page": 4
+        },
+        {
+          "front": "ما هو التحدي الرئيسي في طرق التدريب التقليدية للـ Rationale؟",
+          "back": "تكلفة إنشاء مجموعة كبيرة من الشروحات عالية الجودة مقارنة بأزواج الإدخال‑الإخراج البسيطة.\n\"For rationale‑augmented training and finetuning methods, it is costly to create a large set of high quality rationales\" (صفحة 2)",
+          "page": 2
+        },
+        {
+          "front": "كيف يُقَيِّم الباحثون حساسية الـ Chain‑of‑Thought للتصميم؟",
+          "back": "بدراسة تأثير تغيير ترتيب أو عدد الأمثلة على دقة النموذج (مثال في القسم 3.4).\n\"Sensitivity to exemplars is a key consideration… varying the permutation of few‑shot exemplars can cause the accuracy…\" (صفحة 6)",
+          "page": 6
+        },
+        {
+          "front": "ما هو دور الـ Prompt Engineering في هذا السياق؟",
+          "back": "تحليل تأثير صيغ الـ prompts على أداء النموذج؛ تم إنشاء 8 أمثلة من مجموعة التدريب وتفكيكها إلى خطوات.\n\"The general way that we created chain of thought annotations was by taking eight exemplars from the training set and decomposing the reasoning process\" (صفحة 17)",
+          "page": 17
+        }
+      ]
+    }
+  ]
+}

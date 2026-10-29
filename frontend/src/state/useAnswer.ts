@@ -1,6 +1,7 @@
 import { useCallback, useReducer, useRef } from 'react'
 import { HttpError, streamSSE, type SSEEvent } from '../api/sse'
 import { COMPONENT_SCHEMAS, isComponentType, type ComponentType } from '../catalog/schemas'
+import type { ProviderName } from '../api/client'
 import type { Lang } from '../i18n/context'
 
 export interface Verification {
@@ -31,6 +32,14 @@ export interface Metrics {
   cache: { app_cache_hit: boolean; gemini_cached_tokens: number }
   schema_mode: string
   fallback_used: boolean
+  retrieval?: {
+    retrieval: 'bm25' | 'off'
+    pages?: number[]
+    chunks?: number
+    context_tokens_est?: number
+    prompt_budget?: number
+    streamed?: boolean
+  }
 }
 
 export interface AnswerState {
@@ -160,6 +169,7 @@ export interface AskOptions {
   question: string
   lang: Lang
   textOnly?: boolean
+  provider?: ProviderName
   endpoint?: '/api/ask' | '/api/ask_text'
 }
 
@@ -175,7 +185,7 @@ export function useAnswer() {
     try {
       await streamSSE(
         o.endpoint ?? '/api/ask',
-        { doc_id: o.docId, question: o.question, lang: o.lang, text_only: Boolean(o.textOnly) },
+        { doc_id: o.docId, question: o.question, lang: o.lang, text_only: Boolean(o.textOnly), provider: o.provider },
         (ev) => dispatch({ kind: 'event', ev }),
         { signal: ctrl.signal },
       )

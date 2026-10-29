@@ -11,6 +11,7 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
+from .. import retrieval
 from ..config import Settings
 from ..grounding import normalize
 from ..upload import StoredDoc
@@ -24,14 +25,23 @@ _SAFE_NAME = re.compile(r"^[a-z0-9_]+/[a-z0-9_]+$")
 class MockProvider:
     name = "mock"
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, as_provider: str = "gemini"):
         self.settings = settings
+        # In mock mode the UI's provider switch still works: the mock answers "as" that provider,
+        # labels metrics with its models, and replays its recorded live fixtures when they exist.
+        self.as_provider = as_provider
+        if as_provider == "groq":
+            self.model, self.fallback_model = settings.groq_model, settings.groq_fallback_model
+        else:
+            self.model, self.fallback_model = settings.model, settings.fallback_model
         self.root = settings.fixtures_dir / "answers"
         index = self.root / "index.json"
         self.index: dict[str, Any] = json.loads(index.read_text(encoding="utf-8")) if index.exists() else {}
         self._busy_calls = 0
+        self._docs: dict[str, StoredDoc] = {}
 
     async def prepare_document(self, doc: StoredDoc) -> ProviderDocHandle:
+        self._docs[doc.doc_id] = doc
         slug = self.index.get("docs", {}).get(doc.sha256, "generic")
         return ProviderDocHandle(self.name, doc.doc_id, doc.sha256, {"slug": slug, "pages": doc.page_count})
 
@@ -58,7 +68,9 @@ class MockProvider:
         slug = doc.data.get("slug", "generic")
         sub = "text/" if ext == "txt" else ""
         qid = self.question_id(slug, question)
+        live = self.root / "live" / self.as_provider / f"{sub}{qid}.{lang}.{ext}" if qid and slug == "cot" else None
         for candidate in (
+            live,
             self.root / slug / f"{sub}{qid}.{lang}.{ext}" if qid else None,
             self.root / slug / f"{sub}default.{lang}.{ext}",
             self.root / "generic" / f"{sub}default.{lang}.{ext}",
@@ -67,17 +79,37 @@ class MockProvider:
                 return candidate
         raise ProviderError("NO_FIXTURE", f"no mock fixture for {slug}/{qid}/{lang}")
 
-    async def _replay(self, text: str, doc: ProviderDocHandle) -> AsyncIterator[ProviderDelta]:
+    def _meta(self, doc: ProviderDocHandle, question: str) -> dict[str, Any]:
+        stored = self._docs.get(doc.doc_id)
+        if stored is None or not self.settings.retrieval_on(self.as_provider):
+            return {"retrieval": "off"}
+        budget = self.settings.retrieval_max_prompt_tokens - 3000  # ~ system + strict schema + question
+        r = retrieval.retrieve(stored, question, budget)
+        return {
+            "retrieval": "bm25",
+            "pages": r.pages,
+            "chunks": r.chunks,
+            "context_tokens_est": r.est_tokens,
+            "prompt_budget": self.settings.retrieval_max_prompt_tokens,
+        }
+
+    async def _replay(
+        self, text: str, doc: ProviderDocHandle, meta: dict[str, Any] | None = None
+    ) -> AsyncIterator[ProviderDelta]:
         await asyncio.sleep(self.settings.mock_ttft_ms / 1000)
         for i in range(0, len(text), CHUNK):
             yield ProviderDelta(text_delta=text[i : i + CHUNK])
             await asyncio.sleep(self.settings.mock_delay_ms / 1000)
-        usage = Usage(input=doc.data.get("pages", 1) * TOKENS_PER_PAGE + 1800, output=max(1, len(text) // 3))
-        yield ProviderDelta(usage=usage, finish_reason="STOP")
+        if meta and meta.get("retrieval") == "bm25":
+            prompt_tokens = self.settings.retrieval_max_prompt_tokens - 300
+        else:
+            prompt_tokens = doc.data.get("pages", 1) * TOKENS_PER_PAGE + 1800
+        usage = Usage(input=prompt_tokens, output=max(1, len(text) // 3))
+        yield ProviderDelta(usage=usage, finish_reason="STOP", meta=meta)
 
     async def _forced_error(self, forced: str, model: str | None) -> None:
         kind = forced.split("/", 1)[1]
-        if kind == "busy" or (kind == "busy_then_ok" and model != self.settings.fallback_model):
+        if kind == "busy" or (kind == "busy_then_ok" and model != self.fallback_model):
             raise ProviderError("UPSTREAM_BUSY", "mock 503", 503, retryable=True)
         if kind == "run_error":
             await asyncio.sleep(self.settings.mock_ttft_ms / 1000)
@@ -119,7 +151,7 @@ class MockProvider:
             data = json.loads(text)
             data["needs_visual"], data["components"] = False, []
             text = json.dumps(data, ensure_ascii=False)
-        async for d in self._replay(text, doc):
+        async for d in self._replay(text, doc, self._meta(doc, question)):
             yield d
 
     async def stream_text(

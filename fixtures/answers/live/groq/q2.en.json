@@ -1,0 +1,110 @@
+{
+  "answer_text": "Chain‑of‑thought prompting yields modest gains for smaller models but dramatically boosts accuracy on GSM8K as model size increases, roughly tripling performance from 4.1% to 15.6% for standard prompting and jumping from 4.4% to 46.9% with CoT for models up to 175B, and reaching 56.9% with CoT on the 540B PaLM.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "chart",
+      "id": "c1",
+      "lang": "en",
+      "title": "GSM8K Accuracy vs. Model Size",
+      "reason": "Shows how CoT improves accuracy increasingly with larger models",
+      "chart_type": "line",
+      "x_label": "Model size (B parameters)",
+      "y_label": "Accuracy (%)",
+      "unit": "%",
+      "series": [
+        {
+          "name": "Standard prompting",
+          "points": [
+            {
+              "label": "20B",
+              "value": 4.1,
+              "citation": {
+                "page": 21,
+                "quote": "UL2 20B 4.1 4.4"
+              }
+            },
+            {
+              "label": "68B",
+              "value": 5.7,
+              "citation": {
+                "page": 21,
+                "quote": "68B 5.7 8.2"
+              }
+            },
+            {
+              "label": "137B",
+              "value": 6.5,
+              "citation": {
+                "page": 21,
+                "quote": "137B 6.5 14.3"
+              }
+            },
+            {
+              "label": "175B",
+              "value": 15.6,
+              "citation": {
+                "page": 21,
+                "quote": "175B 15.6 46.9"
+              }
+            },
+            {
+              "label": "540B",
+              "value": 17.9,
+              "citation": {
+                "page": 21,
+                "quote": "540B 17.9 56.9"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chain‑of‑thought prompting",
+          "points": [
+            {
+              "label": "20B",
+              "value": 4.4,
+              "citation": {
+                "page": 21,
+                "quote": "UL2 20B 4.1 4.4"
+              }
+            },
+            {
+              "label": "68B",
+              "value": 8.2,
+              "citation": {
+                "page": 21,
+                "quote": "68B 5.7 8.2"
+              }
+            },
+            {
+              "label": "137B",
+              "value": 14.3,
+              "citation": {
+                "page": 21,
+                "quote": "137B 6.5 14.3"
+              }
+            },
+            {
+              "label": "175B",
+              "value": 46.9,
+              "citation": {
+                "page": 21,
+                "quote": "175B 15.6 46.9"
+              }
+            },
+            {
+              "label": "540B",
+              "value": 56.9,
+              "citation": {
+                "page": 21,
+                "quote": "540B 17.9 56.9"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "answer_text": "الـ Chain‑of‑Thought Prompting هو طريقة بنضيف فيها سلسلة من خطوات التفكير الوسيطة بين السؤال والإجابة داخل الـ prompt، عشان النموذج يوضح طريقة حل المسألة. الـ Standard Prompting بيقدّم بس أمثلة سؤال‑إجابة من غير خطوات التفكير. الفرق إن الـ CoT بيوفر توجيه تفكير أكتر وبيحسّن الدقة على مهام حسابية وعقلية معقدة.",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "comparison",
+      "id": "c1",
+      "lang": "ar",
+      "title": "مقارنة بين Chain‑of‑Thought Prompting وStandard Prompting",
+      "reason": "المقارنة توضح الاختلاف في طريقة الصياغة والتأثير على الأداء.",
+      "items": [
+        {
+          "name": "Chain‑of‑Thought Prompting",
+          "summary": "يضيف سلسلة من خطوات التفكير الوسيطة بين السؤال والإجابة.",
+          "attributes": [
+            {
+              "key": "الوصف",
+              "value": "سلسلة من خطوات التفكير المتوسطة التي تؤدي إلى النتيجة النهائية",
+              "citation": {
+                "page": 2,
+                "quote": "A chain of thought is a series of intermediate natural language reasoning steps that lead to the final output, and we refer to this approach as chain-of-thought prompting."
+              }
+            },
+            {
+              "key": "الأداء",
+              "value": "يحسّن الدقة بشكل ملحوظ على مهام مثل GSM8K",
+              "citation": {
+                "page": 1,
+                "quote": "prompting a PaLM 540B with just eight chain-of-thought exemplars achieves state-of-the-art accuracy on the GSM8K benchmark"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Standard Prompting",
+          "summary": "يعطي نماذج مع أمثلة سؤال‑إجابة مباشرة بدون خطوات تفكير.",
+          "attributes": [
+            {
+              "key": "الوصف",
+              "value": "أمثلة سؤال‑إجابة تُعطى للنموذج مباشرةً",
+              "citation": {
+                "page": 3,
+                "quote": "Standard prompting... a language model is given in-context exemplars of input–output pairs before outputting a prediction."
+              }
+            },
+            {
+              "key": "الأداء",
+              "value": "أقل تحسيناً مقارنةً بـ CoT في مهام معقدة",
+              "citation": {
+                "page": 5,
+                "quote": "Second, chain-of-thought prompting has larger performance gains for more-complicated problems."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

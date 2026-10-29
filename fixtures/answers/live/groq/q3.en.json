@@ -1,0 +1,54 @@
+{
+  "answer_text": "The paper evaluates five large language models (GPT-3 variants, PaLM 540B, and others) on several benchmarks covering arithmetic, commonsense, and symbolic reasoning.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "table",
+      "id": "c1",
+      "lang": "en",
+      "title": "Benchmarks and Models Evaluated",
+      "reason": "A table clearly pairs each benchmark category with the models tested, making it easy to see coverage.",
+      "columns": [
+        "Benchmark Category",
+        "Specific Datasets",
+        "Models Evaluated"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Arithmetic",
+            "GSM8K, SVAMP, ASDiv, AQuA, MAWPS",
+            "GPT-3 (ada, babbage, curie, davinci), PaLM 540B"
+          ],
+          "citation": {
+            "page": 3,
+            "quote": "We consider the following five math word problem benchmarks: (1) the GSM8K benchmark... (2) the SVAMP dataset... (3) the ASDiv dataset... (4) the AQuA dataset... (5) the MAWPS benchmark."
+          }
+        },
+        {
+          "cells": [
+            "Commonsense",
+            "CSQA, StrategyQA, and others",
+            "GPT-3 variants, PaLM 540B"
+          ],
+          "citation": {
+            "page": 7,
+            "quote": "We consider five datasets covering a diverse range of commonsense reasoning types. The popular CSQA... StrategyQA..."
+          }
+        },
+        {
+          "cells": [
+            "Symbolic Reasoning",
+            "Various symbolic reasoning benchmarks (details in Appendix G)",
+            "GPT-3 variants, PaLM 540B"
+          ],
+          "citation": {
+            "page": 4,
+            "quote": "Full prompts in Appendix G... chain-of-thought prompting facilitates OOD generalization to longer sequence lengths."
+          }
+        }
+      ]
+    }
+  ]
+}

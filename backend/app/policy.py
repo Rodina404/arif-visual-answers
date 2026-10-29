@@ -23,6 +23,7 @@ from .catalog import (
     dump_component,
     parse_component,
     project_component,
+    strip_nulls,
 )
 from .upload import StoredDoc
 
@@ -42,6 +43,7 @@ class Outcome:
     drop_reason: str | None = None
     fallback_text: str | None = None
     downgraded_from: str | None = None
+    truncated: int = 0  # strings/lists cut to the catalog's limits
 
     @property
     def dropped(self) -> bool:
@@ -56,6 +58,8 @@ class Outcome:
         }
         if self.downgraded_from:
             out["downgraded_from"] = self.downgraded_from
+        if self.truncated:
+            out["truncated_fields"] = self.truncated
         return out
 
     def dropped_event(self) -> dict[str, Any]:
@@ -73,6 +77,38 @@ def strip_urls(value: Any) -> Any:
     if isinstance(value, dict):
         return {k: strip_urls(v) for k, v in value.items()}
     return value
+
+
+def fit_limits(raw: Any, err: ValidationError) -> tuple[Any, int] | None:
+    """Repair length overruns from providers that can't enforce maxLength/maxItems (Gemini, Groq).
+
+    Over-long strings are cut to the limit with an ellipsis and over-long lists are trimmed. Anything
+    else is not repaired: the caller drops the component. Returns (repaired, fixes) or None.
+    """
+    import copy
+
+    fixed = copy.deepcopy(raw)
+    fixes = 0
+    for e in err.errors():
+        if e["type"] not in ("string_too_long", "too_long"):
+            return None
+        loc = list(e["loc"])[1:]  # first element is the union tag (component type)
+        parent: Any = fixed
+        for key in loc[:-1]:
+            parent = parent[key]
+        last = loc[-1]
+        value = parent[last]
+        limit = int((e.get("ctx") or {}).get("max_length", 0))
+        if not limit:
+            return None
+        if isinstance(value, str):
+            parent[last] = value[: limit - 1].rstrip() + "…"
+        elif isinstance(value, list):
+            parent[last] = value[:limit]
+        else:
+            return None
+        fixes += 1
+    return fixed, fixes
 
 
 @dataclass
@@ -248,14 +284,22 @@ class ComponentProcessor:
         if raw_type not in COMPONENT_TYPES:
             out.drop_reason = "unknown_type"
             return out
-        raw = project_component(raw)
+        raw = project_component(strip_nulls(raw))
         if raw_type == "steps":
             raw = {**raw, "ordered": True}  # steps are ordered by definition; the schema can't pin a bool
+        raw = strip_urls(raw)
         try:
-            comp: BaseComponent = parse_component(strip_urls(raw))
-        except ValidationError:
-            out.drop_reason = "invalid"
-            return out
+            comp: BaseComponent = parse_component(raw)
+        except ValidationError as err:
+            repaired = fit_limits(raw, err)
+            try:
+                if repaired is None:
+                    raise err
+                comp = parse_component(repaired[0])
+                out.truncated = repaired[1]
+            except ValidationError:
+                out.drop_reason = "invalid"
+                return out
         if not comp.reason.strip():
             out.drop_reason = "empty_reason"
             return out

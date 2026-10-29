@@ -1,0 +1,77 @@
+{
+  "provider": "gemini",
+  "summary": {
+    "runs": 1,
+    "errors": 1,
+    "components": 0,
+    "verified": 0,
+    "grounding_pass_rate": null,
+    "components_dropped": 0,
+    "citations_dropped": 0,
+    "latency_p50_s": null,
+    "latency_max_s": null,
+    "mean_prompt_tokens": null,
+    "mean_cost_usd": null,
+    "fallback_used": 0
+  },
+  "runs": [
+    {
+      "qid": "q1",
+      "lang": "ar",
+      "provider": "gemini",
+      "wall_s": 240.0,
+      "error": {
+        "code": "TIMEOUT",
+        "message": "The model took too long; showing what arrived."
+      },
+      "warnings": [],
+      "types": [],
+      "statuses": [],
+      "citations_dropped": 0,
+      "downgraded": [],
+      "dropped": [],
+      "metrics": {
+        "mode": "visual",
+        "model": "gemini-3.8-flash",
+        "provider": "gemini",
+        "thinking_level": "low",
+        "tokens": {
+          "input": 0,
+          "cached_input": 0,
+          "output": 0,
+          "thinking": 0,
+          "total": 0
+        },
+        "cost_usd": {
+          "input": 0.0,
+          "cached_input": 0.0,
+          "output": 0.0,
+          "total": 0.0,
+          "price_table_date": "2026-10-29"
+        },
+        "latency_ms": {
+          "ttft_text": null,
+          "first_component": null,
+          "total": 239992
+        },
+        "components": {
+          "emitted": 0,
+          "dropped": 0,
+          "verified": 0,
+          "partial": 0,
+          "unverified": 0
+        },
+        "cache": {
+          "app_cache_hit": false,
+          "gemini_cached_tokens": 0
+        },
+        "schema_mode": "json",
+        "fallback_used": false,
+        "retrieval": {
+          "retrieval": "off"
+        }
+      },
+      "answer_chars": 0
+    }
+  ]
+}
