@@ -43,19 +43,7 @@ A student who asks *"how much does chain-of-thought improve GSM8K as models grow
 
 ## How it works
 
-```mermaid
-flowchart LR
-    U[Browser<br/>React 19 · RTL/LTR] -- "PDF upload" --> UP[Upload & parse<br/>pdfplumber · visible text only<br/>OCR for scans]
-    U -- "question (SSE)" --> RUN[VisualRun]
-    UP --> DOC[(Pages + cache<br/>SQLite)]
-    DOC --> RET[Retrieval<br/>BM25 · ~600-char chunks<br/>question translated if needed]
-    RET --> LLM[LLM provider<br/>Gemini · Groq · self-hosted]
-    RUN --> RET
-    LLM -- "streamed JSON" --> PARSE[Partial JSON parser]
-    PARSE -- "answer text deltas" --> U
-    PARSE -- "each finished component" --> POL[Validate → Ground → Policy]
-    POL -- "verified / partial / dropped" --> U
-```
+![Architecture: upload, ask and check lanes](docs/images/architecture.svg)
 
 **One request, step by step**
 

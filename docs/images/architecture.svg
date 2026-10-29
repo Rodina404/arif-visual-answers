@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#334155"/>
+    </marker>
+    <marker id="t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#0f766e"/>
+    </marker>
+    <marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#c2410c"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="560" rx="16" fill="#f8fafc"/>
+
+  <!-- lane labels -->
+  <text x="230" y="30" font-size="12" font-weight="700" fill="#64748b" letter-spacing="1">UPLOAD (once per PDF)</text>
+  <text x="230" y="200" font-size="12" font-weight="700" fill="#64748b" letter-spacing="1">ASK (streamed)</text>
+  <text x="230" y="390" font-size="12" font-weight="700" fill="#64748b" letter-spacing="1">CHECK EACH VISUAL</text>
+
+  <!-- Browser -->
+  <rect x="20" y="40" width="150" height="480" rx="12" fill="#0f766e"/>
+  <text x="95" y="250" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">Browser</text>
+  <text x="95" y="272" text-anchor="middle" font-size="12" fill="#ccfbf1">React 19</text>
+  <text x="95" y="290" text-anchor="middle" font-size="12" fill="#ccfbf1">Arabic RTL / English</text>
+  <text x="95" y="308" text-anchor="middle" font-size="12" fill="#ccfbf1">props-only renderers</text>
+
+  <!-- Lane A -->
+  <rect x="230" y="40" width="250" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="250" y="68" font-size="15" font-weight="700" fill="#0f172a">1 · Upload &amp; parse</text>
+  <text x="250" y="90" font-size="12" fill="#475569">visible text only (pdfplumber)</text>
+  <text x="250" y="107" font-size="12" fill="#475569">hidden-text warning</text>
+  <text x="250" y="124" font-size="12" fill="#475569">OCR for scanned pages (local)</text>
+
+  <rect x="560" y="40" width="250" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="580" y="68" font-size="15" font-weight="700" fill="#0f172a">Pages store</text>
+  <text x="580" y="90" font-size="12" fill="#475569">memoised by SHA-256</text>
+  <text x="580" y="107" font-size="12" fill="#475569">answer cache (SQLite)</text>
+  <text x="580" y="124" font-size="12" fill="#475569">owned per browser, 48 h</text>
+
+  <!-- Lane B -->
+  <rect x="230" y="210" width="250" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="250" y="238" font-size="15" font-weight="700" fill="#0f172a">2 · Retrieval</text>
+  <text x="250" y="260" font-size="12" fill="#475569">BM25 over ~600-char chunks</text>
+  <text x="250" y="277" font-size="12" fill="#475569">Arabic question → English</text>
+  <text x="250" y="294" font-size="12" fill="#475569">search query (small model)</text>
+
+  <rect x="560" y="210" width="250" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="580" y="238" font-size="15" font-weight="700" fill="#0f172a">3 · LLM provider</text>
+  <text x="580" y="260" font-size="12" fill="#475569">Groq gpt-oss-120b · Gemini</text>
+  <text x="580" y="277" font-size="12" fill="#475569">or self-hosted (OpenAI API)</text>
+  <text x="580" y="294" font-size="12" fill="#475569">one JSON: answer + components</text>
+
+  <rect x="870" y="210" width="210" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="890" y="238" font-size="15" font-weight="700" fill="#0f172a">4 · Stream parser</text>
+  <text x="890" y="260" font-size="12" fill="#475569">partial JSON (jiter)</text>
+  <text x="890" y="277" font-size="12" fill="#475569">text deltas right away</text>
+  <text x="890" y="294" font-size="12" fill="#475569">components when complete</text>
+
+  <!-- Lane C -->
+  <rect x="870" y="400" width="210" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="890" y="428" font-size="15" font-weight="700" fill="#0f172a">5 · Validate</text>
+  <text x="890" y="450" font-size="12" fill="#475569">catalog schema (Pydantic,</text>
+  <text x="890" y="467" font-size="12" fill="#475569">mirrored by Zod in the UI)</text>
+  <text x="890" y="484" font-size="12" fill="#475569">trim over-long fields</text>
+
+  <rect x="560" y="400" width="250" height="100" rx="12" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="580" y="428" font-size="15" font-weight="700" fill="#9a3412">6 · Ground</text>
+  <text x="580" y="450" font-size="12" fill="#7c2d12">quote fuzzy-matches cited page (≥ 90)</text>
+  <text x="580" y="467" font-size="12" fill="#7c2d12">numbers in the quote AND on the page</text>
+  <text x="580" y="484" font-size="12" fill="#7c2d12">failed points removed, never shown</text>
+
+  <rect x="230" y="400" width="250" height="100" rx="12" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="250" y="428" font-size="15" font-weight="700" fill="#0f172a">7 · Policy</text>
+  <text x="250" y="450" font-size="12" fill="#475569">max 3 visuals, quiz last</text>
+  <text x="250" y="467" font-size="12" fill="#475569">weak chart → table</text>
+  <text x="250" y="484" font-size="12" fill="#475569">verified / partial / dropped</text>
+
+  <!-- arrows: upload lane -->
+  <line x1="170" y1="90" x2="228" y2="90" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+  <text x="199" y="82" text-anchor="middle" font-size="11" fill="#334155">PDF</text>
+  <line x1="480" y1="90" x2="558" y2="90" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- pages feed retrieval and grounding -->
+  <path d="M600 140 L600 170 L400 170 L400 208" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <text x="500" y="163" text-anchor="middle" font-size="11" fill="#334155">page text</text>
+  <path d="M810 120 L840 120 L840 450 L812 450" fill="none" stroke="#c2410c" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#c)"/>
+  <text x="852" y="345" font-size="11" fill="#c2410c" transform="rotate(90 852 345)">page text</text>
+
+  <!-- ask lane -->
+  <line x1="170" y1="260" x2="228" y2="260" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+  <text x="199" y="252" text-anchor="middle" font-size="11" fill="#334155">question</text>
+  <line x1="480" y1="260" x2="558" y2="260" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+  <text x="519" y="252" text-anchor="middle" font-size="11" fill="#334155">~5K tokens</text>
+  <line x1="810" y1="260" x2="868" y2="260" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- answer text straight to browser -->
+  <path d="M975 310 L975 350 L172 350" fill="none" stroke="#0f766e" stroke-width="2" marker-end="url(#t)"/>
+  <text x="560" y="343" text-anchor="middle" font-size="12" font-weight="600" fill="#0f766e">answer text, token by token (SSE: TEXT_MESSAGE_CONTENT)</text>
+
+  <!-- component lane -->
+  <line x1="1060" y1="310" x2="1060" y2="398" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+  <text x="1052" y="370" text-anchor="end" font-size="11" fill="#334155">each component</text>
+  <line x1="870" y1="470" x2="812" y2="470" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="560" y1="450" x2="482" y2="450" stroke="#334155" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="230" y1="450" x2="172" y2="450" stroke="#0f766e" stroke-width="2" marker-end="url(#t)"/>
+  <text x="201" y="442" text-anchor="middle" font-size="11" font-weight="600" fill="#0f766e">SSE</text>
+  <text x="203" y="468" text-anchor="middle" font-size="9" fill="#0f766e">COMPONENT</text>
+
+  <text x="550" y="545" text-anchor="middle" font-size="11" fill="#64748b">429/503 → wait (retry-after) → retry → fallback model, only before anything has streamed · timeout keeps the partial text</text>
+</svg>
