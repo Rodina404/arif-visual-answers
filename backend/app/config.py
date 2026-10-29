@@ -31,7 +31,7 @@ class Settings:
     max_output_tokens: int = field(default_factory=lambda: _int("MAX_OUTPUT_TOKENS", 4096))
     request_timeout_s: int = field(default_factory=lambda: _int("REQUEST_TIMEOUT_S", 45))
     enable_explicit_cache: bool = field(default_factory=lambda: _bool("ENABLE_EXPLICIT_CACHE"))
-    prompt_version: str = field(default_factory=lambda: os.getenv("PROMPT_VERSION", "v2"))
+    prompt_version: str = field(default_factory=lambda: os.getenv("PROMPT_VERSION", "v4"))
 
     openai_compat_base_url: str = field(
         default_factory=lambda: os.getenv("OPENAI_COMPAT_BASE_URL", "http://localhost:8001/v1")
@@ -44,12 +44,14 @@ class Settings:
     groq_fallback_model: str = field(default_factory=lambda: os.getenv("GROQ_FALLBACK_MODEL", "qwen/qwen3.8-27b"))
     groq_base_url: str = field(default_factory=lambda: os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1"))
     groq_max_output_tokens: int = field(default_factory=lambda: _int("GROQ_MAX_OUTPUT_TOKENS", 2400))
+    # Small, cheap model for query translation and suggested questions (own per-model rate-limit bucket).
+    small_model: str = field(default_factory=lambda: os.getenv("SMALL_MODEL", "openai/gpt-oss-20b"))
     groq_schema: str = field(default_factory=lambda: os.getenv("GROQ_SCHEMA", "union"))  # union | flat
 
     # Retrieval: send only the most relevant chunks. auto = on for groq/openai_compat, off for gemini
     # (which reads the whole PDF through the Files API).
     retrieval: str = field(default_factory=lambda: os.getenv("RETRIEVAL", "auto"))
-    retrieval_max_prompt_tokens: int = field(default_factory=lambda: _int("RETRIEVAL_MAX_PROMPT_TOKENS", 5800))
+    retrieval_max_prompt_tokens: int = field(default_factory=lambda: _int("RETRIEVAL_MAX_PROMPT_TOKENS", 6200))
     rate_limit_max_wait_s: int = field(default_factory=lambda: _int("RATE_LIMIT_MAX_WAIT_S", 30))
 
     mock_llm: bool = field(default_factory=lambda: _bool("MOCK_LLM"))

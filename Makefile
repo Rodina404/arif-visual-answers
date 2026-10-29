@@ -3,7 +3,7 @@ SHELL := sh
 UV ?= uv
 export PYTHONUTF8 := 1
 
-.PHONY: setup dev build serve-mock test-backend lint e2e e2e-update test-live record-fixtures demo bench check-models schema fixtures-pdfs
+.PHONY: setup dev build serve serve-mock test-backend lint e2e e2e-update test-live record-fixtures demo bench check-models schema fixtures-pdfs
 
 setup:
 	cd backend && $(UV) sync
@@ -18,6 +18,11 @@ dev:
 build:
 	cd frontend && npm run build
 
+# The real product: live model from PROVIDER in .env (groq | gemini), any PDF. MOCK_LLM is forced off.
+serve: build
+	cd backend && MOCK_LLM=0 $(UV) run uvicorn app.main:app --port 8000
+
+# Deterministic replay of prepared fixtures, for tests and offline demos only.
 serve-mock: build
 	cd backend && MOCK_LLM=1 $(UV) run uvicorn app.main:app --port 8000
 
@@ -44,7 +49,7 @@ e2e-update:
 	cd e2e && npx playwright test --grep-invert "@live|@demo" --update-snapshots
 
 test-live:
-	cd e2e && npx playwright test --grep @live --project=chromium-ar
+	cd e2e && LIVE=1 npx playwright test --grep @live --project=chromium-ar --workers=1
 
 record-fixtures:
 	cd backend && $(UV) run python scripts/record_fixtures.py

@@ -6,6 +6,7 @@ import copy
 import hashlib
 import io
 import json
+import re
 import threading
 import time
 import uuid
@@ -43,6 +44,7 @@ class PageText:
     all_text: str
     hidden_chars: int = 0
     suspicious: bool = False
+    ocr: bool = False  # text recognised from the page image (no text layer)
 
 
 @dataclass
@@ -57,6 +59,13 @@ class StoredDoc:
     questions_asked: int = 0
     provider_handles: dict[str, Any] = field(default_factory=dict)
     token_count: int | None = None
+    status: str = "ready"  # "reading" while OCR runs in the background
+    owner: str = ""  # the browser that uploaded it (X-Client-Id); lists show only the owner's documents
+    language: str = "en"  # dominant script of the text: "en" (Latin), "ar" or "other"
+
+    @property
+    def needs_ocr(self) -> list[int]:
+        return [p.number for p in self.pages if not p.visible_text.strip() and not p.ocr]
 
     @property
     def page_count(self) -> int:
@@ -75,7 +84,16 @@ class StoredDoc:
                     "pages": self.hidden_pages,
                 }
             )
-        empty = [p.number for p in self.pages if not p.visible_text.strip()]
+        ocr = [p.number for p in self.pages if p.ocr and p.visible_text.strip()]
+        if ocr:
+            out.append(
+                {
+                    "code": "OCR_USED",
+                    "message": "Text on these pages was recognised from images (OCR); quotes are checked against it.",
+                    "pages": ocr,
+                }
+            )
+        empty = [p.number for p in self.pages if not p.visible_text.strip() and (p.ocr or self.status != "reading")]
         if empty:
             out.append(
                 {
@@ -85,6 +103,18 @@ class StoredDoc:
                 }
             )
         return out
+
+
+_ARABIC = re.compile("[؀-ۿ]")
+_LATIN = re.compile("[A-Za-z]")
+
+
+def detect_language(text: str) -> str:
+    """Dominant script: "ar" for Arabic, "en" for Latin (any Latin-script language), else "other"."""
+    ar, la = len(_ARABIC.findall(text)), len(_LATIN.findall(text))
+    if ar + la < 20:
+        return "other" if text.strip() else "en"
+    return "ar" if ar > la else "en"
 
 
 def _luminance(color: Any) -> float | None:
@@ -203,7 +233,7 @@ class DocStore:
         self.meta.mkdir(parents=True, exist_ok=True)
         self._docs: dict[str, StoredDoc] = {}
 
-    def add(self, data: bytes, filename: str, content_type: str | None) -> StoredDoc:
+    def add(self, data: bytes, filename: str, content_type: str | None, owner: str = "") -> StoredDoc:
         validate_upload(data, content_type, self.settings)
         sha = hashlib.sha256(data).hexdigest()
         # Parsing a 43-page paper takes seconds; the same bytes always give the same text layers.
@@ -224,6 +254,8 @@ class DocStore:
         path.write_bytes(data)
         hidden = [p.number for p in pages if p.suspicious]
         doc = StoredDoc(
+            owner=owner,
+            language=detect_language(" ".join(p.visible_text for p in pages)),
             doc_id=doc_id,
             sha256=sha,
             filename=Path(filename or "document.pdf").name[:120],
@@ -235,6 +267,32 @@ class DocStore:
         self._docs[doc_id] = doc
         self.save(doc)
         return doc
+
+    def list(self, owner: str) -> list[StoredDoc]:
+        for f in self.meta.glob("*.json"):
+            self.get(f.stem)
+        return sorted((d for d in self._docs.values() if d.owner == owner), key=lambda d: d.created_at)
+
+    def delete(self, doc_id: str) -> bool:
+        doc = self.get(doc_id)
+        if doc is None:
+            return False
+        self._docs.pop(doc_id, None)
+        (self.meta / f"{doc_id}.json").unlink(missing_ok=True)
+        (self.uploads / f"{doc_id}.pdf").unlink(missing_ok=True)
+        return True
+
+    def apply_ocr(self, doc: StoredDoc, texts: dict[int, str]) -> None:
+        """Store recognised text as the page text layer (and in the parse cache for re-uploads)."""
+        for n, text in texts.items():
+            page = doc.page(n)
+            if page is not None:
+                page.visible_text = page.all_text = text
+                page.ocr = True
+        doc.language = detect_language(" ".join(p.visible_text for p in doc.pages))
+        doc.status = "ready"
+        _PARSED[doc.sha256] = copy.deepcopy(doc.pages)
+        self.save(doc)
 
     def save(self, doc: StoredDoc) -> None:
         (self.meta / f"{doc.doc_id}.json").write_text(json.dumps(asdict(doc)), encoding="utf-8")

@@ -102,7 +102,7 @@ class OpenAICompatProvider:
             return ProviderError("UPSTREAM_BUSY", detail, status, retryable=True)
         if status in (401, 403):
             return ProviderError("UPSTREAM_AUTH", detail, status)
-        if status == 400 and "generated json does not match" in detail.lower():
+        if status == 400 and ("json_validate_failed" in detail or "generated json does not match" in detail.lower()):
             # Groq validates the model's output against the strict schema and 400s on a bad generation;
             # that is a sampling failure, so it is worth one more try (then the fallback model).
             return ProviderError("OUTPUT_INVALID", detail, 400, retryable=True, retry_after=0)

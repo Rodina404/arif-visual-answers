@@ -81,6 +81,7 @@ type Action =
   | { kind: 'event'; ev: SSEEvent }
   | { kind: 'fail'; code: string; message: string; status?: number }
   | { kind: 'reset' }
+  | { kind: 'restore'; state: AnswerState }
 
 function upsert(slots: Slot[], slot: Slot): Slot[] {
   const i = slots.findIndex((s) => s.id === slot.id)
@@ -92,6 +93,7 @@ function upsert(slots: Slot[], slot: Slot): Slot[] {
 
 function reduce(state: AnswerState, a: Action): AnswerState {
   if (a.kind === 'reset') return initial
+  if (a.kind === 'restore') return a.state
   if (a.kind === 'start') return { ...initial, phase: 'thinking', question: a.question, lang: a.lang, startedAt: performance.now() }
   if (a.kind === 'fail') return { ...state, phase: 'error', error: { code: a.code, message: a.message, status: a.status } }
 
@@ -202,7 +204,13 @@ export function useAnswer() {
     dispatch({ kind: 'reset' })
   }, [])
 
-  return { state, ask, stop, reset }
+  /** Show a saved answer again (switching back to a document), stopping any running stream. */
+  const restore = useCallback((saved: AnswerState | null) => {
+    abort.current?.abort()
+    dispatch(saved ? { kind: 'restore', state: saved } : { kind: 'reset' })
+  }, [])
+
+  return { state, ask, stop, reset, restore }
 }
 
 export { reduce as answerReducer }

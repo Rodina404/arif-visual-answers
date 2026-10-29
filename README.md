@@ -8,13 +8,22 @@
 
 ```bash
 make setup                 # uv sync, npm ci (frontend + e2e), Playwright Chromium
-make serve-mock            # build + serve on http://localhost:8000 with MOCK_LLM=1 (no key needed)
-make test-backend          # 124 pytest tests
-make e2e                   # 90 Playwright tests (mocked, deterministic)
+make serve                 # THE APP: build + serve on http://localhost:8000 with the live model from .env
+```
+
+`make serve` needs `.env` with `PROVIDER=groq` (and `GROQ_API_KEY`) or `PROVIDER=gemini` (and `GEMINI_API_KEY`). Upload any PDF (scanned pages are read with local OCR), add several and switch between them in the sidebar, and ask anything in Egyptian Arabic or English. The header switch picks Gemini or Groq per question.
+
+Testing and offline demo:
+
+```bash
+make serve-mock            # replays prepared fixtures (MOCK_LLM=1), no key needed
+make test-backend          # pytest
+make e2e                   # Playwright (mocked, deterministic)
+make test-live             # Playwright @live tests against the real model (a few live calls)
 make demo                  # demo/arif-visual-answers.{webm,gif} + demo/shots/
 ```
 
-Live mode: put `GEMINI_API_KEY` in `.env` and run `cd backend && uv run uvicorn app.main:app --port 8000` (after `make build`). **The demo sends the uploaded PDF to Google (Gemini Files API).** Production would use `LLM_PROVIDER=openai_compat` with a self-hosted model, which receives only the extracted text. Decisions, the live-call log and known limitations are in `BUILD_LOG.md`. On Windows, run `make` from Git Bash.
+**Privacy:** with `PROVIDER=gemini` the uploaded PDF goes to Google (Files API); with `PROVIDER=groq` only the extracted text of the most relevant pages goes to Groq. Production would use `PROVIDER=openai_compat` with a self-hosted model. Decisions, live-call logs and known limitations are in `BUILD_LOG.md`. On Windows, run `make` from Git Bash.
 
 ---
 

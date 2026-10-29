@@ -2,7 +2,16 @@ import json
 
 import pytest
 
-from app.retrieval import BM25, chunk_pages, estimate_tokens, expand_query, is_quantitative, retrieve, tokenize
+from app.retrieval import (
+    BM25,
+    RETRIEVAL_QUERY,
+    chunk_pages,
+    estimate_tokens,
+    expand_query,
+    is_quantitative,
+    retrieve,
+    tokenize,
+)
 from app.upload import PageText, StoredDoc
 
 from .helpers import ANSWERS
@@ -27,12 +36,23 @@ def test_tokenize_splits_hyphenated_terms_and_drops_stopwords():
     assert "what" not in toks and "is" not in toks
 
 
-def test_query_expansion_bridges_arabic_and_synonyms():
-    ar = expand_query(INDEX["q2"]["ar"])
-    assert {"gsm8k", "size", "scale"} <= set(ar)
+def test_query_expansion_uses_generic_synonyms_only():
     en = expand_query("results as model size grows")
     assert {"scale", "accuracy"} <= set(en)
+    # No document-specific vocabulary: nothing maps "authors" to a particular lab any more.
+    assert "google" not in expand_query("Who are the authors?")
     assert is_quantitative(INDEX["q2"]["en"]) and not is_quantitative(INDEX["q4"]["en"])
+
+
+def test_translated_query_drives_bm25(cot):
+    # An Arabic question shares almost no words with an English paper; the translated query does.
+    arabic = INDEX["q2"]["ar"]
+    token = RETRIEVAL_QUERY.set(INDEX["q2"]["en"])
+    try:
+        r = retrieve(cot, arabic, 2600)
+    finally:
+        RETRIEVAL_QUERY.reset(token)
+    assert 21 in r.pages and "62B 9.6 29.9" in r.text
 
 
 def test_bm25_prefers_matching_chunk():
@@ -54,17 +74,15 @@ def test_context_is_page_marked_in_page_order(cot):
     assert markers == sorted(markers) == r.pages
 
 
-@pytest.mark.parametrize("lang", ["en", "ar"])
-def test_q2_reaches_table_2_with_the_palm_rows(cot, lang):
-    r = retrieve(cot, INDEX["q2"][lang], 2600)
+def test_q2_reaches_table_2_with_the_palm_rows(cot):
+    r = retrieve(cot, INDEX["q2"]["en"], 2600)
     assert 21 in r.pages
     assert "62B 9.6 29.9" in r.text and "540B 17.9 56.9" in r.text  # caption pulled its table body along
 
 
 @pytest.mark.parametrize("qid,page", [("q1", 2), ("q3", 4), ("q4", 1), ("q6", 1)])
-@pytest.mark.parametrize("lang", ["en", "ar"])
-def test_key_page_is_retrieved(cot, qid, page, lang):
-    assert page in retrieve(cot, INDEX[qid][lang], 2600).pages
+def test_key_page_is_retrieved(cot, qid, page):
+    assert page in retrieve(cot, INDEX[qid]["en"], 2600).pages
 
 
 def test_chunking_covers_all_text():

@@ -35,8 +35,9 @@ class GroqProvider(OpenAICompatProvider):
         self.max_output_tokens = settings.groq_max_output_tokens
 
     def structured_schema(self, schema: dict[str, Any] | None) -> dict[str, Any] | None:
-        # Whatever SCHEMA_MODE says, Groq gets its own strict schema (it enforces it while decoding).
-        return strict_schema(self.settings.groq_schema)
+        # Groq gets its own strict schema (enforced while decoding), except when the caller asks for plain
+        # JSON mode (schema=None): the retry after Groq rejected its own output (`json_validate_failed`).
+        return strict_schema(self.settings.groq_schema) if schema is not None else None
 
     def _extra_body(self, model: str) -> dict[str, Any]:
         if model.startswith("openai/gpt-oss"):

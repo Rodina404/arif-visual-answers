@@ -25,3 +25,25 @@ test('live smoke: q1 in Arabic against the real model @live', async ({ page }) =
   fs.mkdirSync(path.join(ROOT, 'data'), { recursive: true })
   fs.writeFileSync(path.join(ROOT, 'data', 'live-metrics.json'), JSON.stringify(m, null, 2))
 })
+
+// Any PDF, any question: a non-CoT document and a typed question against the real model (1-2 live calls).
+test('live: a typed question about a non-demo PDF gets a verified visual @live', async ({ page }) => {
+  test.skip(!hasKey || process.env.LIVE !== '1', 'needs a key and LIVE=1')
+  test.setTimeout(240_000)
+  // Groq's free tier allows ~8K tokens/minute (about one answer): let the previous live test's tokens expire,
+  // so this answer comes from the primary model rather than a rate-limited fallback.
+  await page.waitForTimeout(65_000)
+  await open(page)
+  await upload(page, path.join(ROOT, 'fixtures/pdfs/real/resume-ner-peft.pdf'))
+  await expect(page.getByTestId('suggest-q1')).toHaveCount(0) // no CoT demo chips on other documents
+  await page.getByTestId('question-input').fill('How does LoRA compare with full fine-tuning in this report?')
+  await page.getByTestId('ask-button').click()
+  await expect(answer(page)).toHaveAttribute('data-phase', /done|error/, { timeout: 150_000 })
+  await expect(page.getByTestId('run-error')).toHaveCount(0)
+  await expect(page.getByTestId('answer-text')).not.toBeEmpty()
+  // "verified": every citation checked out; "partial": shown with the unverifiable citations removed.
+  // Either way the visual passed grounding and at least one page chip backs it.
+  const grounded = page.locator('[data-verification="verified"], [data-verification="partial"]').first()
+  await expect(grounded).toBeVisible()
+  expect(await grounded.getByTestId('citation-chip').count()).toBeGreaterThan(0)
+})

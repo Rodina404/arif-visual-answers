@@ -12,7 +12,16 @@ PDFS = ROOT / "fixtures" / "pdfs"
 
 
 def make_settings(tmp_path: Path, **overrides) -> Settings:
-    base = Settings(data_dir=tmp_path / "data", mock_llm=True, gemini_api_key="", mock_ttft_ms=0, mock_delay_ms=0)
+    # Pinned provider: tests must not depend on PROVIDER in the developer's .env.
+    base = Settings(
+        data_dir=tmp_path / "data",
+        mock_llm=True,
+        llm_provider="gemini",
+        gemini_api_key="",
+        groq_api_key="",
+        mock_ttft_ms=0,
+        mock_delay_ms=0,
+    )
     return dataclasses.replace(base, **overrides)
 
 

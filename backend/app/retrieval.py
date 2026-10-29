@@ -11,6 +11,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 
 from .grounding import normalize
@@ -24,40 +25,6 @@ _STOP = set(
     "who with does did do it's than then there their them they these those into over also can".split()
 )
 _TOKEN = re.compile(r"[a-z0-9]+(?:[-'][a-z0-9]+)*|[؀-ۿ]+")
-
-# The demo paper is English while questions are often Egyptian Arabic. A small glossary bridges the
-# common question words; technical terms (GSM8K, chain-of-thought, PaLM) are usually written in
-# English inside Arabic questions and match directly.
-AR_GLOSSARY = {
-    "موديل": "model",
-    "موديلات": "models language",
-    "الموديل": "model",
-    "الموديلات": "models language",
-    "حجم": "size scale parameters",
-    "الحجم": "size scale",
-    "مين": "authors",
-    "كتبوا": "authors wrote",
-    "الورقه": "paper",
-    "الورقة": "paper",
-    "الفرق": "difference standard",
-    "مثال": "exemplar example",
-    "الإجابه": "answer",
-    "الإجابة": "answer",
-    "للإجابه": "answer",
-    "للإجابة": "answer",
-    "النتايج": "results accuracy table",
-    "بيحسن": "improve",
-    "بيحسّن": "improve",
-    "جربوا": "evaluate benchmarks",
-    "جرّبوا": "evaluate benchmarks",
-    "الأساسيه": "key",
-    "الأساسية": "key",
-    "الأفكار": "ideas",
-    "خطوات": "steps reasoning",
-    "يعني": "what",
-    "بيوصل": "leads arrive answer",
-    "بيوصّل": "leads arrive answer",
-}
 
 
 # English query expansion: question words -> the words papers use for the same idea.
@@ -73,13 +40,7 @@ EN_SYNONYMS = {
     "benchmark": "datasets tasks",
     "evaluate": "benchmarks experiments",
     "evaluated": "benchmarks experiments",
-    "authors": "google research",
     "wrote": "authors",
-    "different": "standard",
-    "difference": "standard",
-    "exemplar": "exemplars few-shot",
-    "review": "key",
-    "ideas": "properties",
 }
 
 
@@ -101,12 +62,6 @@ def expand_query(question: str) -> list[str]:
     for t in toks:
         if t in EN_SYNONYMS:
             extra.extend(tokenize(EN_SYNONYMS[t]))
-    for word in question.split():
-        word = re.sub(r"[؟?.!,،:]", "", word)
-        for key in (word, normalize(word)):
-            if key in AR_GLOSSARY:
-                extra.extend(tokenize(AR_GLOSSARY[key]))
-                break
     return toks + extra
 
 
@@ -210,6 +165,15 @@ class Retrieved:
 
 _INDEX: dict[str, tuple[list[Chunk], BM25]] = {}
 
+# The search query for this request: the question translated into the document's language when they
+# differ (set by the stream layer); providers keep passing the original question.
+RETRIEVAL_QUERY: ContextVar[str | None] = ContextVar("RETRIEVAL_QUERY", default=None)
+
+
+def forget(sha256: str) -> None:
+    """Drop a document's index (its text changed, e.g. after OCR)."""
+    _INDEX.pop(sha256, None)
+
 
 def _index(doc: StoredDoc) -> tuple[list[Chunk], BM25]:
     if doc.sha256 not in _INDEX:
@@ -224,8 +188,9 @@ def retrieve(doc: StoredDoc, question: str, budget_tokens: int) -> Retrieved:
     """Best chunks for the question within budget_tokens. The first chunk of page 1 (title, authors,
     abstract) is always included: it is small and anchors almost every question about a paper."""
     chunks, bm25 = _index(doc)
-    query = expand_query(question)
-    quant = is_quantitative(question)
+    search = RETRIEVAL_QUERY.get() or question
+    query = expand_query(search)
+    quant = is_quantitative(search)
 
     final_page = max((c.page for c in chunks), default=1)
 
@@ -237,25 +202,38 @@ def retrieve(doc: StoredDoc, question: str, budget_tokens: int) -> Retrieved:
         return base * (1 + 2 * numeric_density(chunks[i].tokens)) if quant else base
 
     ranked = sorted(range(len(chunks)), key=lambda i: (-score(i), i))
-    # A table caption is useless without its body: rank the chunk after a caption right behind it.
-    order: list[int] = []
+    # A table caption is useless without its body: they are packed as one unit (both or neither, or the
+    # body alone, which holds the numbers), so a caption never arrives without its rows.
+    units: list[list[int]] = []
+    seen: set[int] = set()
     for i in ranked:
-        if i in order:
+        if i in seen:
             continue
-        order.append(i)
-        if re.match(r"\s*Table \d+:", chunks[i].text) and i + 1 < len(chunks) and chunks[i + 1].page == chunks[i].page:
-            if i + 1 not in order:
-                order.append(i + 1)
-    ranked = order
+        unit = [i]
+        nxt = i + 1
+        if re.match(r"\s*Table \d+:", chunks[i].text) and nxt < len(chunks) and chunks[nxt].page == chunks[i].page:
+            if nxt not in seen:
+                unit.append(nxt)
+        seen.update(unit)
+        units.append(unit)
+    cost = {i: estimate_tokens(c.text) + 6 for i, c in enumerate(chunks)}  # + page marker
     chosen: list[int] = []
     used = 0
     pinned = [i for i, c in enumerate(chunks) if c.page == 1 and c.index == 0]
-    for i in pinned + [i for i in ranked if i not in pinned]:
-        cost = estimate_tokens(chunks[i].text) + 6  # + page marker
-        if used + cost > budget_tokens:
+    for i in pinned:
+        if cost[i] <= budget_tokens:
+            chosen.append(i)
+            used += cost[i]
+    for unit in units:
+        unit = [i for i in unit if i not in chosen]
+        if not unit:
             continue
-        chosen.append(i)
-        used += cost
+        for candidate in (unit, unit[1:]):
+            need = sum(cost[i] for i in candidate)
+            if candidate and used + need <= budget_tokens:
+                chosen.extend(candidate)
+                used += need
+                break
     order = sorted(chosen, key=lambda i: (chunks[i].page, chunks[i].index))
     parts: list[str] = []
     last_page = None

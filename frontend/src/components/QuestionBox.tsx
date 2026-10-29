@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { useI18n } from '../i18n/context'
-import { DEMO_QUESTIONS } from '../lib/format'
 
-/** One-line question input with a send button; the demo questions as full, numbered suggestions. */
+export interface Suggestion {
+  id: string
+  text: string
+}
+
+/** One-line question input with a send button; suggestions (demo or generated) as numbered rows. */
 export function QuestionBox({
   disabled,
   busy,
@@ -10,6 +14,8 @@ export function QuestionBox({
   onStop,
   showTextOnly = true,
   submitLabel,
+  suggestions,
+  suggestionsLoading = false,
 }: {
   disabled: boolean
   busy: boolean
@@ -17,6 +23,8 @@ export function QuestionBox({
   onStop?: () => void
   showTextOnly?: boolean
   submitLabel?: string
+  suggestions: Suggestion[]
+  suggestionsLoading?: boolean
 }) {
   const { t, num } = useI18n()
   const [q, setQ] = useState('')
@@ -81,21 +89,26 @@ export function QuestionBox({
             </label>
           ) : null}
         </div>
+        {suggestionsLoading ? (
+          <p data-testid="suggestions-loading" className="m-0 px-1 text-xs text-muted">
+            {t('ask.suggesting')}
+          </p>
+        ) : null}
         <ol className="m-0 grid list-none gap-1 p-0 sm:grid-cols-2">
-          {DEMO_QUESTIONS.map((id, i) => (
+          {suggestions.map(({ id, text }, i) => (
             <li key={id}>
               <button
                 type="button"
                 data-testid={`suggest-${id}`}
                 disabled={disabled}
-                onClick={() => submit(t(`q.${id}`))}
+                onClick={() => submit(text)}
                 className="flex w-full items-start gap-2.5 rounded-xl px-3 py-2 text-start text-sm text-ink hover:bg-surface hover:shadow-card disabled:opacity-50"
               >
                 <span className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-bold text-accent-strong tabular-nums">
                   {num(i + 1)}
                 </span>
                 <span dir="auto" className="min-w-0 leading-snug">
-                  {t(`q.${id}`)}
+                  {text}
                 </span>
               </button>
             </li>

@@ -5,10 +5,20 @@ import { useAnswer } from '../state/useAnswer'
 import { AnswerText } from './AnswerText'
 import { AnswerView } from './AnswerView'
 import { MetricsStrip } from './MetricsStrip'
-import { QuestionBox } from './QuestionBox'
+import { QuestionBox, type Suggestion } from './QuestionBox'
 
 /** Same model, same question: a simulated text-only answer vs the visual answer, split by a "vs" badge. */
-export function BeforeAfter({ docId, provider }: { docId: string | null; provider?: ProviderName }) {
+export function BeforeAfter({
+  docId,
+  provider,
+  suggestions,
+  suggestionsLoading,
+}: {
+  docId: string | null
+  provider?: ProviderName
+  suggestions: Suggestion[]
+  suggestionsLoading?: boolean
+}) {
   const { t, lang, num } = useI18n()
   const before = useAnswer()
   const after = useAnswer()
@@ -29,7 +39,15 @@ export function BeforeAfter({ docId, provider }: { docId: string | null; provide
 
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6">
-      <QuestionBox disabled={!docId} busy={busy} onAsk={(q) => run(q)} showTextOnly={false} submitLabel={t('compare.ask')} />
+      <QuestionBox
+        disabled={!docId}
+        busy={busy}
+        onAsk={(q) => run(q)}
+        showTextOnly={false}
+        submitLabel={t('compare.ask')}
+        suggestions={suggestions}
+        suggestionsLoading={suggestionsLoading}
+      />
       {!started ? <p className="m-0 py-4 text-center text-sm text-muted">{t('compare.pick')}</p> : null}
       {mb && ma ? (
         <p

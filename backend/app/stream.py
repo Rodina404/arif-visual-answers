@@ -21,6 +21,7 @@ from .config import Settings
 from .metrics import MetricsLog, RunTimer, build_metrics
 from .policy import ComponentProcessor, Outcome, Selector
 from .providers.base import LLMProvider, ProviderDelta, ProviderDocHandle, ProviderError, Usage
+from .retrieval import RETRIEVAL_QUERY
 from .upload import StoredDoc
 
 log = logging.getLogger("arif.stream")
@@ -92,6 +93,7 @@ class AskContext:
     text_only: bool = False
     mock_fixture: str | None = None
     no_cache: bool = False
+    small: Any = None  # SmallLLM: translates the search query when question and document languages differ
     sleep: Callable[[float], Any] = asyncio.sleep
 
 
@@ -112,6 +114,9 @@ class _RunState:
     cacheable: list[Event] = field(default_factory=list)
     errored: bool = False
     meta: dict[str, Any] = field(default_factory=dict)
+    # Set after the provider rejected its own output against the strict schema: the retry uses plain JSON
+    # mode (schema in the prompt) and our own validation drops just the bad component.
+    relaxed: bool = False
 
     def add_usage(self, u: Usage | None) -> None:
         if u:
@@ -141,6 +146,16 @@ def schema_mode(ctx: AskContext) -> str:
     if ctx.provider.name == "groq" or getattr(ctx.provider, "as_provider", None) == "groq":
         return "strict"
     return ctx.settings.schema_mode
+
+
+async def _search_query(ctx: AskContext, st: _RunState) -> Any:
+    """Set the retrieval query for this run; returns the ContextVar token to reset."""
+    if ctx.small is None:
+        return None
+    query, translated = await ctx.small.retrieval_query(ctx.question, ctx.doc)
+    if translated:
+        st.meta["search_query"] = query
+    return RETRIEVAL_QUERY.set(query)
 
 
 def _extra(ctx: AskContext) -> dict[str, Any]:
@@ -174,6 +189,9 @@ async def _resilient(
             return
         except ProviderError as exc:
             log.warning("attempt %d on %s failed: %s %s", attempt + 1, model, exc.status, exc.message[:500])
+            if exc.code == "OUTPUT_INVALID":
+                st.relaxed = True
+                st.meta["relaxed_json"] = True
             last = attempt == len(models) - 1
             if started or not exc.retryable or last:
                 raise
@@ -322,6 +340,7 @@ class VisualRun:
             if w["code"] == "HIDDEN_TEXT_DETECTED":
                 yield self._keep(("WARNING", w))
 
+        token = await _search_query(ctx, st)
         try:
             gen = self._plan_mode() if ctx.settings.schema_mode == "plan" else self._single_mode()
             async for e in gen:
@@ -341,6 +360,10 @@ class VisualRun:
             yield self._metrics(app_cache_hit=False)
             yield ("RUN_ERROR", {"code": exc.code, "message": _friendly(exc)})
             return
+        finally:
+            if token is not None:
+                with contextlib.suppress(ValueError):  # closed from another context: nothing to restore
+                    RETRIEVAL_QUERY.reset(token)
 
         yield self._metrics(app_cache_hit=False)
         yield ("RUN_FINISHED", {"run_id": st.run_id})
@@ -392,7 +415,7 @@ class VisualRun:
         buf = ""
 
         def make(model: str) -> AsyncIterator[ProviderDelta]:
-            mode = schema_mode(ctx)
+            mode = "json" if st.relaxed else schema_mode(ctx)
             return ctx.provider.stream_structured(
                 system=prompts.json_mode_system() if mode == "json" else prompts.VISUAL_SYSTEM,
                 doc=ctx.handle,
@@ -600,6 +623,7 @@ class TextRun:
 
         deadline = asyncio.get_running_loop().time() + ctx.settings.request_timeout_s
         started = False
+        token = await _search_query(ctx, st)
         try:
             async for d in _with_deadline(_resilient(ctx, st, make, pending, deadline), deadline):
                 for e in pending:
@@ -626,6 +650,10 @@ class TextRun:
             msg = "The model took too long." if isinstance(exc, Deadline) else _friendly(exc)
             yield ("RUN_ERROR", {"code": code, "message": msg})
             return
+        finally:
+            if token is not None:
+                with contextlib.suppress(ValueError):  # closed from another context: nothing to restore
+                    RETRIEVAL_QUERY.reset(token)
         if started:
             end: Event = ("TEXT_MESSAGE_END", {"message_id": st.message_id})
             events.append(end)

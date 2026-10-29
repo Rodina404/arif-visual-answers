@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -26,6 +27,8 @@ from .catalog import (
     strip_nulls,
 )
 from .upload import StoredDoc
+
+log = logging.getLogger("arif.policy")
 
 MAX_COMPONENTS = 3
 PRIORITY = ["comparison", "steps", "chart", "table", "diagram", "formula", "flashcards", "text"]
@@ -297,8 +300,10 @@ class ComponentProcessor:
                     raise err
                 comp = parse_component(repaired[0])
                 out.truncated = repaired[1]
-            except ValidationError:
+            except ValidationError as final:
                 out.drop_reason = "invalid"
+                problems = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['type']}" for e in final.errors()[:6])
+                log.info("component %s (%s) invalid: %s", cid, raw_type, problems)
                 return out
         if not comp.reason.strip():
             out.drop_reason = "empty_reason"

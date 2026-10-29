@@ -88,7 +88,8 @@ def test_strict_schema_rules():
         s = strict_schema(kind)
         walk(s)
         text = json.dumps(s)
-        assert "maxLength" not in text and "minItems" not in text and "description" not in text
+        assert "maxLength" not in text and "description" not in text
+        assert '"minItems": 2' in text  # counts are enforced by Groq while decoding
     steps = next(b for b in strict_schema()["properties"]["components"]["items"]["anyOf"] if "steps" in b["properties"])
     assert steps["properties"]["steps"]["items"]["properties"]["page"]["type"] == ["integer", "null"]
 
@@ -222,3 +223,22 @@ def test_invalid_generation_is_retried(groq_app):
     route = respx.post(URL).mock(side_effect=[bad, groq_ok(Q1)])
     ev = ask(groq_app, cot_doc(groq_app), Q1_EN)
     assert route.call_count == 2 and names(ev)[-1] == "RUN_FINISHED"
+
+
+@respx.mock
+def test_rejected_generation_is_retried_in_plain_json_mode(groq_app):
+    bad = httpx.Response(
+        400,
+        json={
+            "error": {"message": "Generated JSON does not match the expected schema.", "code": "json_validate_failed"}
+        },
+    )
+    route = respx.post(URL).mock(side_effect=[bad, groq_ok(Q1)])
+    ev = ask(groq_app, cot_doc(groq_app), Q1_EN)
+    first, second = (json.loads(c.request.content) for c in route.calls)
+    assert first["response_format"]["type"] == "json_schema"
+    assert second["response_format"] == {"type": "json_object"}
+    assert "Return ONE JSON object" in second["messages"][0]["content"]  # the schema travels in the prompt
+    assert [c["type"] for c in components(ev)] == ["comparison", "steps", "quiz"]
+    m = next(d for n, d in ev if n == "METRICS")
+    assert m["retrieval"]["relaxed_json"] is True

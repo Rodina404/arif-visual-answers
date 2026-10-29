@@ -110,5 +110,16 @@
   "ask.try": "Try one of these",
   "ask.send": "Ask",
   "badge.mock": "Mock",
-  "quiz.choose": "Choose an answer"
+  "quiz.choose": "Choose an answer",
+  "docs.title": "Your documents",
+  "docs.add": "Add PDF",
+  "docs.reading": "Reading…",
+  "docs.readingLong": "Reading the scanned pages (OCR)…",
+  "docs.ocr": "OCR",
+  "docs.delete": "Delete {name}",
+  "docs.confirmDelete": "Delete?",
+  "docs.empty": "Add a PDF to start. You can add several and switch between them.",
+  "docs.history": "Earlier questions about this document",
+  "ask.suggesting": "Writing questions about this document…",
+  "warn.OCR_USED": "Text on page(s) {pages} was recognised from images (OCR); quotes are checked against it."
 }

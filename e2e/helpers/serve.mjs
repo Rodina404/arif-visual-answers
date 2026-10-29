@@ -33,6 +33,8 @@ fs.rmSync(dataDir, { recursive: true, force: true })
 const env = {
   ...process.env,
   MOCK_LLM: live ? '0' : '1',
+  // Mock tests replay the hand-authored fixtures; never the live recordings of whichever PROVIDER .env picks.
+  ...(live ? {} : { PROVIDER: 'gemini', LLM_PROVIDER: 'gemini' }),
   DATA_DIR: dataDir,
   RATE_LIMIT_ASK: live ? '10/minute' : '100000/minute',
   RATE_LIMIT_UPLOAD: live ? '5/minute' : '100000/minute',

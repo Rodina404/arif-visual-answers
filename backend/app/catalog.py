@@ -379,22 +379,16 @@ def project_component(raw: dict[str, Any]) -> dict[str, Any]:
 def _strictify(node: Any) -> Any:
     """Strict structured outputs: every property required, optional ones nullable, no extra keys.
 
-    Length/count keywords become description hints (Groq does not document them for strict mode);
-    Pydantic still enforces the real limits after the model answers.
+    String-length limits are not sent (they live in the system prompt); item counts are. Pydantic still
+    enforces every limit after the model answers.
     """
     if isinstance(node, list):
         return [_strictify(v) for v in node]
     if not isinstance(node, dict):
         return node
-    out: dict[str, Any] = {}
-    hints: list[str] = []
-    for k, v in node.items():
-        if k in ("minItems", "maxItems"):
-            hints.append(f"{'min' if k == 'minItems' else 'max'} {v} items")
-            continue
-        out[k] = _strictify(v)
-    if hints:
-        out["description"] = (out.get("description", "") + " (" + ", ".join(hints) + ")").strip()
+    # minItems/maxItems stay: Groq strict mode enforces them while decoding (verified live: without them
+    # gpt-oss produced one-attribute comparisons that our validation then had to drop).
+    out: dict[str, Any] = {k: _strictify(v) for k, v in node.items()}
     if out.get("type") == "object" and "properties" in out:
         required = set(node.get("required", []))
         props = {}

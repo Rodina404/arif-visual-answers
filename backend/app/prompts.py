@@ -19,7 +19,8 @@ Language rules:
   in English where Egyptians use them (e.g. Chain-of-Thought, prompt, GSM8K, PaLM 540B).
 - lang=en: plain, simple English.
 - Every citation.quote is copied VERBATIM from the document, in the document's own language (do not
-  translate quotes), 10-300 characters, from text a reader can see on that page.
+  translate quotes), 10-300 characters, from text a reader can see on that page. A quote is ONE
+  contiguous span: never use "..." to skip text, never add your own words or brackets.
 """.strip()
 
 VISUAL_SYSTEM = f"""
@@ -31,7 +32,8 @@ sentences, at most 700 characters) plus at most 3 visual components that make st
 
 Component catalog (use a component only when its "use when" applies):
 - comparison: 2-4 things compared on the SAME attribute keys in the SAME order (e.g. standard prompting
-  vs chain-of-thought prompting). Attribute values that state facts or numbers carry a citation.
+  vs chain-of-thought prompting). Every item has AT LEAST 2 attributes (e.g. "How it works", "Result"),
+  never just one. Attribute values that state facts or numbers carry a citation.
 - steps: an ordered procedure or method, 2-8 steps, one idea per step.
 - chart: at least 3 numeric values PRINTED in the document that share one unit, compared across a
   category or a trend. Every point has a citation whose quote contains that exact number. Never

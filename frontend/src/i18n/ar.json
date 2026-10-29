@@ -110,5 +110,16 @@
   "ask.try": "جرّب سؤال من دول",
   "ask.send": "اسأل",
   "badge.mock": "تجريبي",
-  "quiz.choose": "اختار إجابة"
+  "quiz.choose": "اختار إجابة",
+  "docs.title": "ملفاتك",
+  "docs.add": "ضيف PDF",
+  "docs.reading": "بنقرا…",
+  "docs.readingLong": "بنقرا الصفحات المصوّرة (OCR)…",
+  "docs.ocr": "OCR",
+  "docs.delete": "امسح {name}",
+  "docs.confirmDelete": "تمسح؟",
+  "docs.empty": "ضيف ملف PDF علشان تبدأ. تقدر تضيف كذا ملف وتتنقل بينهم.",
+  "docs.history": "أسئلة سألتها قبل كده عن الملف ده",
+  "ask.suggesting": "بنجهّز أسئلة عن الملف ده…",
+  "warn.OCR_USED": "النص في صفحة {pages} اتقرا من صورة (OCR)، والاقتباسات بتتراجع عليه."
 }

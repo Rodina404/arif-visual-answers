@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import logging
+import re
 from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any, Literal
@@ -16,12 +18,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from . import security
+from . import retrieval, security
 from .cache import AnswerCache
 from .config import Settings, get_settings
 from .metrics import MetricsLog
+from .ocr import ocr_pages
 from .providers import SELECTABLE, available, get_provider
 from .providers.base import LLMProvider, ProviderDocHandle, ProviderError
+from .small_llm import SmallLLM
 from .stream import AskContext, TextRun, VisualRun, sse
 from .upload import DocStore, StoredDoc, UploadError
 
@@ -36,6 +40,15 @@ class AskRequest(BaseModel):
     lang: Literal["ar", "en"] = "ar"
     text_only: bool = False
     provider: Literal["gemini", "groq"] | None = None  # the UI's provider switch; default is PROVIDER
+
+
+_CLIENT_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
+
+
+def client_id(request: Request) -> str:
+    """The browser's random id (X-Client-Id). Documents are listed and deleted only by their owner."""
+    value = request.headers.get("x-client-id", "")
+    return value if _CLIENT_ID.match(value) else ""
 
 
 def _error(code: str, message: str, status: int) -> JSONResponse:
@@ -56,6 +69,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     provider = provider_for(None)
     cache = AnswerCache(settings.data_dir / "cache.sqlite")
+    small = SmallLLM(settings, cache)
+    ocr_tasks: dict[str, asyncio.Task[None]] = {}
+    try:
+        index = json.loads((settings.fixtures_dir / "answers" / "index.json").read_text(encoding="utf-8"))
+        demo_shas = {sha for sha, slug in index.get("docs", {}).items() if slug == "cot"}
+    except (OSError, ValueError):
+        demo_shas = set()
     metrics = MetricsLog()
     # (provider name, doc_id) -> handle; each provider prepares a document its own way.
     handles: dict[tuple[str, str], ProviderDocHandle] = {}
@@ -147,15 +167,77 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def upload_document(request: Request, file: UploadFile) -> dict[str, Any]:
         limit = settings.max_upload_mb * 1024 * 1024
         data = await file.read(limit + 1)
-        doc = await asyncio.to_thread(store.add, data, file.filename or "document.pdf", file.content_type)
-        preparing[(default_name, doc.doc_id)] = asyncio.create_task(_prepare(doc, default_name))
+        doc = await asyncio.to_thread(
+            store.add, data, file.filename or "document.pdf", file.content_type, client_id(request)
+        )
+        if doc.needs_ocr:
+            # Scanned pages: recognise their text in the background; questions wait for it.
+            doc.status = "reading"
+            store.save(doc)
+            ocr_tasks[doc.doc_id] = asyncio.create_task(_ocr(doc, data))
+        else:
+            preparing[(default_name, doc.doc_id)] = asyncio.create_task(_prepare(doc, default_name))
+        return doc_payload(doc)
+
+    def doc_payload(doc: StoredDoc) -> dict[str, Any]:
         return {
             "doc_id": doc.doc_id,
             "pages": doc.page_count,
             "sha256": doc.sha256,
             "filename": doc.filename,
+            "status": doc.status,
+            "language": doc.language,
+            "is_demo": doc.sha256 in demo_shas,
+            "ocr_pages": [p.number for p in doc.pages if p.ocr],
+            "created_at": doc.created_at,
             "warnings": doc.warnings(),
         }
+
+    async def _ocr(doc: StoredDoc, data: bytes) -> None:
+        try:
+            texts = await asyncio.to_thread(ocr_pages, data, doc.needs_ocr)
+            store.apply_ocr(doc, texts)
+            retrieval.forget(doc.sha256)
+            log.info("doc %s: OCR on %d pages", doc.doc_id, len(texts))
+        except Exception as exc:  # the document stays usable, just without text on those pages
+            log.warning("OCR failed for %s: %s", doc.doc_id, exc)
+            doc.status = "ready"
+            store.save(doc)
+
+    async def ready(doc: StoredDoc) -> None:
+        task = ocr_tasks.get(doc.doc_id)
+        if task is not None:
+            await task
+
+    @app.get("/api/documents")
+    async def list_documents(request: Request) -> list[dict[str, Any]]:
+        owner = client_id(request)
+        return [doc_payload(d) for d in store.list(owner)] if owner else []
+
+    @app.get("/api/documents/{doc_id}", response_model=None)
+    async def get_document(doc_id: str) -> dict[str, Any] | JSONResponse:
+        doc = store.get(doc_id)
+        return doc_payload(doc) if doc else _error("NOT_FOUND", "Unknown document.", 404)
+
+    @app.delete("/api/documents/{doc_id}", response_model=None)
+    async def delete_document(request: Request, doc_id: str) -> dict[str, Any] | JSONResponse:
+        doc = store.get(doc_id)
+        if doc is None or doc.owner != client_id(request):
+            return _error("NOT_FOUND", "Unknown document.", 404)
+        task = ocr_tasks.pop(doc_id, None)
+        if task is not None:
+            task.cancel()
+        for key in [k for k in handles if k[1] == doc_id]:
+            handles.pop(key, None)
+        return {"deleted": doc_id} if store.delete(doc_id) else _error("NOT_FOUND", "Unknown document.", 404)
+
+    @app.get("/api/documents/{doc_id}/suggestions", response_model=None)
+    async def suggestions(doc_id: str, lang: Literal["ar", "en"] = "en") -> dict[str, Any] | JSONResponse:
+        doc = store.get(doc_id)
+        if doc is None:
+            return _error("NOT_FOUND", "Unknown document.", 404)
+        await ready(doc)
+        return {"questions": await small.suggestions(doc, lang), "generated": small.enabled}
 
     @app.get("/api/documents/{doc_id}/pages/{n}")
     async def page_text(doc_id: str, n: int) -> JSONResponse:
@@ -177,6 +259,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not available(settings).get(name, name == default_name):
             return _error("PROVIDER_UNAVAILABLE", f"{name} is not configured (missing API key).", 400)
         doc.questions_asked += 1
+        await ready(doc)
         p = provider_for(name)
         try:
             handle = await handle_for(doc, name)
@@ -198,6 +281,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             text_only=body.text_only,
             mock_fixture=forced,
             no_cache=no_cache,
+            small=small,
         )
 
     def _stream(events: AsyncIterator[tuple[str, dict[str, Any]]]) -> StreamingResponse:
