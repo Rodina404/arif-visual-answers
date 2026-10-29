@@ -575,8 +575,8 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** `make e2e` is green twice in a row (to rule out flaky tests). `make test-live` passes or is skipped because there is no key (logged).
 
 ### Phase 9 — Demo recording
-- [ ] `demo.spec.ts`, `make demo` → webm, GIF and key-frame PNGs in `demo/`.
-- [ ] Optional live recording, and `make bench` if the budget allows. Put the real p50 numbers in `BUILD_LOG.md`.
+- [x] `demo.spec.ts`, `make demo` → webm, GIF and key-frame PNGs in `demo/`.
+- [x] Optional live recording, and `make bench` if the budget allows. Put the real p50 numbers in `BUILD_LOG.md`.
 - **Accept:** the GIF is under about 15 MB, plays the full script, and shows Arabic RTL and English.
 
 ### Phase 10 — Polish and hand-off
