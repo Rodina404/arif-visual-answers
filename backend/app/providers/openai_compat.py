@@ -167,6 +167,55 @@ class OpenAICompatProvider:
             yield ProviderDelta(text_delta=content)
         yield ProviderDelta(usage=_usage(data.get("usage")), finish_reason=choice.get("finish_reason"), meta=meta)
 
+    # -- agent mode: tool calling --------------------------------------------------------------
+    async def chat(
+        self,
+        *,
+        messages: list[dict[str, Any]],
+        model: str | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        json_schema: dict[str, Any] | None = None,
+        max_tokens: int = 1200,
+        purpose: str = "agent",
+        meta: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """One non-streamed chat call: returns {message, content, usage, upstream_ms}."""
+        use_model = model or self.model
+        body: dict[str, Any] = {
+            "model": use_model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.2,
+            **self._extra_body(use_model),
+        }
+        if tools:
+            body["tools"] = tools
+            body["tool_choice"] = "auto"
+        if json_schema:
+            body["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": purpose.replace(":", "_"), "schema": json_schema, "strict": True},
+            }
+        url = self.base_url.rstrip("/") + "/chat/completions"
+        started = time.perf_counter()
+        try:
+            async with self._client() as client:
+                resp = await client.post(url, json=body, headers=self._headers())
+        except httpx.HTTPError as exc:
+            raise ProviderError("UPSTREAM_ERROR", str(exc)[:300], None, retryable=True) from exc
+        if resp.status_code >= 400:
+            raise self._error(resp.status_code, resp.text[:300], resp.headers)
+        data = resp.json()
+        choice = (data.get("choices") or [{}])[0]
+        message = dict(choice.get("message") or {})
+        message.pop("reasoning", None)  # gpt-oss returns its reasoning; it is not sent back
+        return {
+            "message": message,
+            "content": message.get("content") or "",
+            "usage": _usage(data.get("usage")),
+            "upstream_ms": int((time.perf_counter() - started) * 1000),
+        }
+
     # -- provider interface -------------------------------------------------------------------
     def structured_schema(self, schema: dict[str, Any] | None) -> dict[str, Any] | None:
         return schema

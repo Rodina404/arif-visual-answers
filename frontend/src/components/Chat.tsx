@@ -11,7 +11,18 @@ export function Logo({ className = 'h-7 w-7' }: { className?: string }) {
 }
 
 /** The visual each demo question is expected to produce, used as the card icon. */
-const DEMO_ICON: Record<string, string> = { q1: 'comparison', q2: 'chart', q3: 'table', q4: 'text', q5: 'flashcards', q6: 'diagram' }
+const DEMO_ICON: Record<string, string> = {
+  q1: 'comparison',
+  q2: 'chart',
+  q3: 'table',
+  q4: 'text',
+  q5: 'flashcards',
+  q6: 'diagram',
+  decisions: 'decision_cards',
+  owners: 'task_cards',
+  tasks: 'action_card',
+  email: 'text',
+}
 const GENERIC_ICON: IconName[] = ['file', 'lines', 'shield', 'spark']
 
 function SuggestionIcon({ id, i }: { id: string; i: number }) {

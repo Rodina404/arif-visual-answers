@@ -21,6 +21,8 @@ import { LangToggle } from './components/LangToggle'
 import { ProviderSwitch } from './components/ProviderSwitch'
 import type { Suggestion } from './components/QuestionBox'
 import { SourcePanel } from './components/SourcePanel'
+import { TasksView } from './components/TasksView'
+import { TypeIcon } from './components/TypeIcon'
 import { Warnings } from './components/Warnings'
 import { useI18n } from './i18n/context'
 import { DEMO_QUESTIONS } from './lib/format'
@@ -28,7 +30,10 @@ import { addToHistory, forgetHistory, loadHistory } from './lib/history'
 import { AppContext, type SourceRequest } from './state/context'
 import { useAnswer, type AnswerState } from './state/useAnswer'
 
-type View = 'ask' | 'compare'
+type View = 'ask' | 'compare' | 'tasks'
+const PATHS: Record<View, string> = { ask: '/', compare: '/compare', tasks: '/tasks' }
+// The SAMPLE meeting transcript's prepared questions (agent mode).
+const MEETING_QUESTIONS = ['decisions', 'owners', 'tasks', 'email']
 const PROVIDER_KEY = 'arif.provider'
 const ACTIVE_KEY = 'arif.activeDoc'
 
@@ -57,7 +62,10 @@ function storedProvider(): ProviderName | null {
   }
   return v === 'gemini' || v === 'groq' ? v : null
 }
-const viewFromPath = (): View => (window.location.pathname.replace(/\/+$/, '') === '/compare' ? 'compare' : 'ask')
+const viewFromPath = (): View => {
+  const path = window.location.pathname.replace(/\/+$/, '')
+  return path === '/compare' ? 'compare' : path === '/tasks' ? 'tasks' : 'ask'
+}
 
 export default function App() {
   const { t, lang, setDigits } = useI18n()
@@ -127,7 +135,7 @@ export default function App() {
   }, [readingKey])
 
   // Suggestions: the prepared demo questions for the CoT paper, otherwise generated from the document.
-  const suggestKey = doc && !doc.is_demo && doc.status === 'ready' ? `${doc.doc_id}:${lang}` : null
+  const suggestKey = doc && !doc.is_demo && !doc.demo && doc.status === 'ready' ? `${doc.doc_id}:${lang}` : null
   useEffect(() => {
     if (!suggestKey) return
     const [docId, l] = suggestKey.split(':')
@@ -143,15 +151,17 @@ export default function App() {
   const suggestions: Suggestion[] = useMemo(() => {
     if (!doc) return []
     if (doc.is_demo) return DEMO_QUESTIONS.map((id) => ({ id, text: t(`q.${id}`), title: t(`q.short.${id}`) }))
+    if (doc.demo === 'meeting')
+      return MEETING_QUESTIONS.map((id) => ({ id, text: t(`q.meeting.${id}`), title: t(`q.meeting.short.${id}`) }))
     if (suggested?.key !== suggestKey) return []
     return suggested.questions.map((text, i) => ({ id: `g${i + 1}`, text }))
   }, [doc, suggested, suggestKey, t])
-  const suggestionsLoading = Boolean(doc && !doc.is_demo && (doc.status === 'reading' || suggested?.key !== suggestKey))
+  const suggestionsLoading = Boolean(doc && !doc.is_demo && !doc.demo && (doc.status === 'reading' || suggested?.key !== suggestKey))
 
   const go = (v: View) => {
     setView(v)
     setMenuOpen(false)
-    window.history.pushState(null, '', v === 'compare' ? '/compare' : '/')
+    window.history.pushState(null, '', PATHS[v])
   }
 
   const setProvider = (p: ProviderName) => {
@@ -252,7 +262,7 @@ export default function App() {
         <span aria-hidden className="h-6 w-px shrink-0 bg-line" />
         <span className="flex min-w-0 items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-strong max-sm:hidden">
           <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-          <span className="truncate">{t(view === 'compare' ? 'tab.compare' : 'widget.mode')}</span>
+          <span className="truncate">{t(view === 'ask' ? 'widget.mode' : `tab.${view}`)}</span>
         </span>
         {config?.mock ? (
           <span data-testid="mock-badge" title={t('notice.mock')} className="shrink-0 rounded-full bg-hot px-2 py-0.5 text-[10px] font-bold text-white">
@@ -261,6 +271,17 @@ export default function App() {
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-0.5 text-muted">
+        <button
+          type="button"
+          data-testid="tasks-button"
+          onClick={() => go(view === 'tasks' ? 'ask' : 'tasks')}
+          aria-label={t('tab.tasks')}
+          aria-pressed={view === 'tasks'}
+          title={t('tab.tasks')}
+          className={`flex h-9 w-9 items-center justify-center rounded-full hover:bg-raised hover:text-ink ${view === 'tasks' ? 'bg-accent-soft text-accent-strong' : ''}`}
+        >
+          <TypeIcon type="task_cards" className="h-[18px] w-[18px]" />
+        </button>
         <button
           type="button"
           data-testid="new-chat"
@@ -296,17 +317,17 @@ export default function App() {
       <Menu open={menuOpen} onClose={closeMenu}>
         <MenuRow label={t('widget.view')}>
           <nav aria-label="views" className="flex rounded-full bg-raised p-0.5">
-            {(['ask', 'compare'] as const).map((v) => (
+            {(['ask', 'compare', 'tasks'] as const).map((v) => (
               <a
                 key={v}
-                href={v === 'compare' ? '/compare' : '/'}
+                href={PATHS[v]}
                 data-testid={`tab-${v}`}
                 aria-current={view === v ? 'page' : undefined}
                 onClick={(e) => {
                   e.preventDefault()
                   go(v)
                 }}
-                className={`flex-1 rounded-full px-3 py-1 text-center text-sm font-semibold no-underline ${view === v ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink'}`}
+                className={`flex-1 rounded-full px-2 py-1 text-center text-sm font-semibold no-underline ${view === v ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink'}`}
               >
                 {t(`tab.${v}`)}
               </a>
@@ -372,7 +393,7 @@ export default function App() {
         ) : null
       ) : (
         <div ref={turnRef} className="min-w-0 scroll-mt-4">
-          <Turn question={state.question} note={t(last?.textOnly ? 'widget.noteText' : 'widget.note')}>
+          <Turn question={state.question} note={t(state.agent ? 'widget.noteAgent' : last?.textOnly ? 'widget.noteText' : 'widget.note')}>
             <AnswerView state={state} onRetry={last ? () => run(last.question, last.textOnly) : undefined} />
           </Turn>
         </div>
@@ -415,7 +436,7 @@ export default function App() {
               ) : null}
               {doc?.status === 'reading' ? <p className="m-0 text-xs font-semibold text-warn">{t('docs.readingLong')}</p> : null}
               {doc ? <Warnings items={doc.warnings} /> : null}
-              {!doc ? (
+              {!doc && view !== 'tasks' ? (
                 <>
                   {welcome}
                   <label
@@ -436,7 +457,9 @@ export default function App() {
                   </label>
                 </>
               ) : null}
-              {view === 'ask' ? (
+              {view === 'tasks' ? (
+                <TasksView />
+              ) : view === 'ask' ? (
                 conversation
               ) : (
                 <BeforeAfter

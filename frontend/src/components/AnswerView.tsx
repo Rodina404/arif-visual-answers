@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from 'react'
 import { REGISTRY } from '../catalog/registry'
-import { isComponentType, type ChartProps } from '../catalog/schemas'
+import { AGENT_TYPES, isComponentType, type ChartProps } from '../catalog/schemas'
 import { useI18n } from '../i18n/context'
 import { errorMessage } from '../lib/format'
 import { keyStat, type Stat } from '../lib/keyNumbers'
@@ -78,7 +78,8 @@ export function AnswerView({ state, onRetry, showDrawer = true }: { state: Answe
   const thinking = state.phase === 'thinking' || (state.phase === 'streaming' && !state.text)
   // Lead with the visual: the first component's title becomes the takeaway headline.
   const first = state.slots[0]
-  const lead = first?.state === 'ready' ? (first.props as { title: string; lang: 'ar' | 'en' }) : null
+  // Agent cards (tasks, decisions, proposals) keep their own titles: the reply text leads instead.
+  const lead = first?.state === 'ready' && !AGENT_TYPES.has(first.type) ? (first.props as { title: string; lang: 'ar' | 'en' }) : null
   const chart = state.slots.find((s) => s.state === 'ready' && s.type === 'chart')
   const chartProps = chart && chart.state === 'ready' ? (chart.props as ChartProps) : null
   const key = chartProps ? keyStat(chartProps) : null
@@ -125,7 +126,7 @@ export function AnswerView({ state, onRetry, showDrawer = true }: { state: Answe
       {state.metrics ? (
         <div className="grid gap-2">
           <MetricsStrip m={state.metrics} />
-          {showDrawer ? <MetricsDrawer m={state.metrics} slots={state.slots} /> : null}
+          {showDrawer ? <MetricsDrawer m={state.metrics} slots={state.slots} tools={state.tools} /> : null}
         </div>
       ) : null}
     </div>

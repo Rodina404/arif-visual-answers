@@ -39,6 +39,9 @@
   --color-band-quiz: #a8365e;
   --color-band-flashcards: #1c6a85;
   --color-band-text: #4a5562;
+  --color-band-task_cards: #2459a6;
+  --color-band-decision_cards: #7a2f86;
+  --color-band-action_card: #9a4a0b;
   --shadow-card: 0 1px 2px rgb(24 20 48 / 0.06), 0 8px 24px -12px rgb(24 20 48 / 0.18);
   --shadow-float: 0 2px 6px rgb(24 20 48 / 0.08), 0 16px 40px -16px rgb(24 20 48 / 0.25);
 }

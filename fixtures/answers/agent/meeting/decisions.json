@@ -1,0 +1,80 @@
+{
+  "steps": [
+    {
+      "tool_calls": [
+        {
+          "name": "extract_items",
+          "arguments": {
+            "kind": "decisions"
+          }
+        }
+      ]
+    }
+  ],
+  "extract": {
+    "decisions": [
+      {
+        "text": "الـ launch هيكون يوم 15 ديسمبر بدل 1 ديسمبر",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s8"
+        ]
+      },
+      {
+        "text": "نعمل closed beta لـ 50 مستخدم بس",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s11"
+        ]
+      },
+      {
+        "text": "نأجل الـ payments للـ version 2",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s13"
+        ]
+      }
+    ],
+    "action_items": [
+      {
+        "text": "يصلّح مشكلة الـ SSO login",
+        "owner": "كريم",
+        "due_date": "20 نوفمبر",
+        "sentence_ids": [
+          "s15"
+        ]
+      },
+      {
+        "text": "تسلّم الـ onboarding designs الجديدة",
+        "owner": "سارة",
+        "due_date": "25 نوفمبر",
+        "sentence_ids": [
+          "s16"
+        ]
+      },
+      {
+        "text": "يجهز test plan للـ closed beta",
+        "owner": "عمر",
+        "due_date": "1 ديسمبر",
+        "sentence_ids": [
+          "s17"
+        ]
+      },
+      {
+        "text": "تبعت الـ beta invites للـ 50 مستخدم",
+        "owner": "منى",
+        "due_date": "5 ديسمبر",
+        "sentence_ids": [
+          "s18"
+        ]
+      }
+    ]
+  },
+  "final": {
+    "ar": "خدتوا 3 قرارات: الـ launch اتأجل لـ 15 ديسمبر، الـ closed beta هتبقى لـ 50 مستخدم بس، والـ payments اتأجلت للـ version 2.",
+    "en": "The meeting made 3 decisions: the launch moves to 15 December, the closed beta is limited to 50 users, and payments move to version 2."
+  }
+}

@@ -19,7 +19,7 @@ from .base import ProviderDelta, ProviderDocHandle, ProviderError, Usage
 
 CHUNK = 40
 TOKENS_PER_PAGE = 560  # measured with count_tokens on cot.pdf (24,081 tokens / 43 pages)
-_SAFE_NAME = re.compile(r"^[a-z0-9_]+/[a-z0-9_]+$")
+_SAFE_NAME = re.compile(r"^[a-z0-9_]+/[a-z0-9_]+$")  # e.g. cot/q1, error/busy, agent/generic
 
 
 class MockProvider:
@@ -168,6 +168,63 @@ class MockProvider:
         text = self._fixture_path(doc, question, lang, "txt", None).read_text(encoding="utf-8")
         async for d in self._replay(text, doc):
             yield d
+
+    # -- agent mode ------------------------------------------------------------------------------
+    def _agent_fixture(self, meta: dict[str, Any]) -> dict[str, Any]:
+        """fixtures/answers/agent/<slug>/<qid>.json: the model's tool calls step by step, plus what
+        extract_items returns. Chosen like answers (question match), or forced with X-Mock-Fixture."""
+        forced = meta.get("mock_fixture")
+        if forced and _SAFE_NAME.match(forced) and forced.startswith("agent/"):
+            path = self.root / f"{forced}.json"
+        else:
+            handle: ProviderDocHandle = meta["doc"]
+            slug = handle.data.get("slug", "generic")
+            qid = self.question_id(slug, meta.get("question", ""))
+            path = self.root / "agent" / slug / f"{qid}.json"
+            if not qid or not path.exists():
+                path = self.root / "agent" / "generic" / "default.json"
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    async def chat(
+        self,
+        *,
+        messages: list[dict[str, Any]],
+        model: str | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        json_schema: dict[str, Any] | None = None,
+        max_tokens: int = 1200,
+        purpose: str = "agent",
+        meta: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        meta = meta or {}
+        fx = self._agent_fixture(meta)
+        await asyncio.sleep(self.settings.mock_ttft_ms / 1000)
+        usage = Usage(input=sum(len(str(m.get("content", ""))) for m in messages) // 3, output=120)
+        if purpose.startswith("extract:"):
+            items = fx.get("extract", {}).get(purpose.split(":", 1)[1], [])
+            content = json.dumps({"items": items}, ensure_ascii=False)
+            return {"message": {"role": "assistant", "content": content}, "content": content, "usage": usage}
+        step = sum(1 for m in messages if m.get("role") == "assistant")
+        steps = fx.get("steps", [])
+        spec = steps[step] if step < len(steps) else {"content": fx.get("final", {})}
+        calls = spec.get("tool_calls") if tools else None
+        if calls:
+            message = {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": f"call_{step}_{i}",
+                        "type": "function",
+                        "function": {"name": c["name"], "arguments": json.dumps(c["arguments"], ensure_ascii=False)},
+                    }
+                    for i, c in enumerate(calls)
+                ],
+            }
+            return {"message": message, "content": "", "usage": usage}
+        final = spec.get("content") or fx.get("final", {})
+        text = final.get(meta.get("lang", "en"), "") if isinstance(final, dict) else str(final)
+        return {"message": {"role": "assistant", "content": text}, "content": text, "usage": usage}
 
     async def count_tokens(self, doc: ProviderDocHandle) -> int:
         return doc.data.get("pages", 1) * TOKENS_PER_PAGE

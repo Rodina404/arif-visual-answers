@@ -1,0 +1,22 @@
+{
+  "steps": [
+    {
+      "tool_calls": [
+        {
+          "name": "extract_items",
+          "arguments": {
+            "kind": "action_items"
+          }
+        }
+      ]
+    }
+  ],
+  "extract": {
+    "action_items": [],
+    "decisions": []
+  },
+  "final": {
+    "ar": "ملقتش action items أو قرارات واضحة في الملف ده.",
+    "en": "I couldn't find clear action items or decisions in this document."
+  }
+}

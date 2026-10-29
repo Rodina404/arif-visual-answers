@@ -1,7 +1,7 @@
 import { useCallback, useReducer, useRef } from 'react'
 import { HttpError, streamSSE, type SSEEvent } from '../api/sse'
 import { COMPONENT_SCHEMAS, isComponentType, type ComponentType } from '../catalog/schemas'
-import type { ProviderName } from '../api/client'
+import { clientId, type ProviderName } from '../api/client'
 import type { Lang } from '../i18n/context'
 
 export interface Verification {
@@ -42,6 +42,17 @@ export interface Metrics {
   }
 }
 
+/** One agent tool call, as shown in the Execution audit. */
+export interface ToolCall {
+  id: string
+  name: string
+  step: number
+  input: string
+  status: 'running' | 'ok' | 'proposed' | 'error'
+  durationMs?: number
+  summary?: string
+}
+
 export interface AnswerState {
   phase: 'idle' | 'thinking' | 'streaming' | 'done' | 'error'
   question: string
@@ -53,6 +64,8 @@ export interface AnswerState {
   error?: { code: string; message: string; status?: number }
   cached: boolean
   startedAt: number
+  agent: boolean
+  tools: ToolCall[]
 }
 
 const initial: AnswerState = {
@@ -64,6 +77,8 @@ const initial: AnswerState = {
   warnings: [],
   cached: false,
   startedAt: 0,
+  agent: false,
+  tools: [],
 }
 
 // Drops the user should hear about. Silent ones are policy decisions (restraint), not failures.
@@ -101,7 +116,27 @@ function reduce(state: AnswerState, a: Action): AnswerState {
   const d = data as Record<string, unknown>
   switch (event) {
     case 'RUN_STARTED':
-      return { ...state, cached: Boolean(d.cached) }
+      return { ...state, cached: Boolean(d.cached), agent: Boolean(d.agent) }
+    case 'TOOL_CALL_START': {
+      const call: ToolCall = {
+        id: String(d.tool_call_id),
+        name: String(d.tool_call_name),
+        step: Number(d.step ?? 0),
+        input: String(d.input ?? ''),
+        status: 'running',
+      }
+      return { ...state, phase: 'streaming', tools: [...state.tools.filter((c) => c.id !== call.id), call] }
+    }
+    case 'TOOL_CALL_RESULT': {
+      const id = String(d.tool_call_id)
+      const status = (['ok', 'proposed', 'error'].includes(String(d.status)) ? d.status : 'error') as ToolCall['status']
+      return {
+        ...state,
+        tools: state.tools.map((c) =>
+          c.id === id ? { ...c, status, durationMs: Number(d.duration_ms ?? 0), summary: String(d.summary ?? '') } : c,
+        ),
+      }
+    }
     case 'TEXT_MESSAGE_CONTENT':
       return { ...state, phase: 'streaming', text: state.text + String(d.delta ?? '') }
     case 'COMPONENT_PLANNED': {
@@ -189,7 +224,7 @@ export function useAnswer() {
         o.endpoint ?? '/api/ask',
         { doc_id: o.docId, question: o.question, lang: o.lang, text_only: Boolean(o.textOnly), provider: o.provider },
         (ev) => dispatch({ kind: 'event', ev }),
-        { signal: ctrl.signal },
+        { signal: ctrl.signal, headers: { 'X-Client-Id': clientId() } },
       )
     } catch (err) {
       if (ctrl.signal.aborted) return

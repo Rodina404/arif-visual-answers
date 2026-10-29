@@ -1,4 +1,5 @@
 import { lazy, type ComponentType as ReactComponent } from 'react'
+import { ActionCard, DecisionCards, TaskCards } from '../components/AgentCards'
 import { ComparisonCard } from '../components/ComparisonCard'
 import { DataTable } from '../components/DataTable'
 import { DiagramView } from '../components/DiagramView'
@@ -33,4 +34,7 @@ export const REGISTRY: Record<ComponentType, ReactComponent<RendererProps>> = {
   formula: FormulaCard as ReactComponent<RendererProps>,
   quiz: QuizCard as ReactComponent<RendererProps>,
   flashcards: Flashcards as ReactComponent<RendererProps>,
+  task_cards: TaskCards as ReactComponent<RendererProps>,
+  decision_cards: DecisionCards as ReactComponent<RendererProps>,
+  action_card: ActionCard as ReactComponent<RendererProps>,
 }

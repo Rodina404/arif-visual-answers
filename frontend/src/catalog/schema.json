@@ -2036,6 +2036,409 @@
       ],
       "title": "FlashcardsComponent",
       "type": "object"
+    },
+    "task_cards": {
+      "$defs": {
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        },
+        "TaskItem": {
+          "additionalProperties": false,
+          "properties": {
+            "title": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Title",
+              "type": "string"
+            },
+            "owner": {
+              "maxLength": 60,
+              "minLength": 1,
+              "title": "Owner",
+              "type": "string"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Due Date"
+            },
+            "citation": {
+              "$ref": "#/$defs/Citation"
+            }
+          },
+          "required": [
+            "title",
+            "owner",
+            "citation"
+          ],
+          "title": "TaskItem",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Action items found in the document (who does what by when), each backed by its sentence.",
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "task_cards",
+          "title": "Type",
+          "type": "string"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/TaskItem"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Tasks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "tasks"
+      ],
+      "title": "TaskCardsComponent",
+      "type": "object"
+    },
+    "decision_cards": {
+      "$defs": {
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        },
+        "DecisionItem": {
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Text",
+              "type": "string"
+            },
+            "citation": {
+              "$ref": "#/$defs/Citation"
+            }
+          },
+          "required": [
+            "text",
+            "citation"
+          ],
+          "title": "DecisionItem",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "decision_cards",
+          "title": "Type",
+          "type": "string"
+        },
+        "decisions": {
+          "items": {
+            "$ref": "#/$defs/DecisionItem"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Decisions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "decisions"
+      ],
+      "title": "DecisionCardsComponent",
+      "type": "object"
+    },
+    "action_card": {
+      "$defs": {
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        },
+        "ProposedAction": {
+          "additionalProperties": false,
+          "description": "A proposal waiting for the user: nothing happens until they approve it.",
+          "properties": {
+            "proposal_id": {
+              "pattern": "^p[0-9a-f]{12}$",
+              "title": "Proposal Id",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "create_task",
+                "draft_message"
+              ],
+              "title": "Kind",
+              "type": "string"
+            },
+            "title": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Title",
+              "type": "string"
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "maxLength": 60,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner"
+            },
+            "due_date": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Due Date"
+            },
+            "to": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "To"
+            },
+            "body": {
+              "anyOf": [
+                {
+                  "maxLength": 1200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Body"
+            },
+            "citation": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Citation"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "flags": {
+              "items": {
+                "enum": [
+                  "UNVERIFIED_SOURCE",
+                  "FROM_HIDDEN_TEXT",
+                  "NOT_REQUESTED"
+                ],
+                "type": "string"
+              },
+              "maxItems": 3,
+              "title": "Flags",
+              "type": "array"
+            }
+          },
+          "required": [
+            "proposal_id",
+            "kind",
+            "title"
+          ],
+          "title": "ProposedAction",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "action_card",
+          "title": "Type",
+          "type": "string"
+        },
+        "actions": {
+          "items": {
+            "$ref": "#/$defs/ProposedAction"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Actions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "actions"
+      ],
+      "title": "ActionCardComponent",
+      "type": "object"
     }
   }
 }

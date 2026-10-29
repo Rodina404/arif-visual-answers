@@ -14,6 +14,7 @@ export interface UploadedDoc {
   status: 'reading' | 'ready'
   language: string
   is_demo: boolean
+  demo?: 'cot' | 'meeting' | null
   ocr_pages: number[]
   created_at: number
   warnings: DocWarning[]
@@ -100,4 +101,53 @@ export async function deleteDocument(docId: string): Promise<void> {
 
 export async function getSuggestions(docId: string, lang: string): Promise<{ questions: string[]; generated: boolean }> {
   return json(await fetch(`/api/documents/${encodeURIComponent(docId)}/suggestions?lang=${lang}`))
+}
+
+// -- actions: a proposal becomes a task (or a saved draft) only through approveAction -----------
+
+export interface ActionEdits {
+  title?: string
+  owner?: string
+  due_date?: string
+  to?: string
+  body?: string
+}
+
+export interface SavedItem {
+  id: string
+  kind?: 'task' | 'draft'
+  proposal_id: string
+  doc_id: string
+  filename: string
+  title: string
+  owner?: string
+  due_date?: string | null
+  to?: string
+  body?: string
+  sent?: boolean
+  citation?: { page: number; quote: string } | null
+  flags: string[]
+  edited: boolean
+  approved_at: number
+}
+
+export async function approveAction(proposalId: string, edits: ActionEdits = {}): Promise<{ status: string; item: SavedItem }> {
+  return json(
+    await fetch(
+      `/api/actions/${encodeURIComponent(proposalId)}/approve`,
+      owned({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(edits) }),
+    ),
+  )
+}
+
+export async function rejectAction(proposalId: string): Promise<{ status: string }> {
+  return json(await fetch(`/api/actions/${encodeURIComponent(proposalId)}/reject`, owned({ method: 'POST' })))
+}
+
+export async function listTasks(): Promise<{ tasks: SavedItem[]; drafts: SavedItem[] }> {
+  return json(await fetch('/api/tasks', owned()))
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  await json(await fetch(`/api/tasks/${encodeURIComponent(id)}`, owned({ method: 'DELETE' })))
 }

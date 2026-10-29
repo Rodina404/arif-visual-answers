@@ -1,0 +1,98 @@
+{
+  "steps": [
+    {
+      "tool_calls": [
+        {
+          "name": "extract_items",
+          "arguments": {
+            "kind": "decisions"
+          }
+        },
+        {
+          "name": "extract_items",
+          "arguments": {
+            "kind": "action_items"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "draft_message",
+          "arguments": {
+            "to": "Nile Learning team",
+            "subject": "Launch plan: decisions and owners",
+            "body": "Hi team,\n\nDecisions: the launch moves to 15 December; the closed beta is limited to 50 users; payments move to version 2.\n\nOwners: Karim - SSO login fix by 20 November. Sara - onboarding designs by 25 November. Omar - closed beta test plan by 1 December. Mona - beta invites on 5 December.\n\nThanks,\nMona"
+          }
+        }
+      ]
+    }
+  ],
+  "extract": {
+    "decisions": [
+      {
+        "text": "الـ launch هيكون يوم 15 ديسمبر بدل 1 ديسمبر",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s8"
+        ]
+      },
+      {
+        "text": "نعمل closed beta لـ 50 مستخدم بس",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s11"
+        ]
+      },
+      {
+        "text": "نأجل الـ payments للـ version 2",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s13"
+        ]
+      }
+    ],
+    "action_items": [
+      {
+        "text": "يصلّح مشكلة الـ SSO login",
+        "owner": "كريم",
+        "due_date": "20 نوفمبر",
+        "sentence_ids": [
+          "s15"
+        ]
+      },
+      {
+        "text": "تسلّم الـ onboarding designs الجديدة",
+        "owner": "سارة",
+        "due_date": "25 نوفمبر",
+        "sentence_ids": [
+          "s16"
+        ]
+      },
+      {
+        "text": "يجهز test plan للـ closed beta",
+        "owner": "عمر",
+        "due_date": "1 ديسمبر",
+        "sentence_ids": [
+          "s17"
+        ]
+      },
+      {
+        "text": "تبعت الـ beta invites للـ 50 مستخدم",
+        "owner": "منى",
+        "due_date": "5 ديسمبر",
+        "sentence_ids": [
+          "s18"
+        ]
+      }
+    ]
+  },
+  "final": {
+    "ar": "كتبتلك draft للإيميل فيه القرارات ومين مسؤول عن إيه. ماتبعتش حاجة: راجعه ووافق عليه لو تمام.",
+    "en": "I drafted an email with the decisions and the owners. Nothing was sent: review it and approve it if it looks right."
+  }
+}

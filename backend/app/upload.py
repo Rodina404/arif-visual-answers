@@ -9,6 +9,7 @@ import json
 import re
 import threading
 import time
+import unicodedata
 import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -117,6 +118,30 @@ def detect_language(text: str) -> str:
     return "ar" if ar > la else "en"
 
 
+# Arabic presentation forms (U+FB50-FDFF, U+FE70-FEFF): some PDF producers (Chromium, Word) draw shaped
+# glyphs in visual order, so pdfplumber returns each Arabic line reversed with contextual letter forms.
+_PRESENTATION = re.compile("[\ufb50-\ufdff\ufe70-\ufeff]")
+# Left-to-right runs inside a right-to-left line: Latin words and numbers, with the spaces and
+# punctuation between them, keep their own order.
+_LTR_RUN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9 .,:%/_+\-']*[A-Za-z0-9%])?")
+_MIRROR = str.maketrans("()[]{}<>", ")(][}{><")
+# Fonts often map Arabic glyphs to their Persian look-alikes (yeh, heh, kaf).
+_PERSIAN = str.maketrans({"ی": "ي", "ھ": "ه", "ہ": "ه", "ک": "ك"})
+
+
+def logical_line(line: str) -> str:
+    """One visually ordered Arabic line -> logical order (base letters, LTR runs kept as they read)."""
+    if not _PRESENTATION.search(line):
+        return line
+    # Reverse before decomposing: a lam-alef ligature is one glyph and must keep its inner order.
+    flat = unicodedata.normalize("NFKC", line[::-1]).translate(_PERSIAN).translate(_MIRROR)
+    return _LTR_RUN.sub(lambda m: m.group(0)[::-1].translate(_MIRROR), flat)
+
+
+def logical_text(text: str) -> str:
+    return "\n".join(logical_line(line) for line in text.split("\n"))
+
+
 def _luminance(color: Any) -> float | None:
     if color is None or isinstance(color, str):
         return None
@@ -160,14 +185,14 @@ def extract_pages(pdf: Any) -> list[PageText]:
         cb = page.cropbox
         mb = page.mediabox
         crop = (cb[0] - mb[0], mb[3] - cb[3], cb[2] - mb[0], mb[3] - cb[1])
-        all_text = page.extract_text(x_tolerance=X_TOLERANCE) or ""
+        all_text = logical_text(page.extract_text(x_tolerance=X_TOLERANCE) or "")
         reasons = [hidden_reason(c, crop) for c in page.chars if c["text"].strip()]
         tiny = reasons.count("tiny")
         sneaky = reasons.count("white") + reasons.count("offpage")
         visible_page = page.filter(
             lambda obj, crop=crop: obj.get("object_type") != "char" or is_visible_char(obj, crop)
         )
-        visible_text = visible_page.extract_text(x_tolerance=X_TOLERANCE) or ""
+        visible_text = logical_text(visible_page.extract_text(x_tolerance=X_TOLERANCE) or "")
         pages.append(
             PageText(
                 number=i,

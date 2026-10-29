@@ -107,6 +107,39 @@ export const FlashcardsComponent = z.strictObject({
   cards: z.array(Flashcard).min(3).max(8),
 })
 
+// Agent components: built by the server from tool results (never by the model's answer schema).
+export const TaskItem = z.strictObject({ title: s(120, 1), owner: s(60, 1), due_date: s(40).optional(), citation: Citation })
+export const TaskCardsComponent = z.strictObject({
+  ...base,
+  type: z.literal('task_cards'),
+  tasks: z.array(TaskItem).min(1).max(8),
+})
+
+export const DecisionItem = z.strictObject({ text: s(200, 1), citation: Citation })
+export const DecisionCardsComponent = z.strictObject({
+  ...base,
+  type: z.literal('decision_cards'),
+  decisions: z.array(DecisionItem).min(1).max(8),
+})
+
+export const ActionFlag = z.enum(['UNVERIFIED_SOURCE', 'FROM_HIDDEN_TEXT', 'NOT_REQUESTED'])
+export const ProposedAction = z.strictObject({
+  proposal_id: z.string().regex(/^p[0-9a-f]{12}$/),
+  kind: z.enum(['create_task', 'draft_message']),
+  title: s(120, 1),
+  owner: s(60).optional(),
+  due_date: s(40).optional(),
+  to: s(120).optional(),
+  body: s(1200).optional(),
+  citation: Citation.optional(),
+  flags: z.array(ActionFlag).max(3).optional(),
+})
+export const ActionCardComponent = z.strictObject({
+  ...base,
+  type: z.literal('action_card'),
+  actions: z.array(ProposedAction).min(1).max(6),
+})
+
 export const COMPONENT_SCHEMAS = {
   text: TextComponent,
   chart: ChartComponent,
@@ -117,7 +150,13 @@ export const COMPONENT_SCHEMAS = {
   formula: FormulaComponent,
   quiz: QuizComponent,
   flashcards: FlashcardsComponent,
+  task_cards: TaskCardsComponent,
+  decision_cards: DecisionCardsComponent,
+  action_card: ActionCardComponent,
 } as const
+
+/** Types the agent produces; they never lead the answer as a headline. */
+export const AGENT_TYPES = new Set<string>(['task_cards', 'decision_cards', 'action_card'])
 
 export type ComponentType = keyof typeof COMPONENT_SCHEMAS
 export type CitationT = z.infer<typeof Citation>
@@ -130,6 +169,10 @@ export type DiagramProps = z.infer<typeof DiagramComponent>
 export type FormulaProps = z.infer<typeof FormulaComponent>
 export type QuizProps = z.infer<typeof QuizComponent>
 export type FlashcardsProps = z.infer<typeof FlashcardsComponent>
+export type TaskCardsProps = z.infer<typeof TaskCardsComponent>
+export type DecisionCardsProps = z.infer<typeof DecisionCardsComponent>
+export type ActionCardProps = z.infer<typeof ActionCardComponent>
+export type ProposedActionT = z.infer<typeof ProposedAction>
 
 export function isComponentType(t: string): t is ComponentType {
   return Object.hasOwn(COMPONENT_SCHEMAS, t)

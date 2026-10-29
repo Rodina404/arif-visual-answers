@@ -1,0 +1,69 @@
+{
+  "steps": [
+    {
+      "tool_calls": [
+        {
+          "name": "search_document",
+          "arguments": {
+            "query": "launch"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "search_document",
+          "arguments": {
+            "query": "launch"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "search_document",
+          "arguments": {
+            "query": "launch"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "search_document",
+          "arguments": {
+            "query": "launch"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "search_document",
+          "arguments": {
+            "query": "launch"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "search_document",
+          "arguments": {
+            "query": "launch"
+          }
+        }
+      ]
+    }
+  ],
+  "extract": {},
+  "final": {
+    "ar": "",
+    "en": ""
+  }
+}

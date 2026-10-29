@@ -30,7 +30,7 @@ test-backend:
 	cd backend && $(UV) run pytest -q
 
 schema:
-	cd backend && $(UV) run python scripts/export_schema.py
+	cd backend && PYTHONPATH=. $(UV) run python scripts/export_schema.py
 
 fixtures-pdfs:
 	cd backend && $(UV) run python scripts/make_injection_pdf.py

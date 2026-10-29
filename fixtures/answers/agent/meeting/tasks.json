@@ -1,0 +1,128 @@
+{
+  "steps": [
+    {
+      "tool_calls": [
+        {
+          "name": "extract_items",
+          "arguments": {
+            "kind": "action_items"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "create_task",
+          "arguments": {
+            "title": "يصلّح مشكلة الـ SSO login",
+            "owner": "كريم",
+            "due_date": "20 نوفمبر",
+            "sentence_ids": [
+              "s15"
+            ]
+          }
+        },
+        {
+          "name": "create_task",
+          "arguments": {
+            "title": "تسلّم الـ onboarding designs الجديدة",
+            "owner": "سارة",
+            "due_date": "25 نوفمبر",
+            "sentence_ids": [
+              "s16"
+            ]
+          }
+        },
+        {
+          "name": "create_task",
+          "arguments": {
+            "title": "يجهز test plan للـ closed beta",
+            "owner": "عمر",
+            "due_date": "1 ديسمبر",
+            "sentence_ids": [
+              "s17"
+            ]
+          }
+        },
+        {
+          "name": "create_task",
+          "arguments": {
+            "title": "تبعت الـ beta invites للـ 50 مستخدم",
+            "owner": "منى",
+            "due_date": "5 ديسمبر",
+            "sentence_ids": [
+              "s18"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "extract": {
+    "decisions": [
+      {
+        "text": "الـ launch هيكون يوم 15 ديسمبر بدل 1 ديسمبر",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s8"
+        ]
+      },
+      {
+        "text": "نعمل closed beta لـ 50 مستخدم بس",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s11"
+        ]
+      },
+      {
+        "text": "نأجل الـ payments للـ version 2",
+        "owner": null,
+        "due_date": null,
+        "sentence_ids": [
+          "s13"
+        ]
+      }
+    ],
+    "action_items": [
+      {
+        "text": "يصلّح مشكلة الـ SSO login",
+        "owner": "كريم",
+        "due_date": "20 نوفمبر",
+        "sentence_ids": [
+          "s15"
+        ]
+      },
+      {
+        "text": "تسلّم الـ onboarding designs الجديدة",
+        "owner": "سارة",
+        "due_date": "25 نوفمبر",
+        "sentence_ids": [
+          "s16"
+        ]
+      },
+      {
+        "text": "يجهز test plan للـ closed beta",
+        "owner": "عمر",
+        "due_date": "1 ديسمبر",
+        "sentence_ids": [
+          "s17"
+        ]
+      },
+      {
+        "text": "تبعت الـ beta invites للـ 50 مستخدم",
+        "owner": "منى",
+        "due_date": "5 ديسمبر",
+        "sentence_ids": [
+          "s18"
+        ]
+      }
+    ]
+  },
+  "final": {
+    "ar": "جهزتلك 4 tasks من الـ action items، ومحدش فيهم اتسجل لسه: كل واحدة مستنية موافقتك.",
+    "en": "I prepared 4 tasks from the action items. None is saved yet: each one is waiting for your approval."
+  }
+}

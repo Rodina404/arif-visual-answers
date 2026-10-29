@@ -1,0 +1,24 @@
+{
+  "steps": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_task",
+          "arguments": {
+            "title": "يصلّح مشكلة الـ SSO login",
+            "owner": "كريم",
+            "due_date": "20 نوفمبر",
+            "sentence_ids": [
+              "s15"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "extract": {},
+  "final": {
+    "ar": "كريم مسؤول عن الـ SSO login.",
+    "en": "Karim owns the SSO login fix."
+  }
+}

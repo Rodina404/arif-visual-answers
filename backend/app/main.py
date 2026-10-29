@@ -18,7 +18,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from . import retrieval, security
+from . import agent, retrieval, security
+from .actions import ActionStore
 from .cache import AnswerCache
 from .config import Settings, get_settings
 from .metrics import MetricsLog
@@ -40,6 +41,17 @@ class AskRequest(BaseModel):
     lang: Literal["ar", "en"] = "ar"
     text_only: bool = False
     provider: Literal["gemini", "groq"] | None = None  # the UI's provider switch; default is PROVIDER
+
+
+class ApproveRequest(BaseModel):
+    """Optional edits made on the action card before approving."""
+
+    model_config = ConfigDict(extra="forbid")
+    title: str | None = Field(default=None, min_length=1, max_length=120)
+    owner: str | None = Field(default=None, min_length=1, max_length=60)
+    due_date: str | None = Field(default=None, max_length=40)
+    to: str | None = Field(default=None, max_length=120)
+    body: str | None = Field(default=None, max_length=1200)
 
 
 _CLIENT_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
@@ -69,13 +81,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     provider = provider_for(None)
     cache = AnswerCache(settings.data_dir / "cache.sqlite")
+    actions = ActionStore(settings.data_dir / "agent.sqlite")
     small = SmallLLM(settings, cache)
     ocr_tasks: dict[str, asyncio.Task[None]] = {}
     try:
         index = json.loads((settings.fixtures_dir / "answers" / "index.json").read_text(encoding="utf-8"))
         demo_shas = {sha for sha, slug in index.get("docs", {}).items() if slug == "cot"}
+        # Prepared demo documents get their own suggested questions in the UI.
+        demo_slugs = {sha: slug for sha, slug in index.get("docs", {}).items() if slug in ("cot", "meeting")}
     except (OSError, ValueError):
-        demo_shas = set()
+        demo_shas, demo_slugs = set(), {}
     metrics = MetricsLog()
     # (provider name, doc_id) -> handle; each provider prepares a document its own way.
     handles: dict[tuple[str, str], ProviderDocHandle] = {}
@@ -102,6 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         task.cancel()
         cache.close()
+        actions.close()
 
     app = FastAPI(title="Arif Visual Answers", lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.settings = settings
@@ -188,6 +204,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "status": doc.status,
             "language": doc.language,
             "is_demo": doc.sha256 in demo_shas,
+            "demo": demo_slugs.get(doc.sha256),
             "ocr_pages": [p.number for p in doc.pages if p.ocr],
             "created_at": doc.created_at,
             "warnings": doc.warnings(),
@@ -198,6 +215,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             texts = await asyncio.to_thread(ocr_pages, data, doc.needs_ocr)
             store.apply_ocr(doc, texts)
             retrieval.forget(doc.sha256)
+            agent.forget(doc.sha256)
             log.info("doc %s: OCR on %d pages", doc.doc_id, len(texts))
         except Exception as exc:  # the document stays usable, just without text on those pages
             log.warning("OCR failed for %s: %s", doc.doc_id, exc)
@@ -298,10 +316,60 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/api/ask", response_model=None)
     @limiter.limit(lambda: settings.rate_limit_ask)
     async def ask(request: Request, body: AskRequest) -> StreamingResponse | JSONResponse:
+        if not body.text_only and agent.wants_agent(body.question):
+            # Agent mode needs tool calling (Groq). Without it the question still gets a visual answer.
+            if available(settings).get("groq"):
+                ctx = await _start(request, body.model_copy(update={"provider": "groq"}))
+                if isinstance(ctx, JSONResponse):
+                    return ctx
+                return _stream(agent.AgentRun(ctx, actions, client_id(request)).events())
+            ctx = await _start(request, body)
+            if isinstance(ctx, JSONResponse):
+                return ctx
+            return _stream(_with_warning(VisualRun(ctx).events(), "AGENT_UNAVAILABLE", "Actions need GROQ_API_KEY."))
         ctx = await _start(request, body)
         if isinstance(ctx, JSONResponse):
             return ctx
         return _stream(VisualRun(ctx).events())
+
+    # -- actions: proposals become tasks only here, on the user's click --------------------------
+    @app.post("/api/actions/{proposal_id}/approve", response_model=None)
+    async def approve_action(
+        request: Request, proposal_id: str, body: ApproveRequest | None = None
+    ) -> dict[str, Any] | JSONResponse:
+        p = actions.get(proposal_id, client_id(request))
+        if p is None:
+            return _error("NOT_FOUND", "Unknown proposal.", 404)
+        if p.status != "proposed":
+            return _error("ALREADY_DECIDED", f"This proposal was already {p.status}.", 409)
+        edits = (body or ApproveRequest()).model_dump()
+        if p.action.get("kind") == "draft_message":
+            edits = {"title": edits["title"], "to": edits["to"], "body": edits["body"]}
+        else:
+            edits = {"title": edits["title"], "owner": edits["owner"], "due_date": edits["due_date"]}
+        return {"status": "approved", "item": actions.approve(p, edits)}
+
+    @app.post("/api/actions/{proposal_id}/reject", response_model=None)
+    async def reject_action(request: Request, proposal_id: str) -> dict[str, Any] | JSONResponse:
+        p = actions.get(proposal_id, client_id(request))
+        if p is None:
+            return _error("NOT_FOUND", "Unknown proposal.", 404)
+        if p.status != "proposed":
+            return _error("ALREADY_DECIDED", f"This proposal was already {p.status}.", 409)
+        actions.reject(p)
+        return {"status": "rejected"}
+
+    @app.get("/api/tasks")
+    async def list_tasks(request: Request) -> dict[str, Any]:
+        owner = client_id(request)
+        return actions.items(owner) if owner else {"tasks": [], "drafts": []}
+
+    @app.delete("/api/tasks/{item_id}", response_model=None)
+    async def delete_task(request: Request, item_id: str) -> dict[str, Any] | JSONResponse:
+        owner = client_id(request)
+        if not owner or not actions.delete(item_id, owner):
+            return _error("NOT_FOUND", "Unknown task.", 404)
+        return {"deleted": item_id}
 
     @app.post("/api/ask_text", response_model=None)
     @limiter.limit(lambda: settings.rate_limit_ask)
@@ -317,6 +385,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     _mount_frontend(app, settings.frontend_dist)
     return app
+
+
+async def _with_warning(
+    events: AsyncIterator[tuple[str, dict[str, Any]]], code: str, message: str
+) -> AsyncIterator[tuple[str, dict[str, Any]]]:
+    """Insert a WARNING right after RUN_STARTED."""
+    async for name, data in events:
+        yield name, data
+        if name == "RUN_STARTED":
+            yield "WARNING", {"code": code, "message": message}
 
 
 def _mount_frontend(app: FastAPI, dist: Path) -> None:

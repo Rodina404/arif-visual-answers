@@ -1,46 +1,140 @@
 {
   "docs": {
     "7d9f878c23b460e4566aa4ec9201b1abfb3b8faefb2b1356e411cb90fef72a12": "cot",
-    "e81dbc51ba671a1fc680a15c1829a48fb9c9c384f1511fbfe28a7f94e30003df": "injection"
+    "e81dbc51ba671a1fc680a15c1829a48fb9c9c384f1511fbfe28a7f94e30003df": "injection",
+    "650b14e2c59433829860a19078ada27afe32898ca82a654e123a4009b7030672": "meeting",
+    "3944962d16eeb4ce858db9da67b51dfbcb121d19b667886e356a0b25b87902ae": "injection_tasks"
   },
   "questions": {
     "cot": {
       "q1": {
         "en": "What is chain-of-thought prompting and how is it different from standard prompting?",
         "ar": "يعني إيه chain-of-thought prompting وإيه الفرق بينه وبين الـ standard prompting؟",
-        "keywords": ["different", "difference", "الفرق", "standard prompting", "what is chain"]
+        "keywords": [
+          "different",
+          "difference",
+          "الفرق",
+          "standard prompting",
+          "what is chain"
+        ]
       },
       "q2": {
         "en": "How much does chain-of-thought improve results on GSM8K as model size grows?",
         "ar": "الـ chain-of-thought بيحسّن النتايج على GSM8K قد إيه لما حجم الموديل بيكبر؟",
-        "keywords": ["gsm8k", "model size", "scale", "حجم"]
+        "keywords": [
+          "gsm8k",
+          "model size",
+          "scale",
+          "حجم"
+        ]
       },
       "q3": {
         "en": "Which benchmarks and models did they evaluate?",
         "ar": "جرّبوا على أنهي benchmarks وأنهي موديلات؟",
-        "keywords": ["benchmark", "evaluate", "datasets", "موديلات"]
+        "keywords": [
+          "benchmark",
+          "evaluate",
+          "datasets",
+          "موديلات"
+        ]
       },
       "q4": {
         "en": "Who are the authors of this paper?",
         "ar": "مين اللي كتبوا الورقة دي؟",
-        "keywords": ["author", "who wrote", "كتبوا", "مين"]
+        "keywords": [
+          "author",
+          "who wrote",
+          "كتبوا",
+          "مين"
+        ]
       },
       "q5": {
         "en": "Make me flashcards to review the key ideas.",
         "ar": "اعملي flashcards أراجع بيها الأفكار الأساسية.",
-        "keywords": ["flashcard", "review", "study", "memorize", "أراجع", "فلاش"]
+        "keywords": [
+          "flashcard",
+          "review",
+          "study",
+          "memorize",
+          "أراجع",
+          "فلاش"
+        ]
       },
       "q6": {
         "en": "Show how a chain-of-thought exemplar leads the model to an answer.",
         "ar": "وريني إزاي مثال الـ chain-of-thought بيوصّل الموديل للإجابة.",
-        "keywords": ["exemplar", "leads", "flow", "diagram", "بيوصّل", "مثال"]
+        "keywords": [
+          "exemplar",
+          "leads",
+          "flow",
+          "diagram",
+          "بيوصّل",
+          "مثال"
+        ]
       }
     },
     "injection": {
       "q1": {
         "en": "What accuracy does the baseline model reach on each task?",
         "ar": "الموديل الأساسي جاب accuracy قد إيه في كل task؟",
-        "keywords": ["accuracy", "task"]
+        "keywords": [
+          "accuracy",
+          "task"
+        ]
+      }
+    },
+    "meeting": {
+      "decisions": {
+        "en": "Which decisions did we make?",
+        "ar": "إيه القرارات اللي خدناها؟",
+        "keywords": [
+          "decision",
+          "decided",
+          "قرار",
+          "القرارات"
+        ]
+      },
+      "owners": {
+        "en": "Who is responsible for what?",
+        "ar": "مين مسؤول عن إيه؟",
+        "keywords": [
+          "responsible",
+          "who does what",
+          "مسؤول",
+          "مين هيعمل"
+        ]
+      },
+      "tasks": {
+        "en": "Create tasks from the action items.",
+        "ar": "اعمللي tasks بالـ action items",
+        "keywords": [
+          "create task",
+          "make task",
+          "tasks",
+          "اعمللي",
+          "تاسك"
+        ]
+      },
+      "email": {
+        "en": "Draft an email to the team with the decisions and who owns each action item.",
+        "ar": "اكتبلي ايميل للفريق فيه القرارات ومين مسؤول عن إيه.",
+        "keywords": [
+          "email",
+          "draft",
+          "ايميل",
+          "رساله"
+        ]
+      }
+    },
+    "injection_tasks": {
+      "tasks": {
+        "en": "Make tasks from the action items.",
+        "ar": "اعمللي tasks بالـ action items",
+        "keywords": [
+          "task",
+          "تاسك",
+          "اعمللي"
+        ]
       }
     }
   }

@@ -30,6 +30,8 @@ class Settings:
     schema_mode: str = field(default_factory=lambda: os.getenv("SCHEMA_MODE", "json"))
     max_output_tokens: int = field(default_factory=lambda: _int("MAX_OUTPUT_TOKENS", 4096))
     request_timeout_s: int = field(default_factory=lambda: _int("REQUEST_TIMEOUT_S", 45))
+    # Agent mode: each tool-calling step (one model call) gets its own timeout; at most 4 steps per run.
+    agent_step_timeout_s: int = field(default_factory=lambda: _int("AGENT_STEP_TIMEOUT_S", 40))
     enable_explicit_cache: bool = field(default_factory=lambda: _bool("ENABLE_EXPLICIT_CACHE"))
     prompt_version: str = field(default_factory=lambda: os.getenv("PROMPT_VERSION", "v4"))
 

@@ -14,6 +14,9 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 Lang = Literal["ar", "en"]
 
 COMPONENT_TYPES = ("text", "chart", "comparison", "steps", "table", "diagram", "formula", "quiz", "flashcards")
+# Built by the server from the agent's tool results, never written by the model directly: the visual
+# answer schema (VisualAnswer) does not include them, and the policy drops them if a model sends one.
+AGENT_COMPONENT_TYPES = ("task_cards", "decision_cards", "action_card")
 
 
 class Strict(BaseModel):
@@ -178,6 +181,52 @@ class FlashcardsComponent(BaseComponent):
     cards: list[Flashcard] = Field(min_length=3, max_length=8)
 
 
+class TaskItem(Strict):
+    title: str = S(120, 1)
+    owner: str = S(60, 1)
+    due_date: str | None = Field(default=None, max_length=40)
+    citation: Citation
+
+
+class TaskCardsComponent(BaseComponent):
+    """Action items found in the document (who does what by when), each backed by its sentence."""
+
+    type: Literal["task_cards"]
+    tasks: list[TaskItem] = Field(min_length=1, max_length=8)
+
+
+class DecisionItem(Strict):
+    text: str = S(200, 1)
+    citation: Citation
+
+
+class DecisionCardsComponent(BaseComponent):
+    type: Literal["decision_cards"]
+    decisions: list[DecisionItem] = Field(min_length=1, max_length=8)
+
+
+ActionFlag = Literal["UNVERIFIED_SOURCE", "FROM_HIDDEN_TEXT", "NOT_REQUESTED"]
+
+
+class ProposedAction(Strict):
+    """A proposal waiting for the user: nothing happens until they approve it."""
+
+    proposal_id: str = Field(pattern=r"^p[0-9a-f]{12}$")
+    kind: Literal["create_task", "draft_message"]
+    title: str = S(120, 1)  # the task title, or the draft's subject
+    owner: str | None = Field(default=None, max_length=60)
+    due_date: str | None = Field(default=None, max_length=40)
+    to: str | None = Field(default=None, max_length=120)
+    body: str | None = Field(default=None, max_length=1200)
+    citation: Citation | None = None
+    flags: list[ActionFlag] = Field(default_factory=list, max_length=3)
+
+
+class ActionCardComponent(BaseComponent):
+    type: Literal["action_card"]
+    actions: list[ProposedAction] = Field(min_length=1, max_length=6)
+
+
 Component = Annotated[
     TextComponent
     | ChartComponent
@@ -190,7 +239,22 @@ Component = Annotated[
     | FlashcardsComponent,
     Field(discriminator="type"),
 ]
-ComponentAdapter: TypeAdapter[Any] = TypeAdapter(Component)
+AnyComponent = Annotated[
+    TextComponent
+    | ChartComponent
+    | ComparisonComponent
+    | StepsComponent
+    | TableComponent
+    | DiagramComponent
+    | FormulaComponent
+    | QuizComponent
+    | FlashcardsComponent
+    | TaskCardsComponent
+    | DecisionCardsComponent
+    | ActionCardComponent,
+    Field(discriminator="type"),
+]
+ComponentAdapter: TypeAdapter[Any] = TypeAdapter(AnyComponent)
 
 COMPONENT_MODELS: dict[str, type[BaseComponent]] = {
     "text": TextComponent,
@@ -202,6 +266,9 @@ COMPONENT_MODELS: dict[str, type[BaseComponent]] = {
     "formula": FormulaComponent,
     "quiz": QuizComponent,
     "flashcards": FlashcardsComponent,
+    "task_cards": TaskCardsComponent,
+    "decision_cards": DecisionCardsComponent,
+    "action_card": ActionCardComponent,
 }
 
 

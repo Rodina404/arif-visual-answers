@@ -16,7 +16,8 @@ test.describe('security', () => {
     await expect(answer(page).getByText(/<script>alert\(1\)<\/script>/).first()).toBeVisible()
     await expect(answer(page).locator('img, script, iframe')).toHaveCount(0)
     const hrefs = await page.locator('a').evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''))
-    expect(hrefs.every((h) => h === '/' || h === '/compare')).toBe(true)
+    // Only the app's own view links (Ask, Before vs After, Tasks); nothing from the model.
+    expect(hrefs.every((h) => ['/', '/compare', '/tasks'].includes(h))).toBe(true)
     expect(dialogs).toBe(0)
   })
 

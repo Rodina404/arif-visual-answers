@@ -8,6 +8,8 @@ export const PDFS = {
   injection: path.join(ROOT, 'fixtures/pdfs/injection.pdf'),
   tiny: path.join(ROOT, 'fixtures/pdfs/tiny.pdf'),
   notpdf: path.join(ROOT, 'fixtures/pdfs/notpdf.pdf'),
+  meeting: path.join(ROOT, 'fixtures/pdfs/meeting_sample.pdf'),
+  injectionTasks: path.join(ROOT, 'fixtures/pdfs/injection_tasks.pdf'),
 }
 const INDEX = JSON.parse(fs.readFileSync(path.join(ROOT, 'fixtures/answers/index.json'), 'utf-8'))
 export const QUESTIONS: Record<string, { en: string; ar: string }> = INDEX.questions.cot

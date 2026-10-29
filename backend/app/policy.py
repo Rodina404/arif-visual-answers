@@ -8,19 +8,24 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from pydantic import ValidationError
+from rapidfuzz import fuzz
 
 from . import grounding
 from .catalog import (
+    AGENT_COMPONENT_TYPES,
     COMPONENT_TYPES,
+    ActionCardComponent,
     BaseComponent,
     ChartComponent,
     ComparisonComponent,
+    DecisionCardsComponent,
     DiagramComponent,
     FlashcardsComponent,
     FormulaComponent,
     QuizComponent,
     StepsComponent,
     TableComponent,
+    TaskCardsComponent,
     dump_component,
     parse_component,
     project_component,
@@ -31,7 +36,21 @@ from .upload import StoredDoc
 log = logging.getLogger("arif.policy")
 
 MAX_COMPONENTS = 3
-PRIORITY = ["comparison", "steps", "chart", "table", "diagram", "formula", "flashcards", "text"]
+PRIORITY = [
+    "action_card",
+    "task_cards",
+    "decision_cards",
+    "comparison",
+    "steps",
+    "chart",
+    "table",
+    "diagram",
+    "formula",
+    "flashcards",
+    "text",
+]
+DECISION_MATCH = 50  # token_set_ratio between a decision and its sentence (decisions are summarised)
+HIDDEN_MATCH = 80  # an action this close to hidden text, and not to visible text, came from the hidden text
 _URL = re.compile(r"(?i)\b(?:https?|ftp|file|javascript|vbscript|data):\S*|\bwww\.\S+")
 LINK_REMOVED = "[link removed]"
 
@@ -258,6 +277,95 @@ def _ground_formula(c: FormulaComponent, doc: StoredDoc, out: Outcome) -> None:
     out.props = dump_component(c)
 
 
+def _names_in(name: str, text: str) -> bool:
+    """Every word of a person's name (2+ letters) appears in the sentence."""
+    words = [w for w in grounding.normalize(name).replace("@", " ").split() if len(w) >= 2]
+    t = grounding.normalize(text)
+    return bool(words) and all(w in t for w in words)
+
+
+def _date_in(due: str | None, text: str) -> bool:
+    """A due date's numbers (day, year) all appear in the sentence. Dates without digits are not checked."""
+    if not due:
+        return True
+    wanted = grounding.numbers_in(due)
+    found = grounding.numbers_in(text)
+    return all(grounding.number_matches(v, found) for v in wanted)
+
+
+def _ground_task_cards(c: TaskCardsComponent, doc: StoredDoc, out: Outcome) -> None:
+    tally = _Tally()
+    kept = []
+    for t in c.tasks:
+        ok = _ground_citation(doc, t.citation, tally)
+        if ok and not (_names_in(t.owner, t.citation.quote) and _date_in(t.due_date, t.citation.quote)):
+            ok = False
+        if ok:
+            kept.append(t)
+        else:
+            tally.dropped += 1
+    if not kept:
+        out.drop_reason = "no_verified_items"
+        return
+    c.tasks = kept
+    out.dropped_points = tally.dropped
+    out.status = tally.status()
+    out.props = dump_component(c)
+
+
+def _ground_decision_cards(c: DecisionCardsComponent, doc: StoredDoc, out: Outcome) -> None:
+    tally = _Tally()
+    kept = []
+    for d in c.decisions:
+        ok = _ground_citation(doc, d.citation, tally)
+        a, b = grounding.normalize(d.text), grounding.normalize(d.citation.quote)
+        if ok and fuzz.token_set_ratio(a, b) < DECISION_MATCH and fuzz.partial_ratio(a, b) < 70:
+            ok = False
+        if ok:
+            kept.append(d)
+        else:
+            tally.dropped += 1
+    if not kept:
+        out.drop_reason = "no_verified_items"
+        return
+    c.decisions = kept
+    out.dropped_points = tally.dropped
+    out.status = tally.status()
+    out.props = dump_component(c)
+
+
+def from_hidden_text(doc: StoredDoc, text: str) -> bool:
+    """The text matches what only hidden characters say (white, tiny or off-page), not the visible page."""
+    t = grounding.normalize(text)
+    if not t or not doc.hidden_pages:
+        return False
+    hidden = max((fuzz.partial_ratio(t, grounding.normalize(p.all_text)) for p in doc.pages if p.suspicious), default=0)
+    visible = max((fuzz.partial_ratio(t, grounding.normalize(p.visible_text)) for p in doc.pages), default=0)
+    return hidden >= HIDDEN_MATCH and visible < 70
+
+
+def _ground_action_card(c: ActionCardComponent, doc: StoredDoc, out: Outcome) -> None:
+    """Actions are never dropped: the user sees every proposal, and unsupported ones are flagged."""
+    for a in c.actions:
+        flags = set(a.flags)
+        if a.citation is not None:
+            result = grounding.check_quote(doc, a.citation.page, a.citation.quote)
+            if result.status == "verified":
+                a.citation.page = result.page
+                if a.kind == "create_task" and a.owner and not _names_in(a.owner, a.citation.quote):
+                    flags.add("UNVERIFIED_SOURCE")
+            else:
+                a.citation = None
+        if a.citation is None and a.kind == "create_task":
+            flags.add("UNVERIFIED_SOURCE")  # a draft is a composition, not a claim about the document
+        if from_hidden_text(doc, a.title) or (a.body and from_hidden_text(doc, a.body)):
+            flags.add("FROM_HIDDEN_TEXT")
+        order = ["FROM_HIDDEN_TEXT", "UNVERIFIED_SOURCE", "NOT_REQUESTED"]
+        a.flags = [f for f in order if f in flags]  # type: ignore[misc]
+    out.status = "unverified" if any(a.flags for a in c.actions) else "verified"
+    out.props = dump_component(c)
+
+
 def _fix_pages(items: list[Any], doc: StoredDoc) -> None:
     for item in items:
         if getattr(item, "page", None) is not None and item.page > doc.page_count:
@@ -276,6 +384,8 @@ class ComponentProcessor:
     doc: StoredDoc
     needs_visual: bool = True
     seen_ids: set[str] = field(default_factory=set)
+    # Only the agent run may emit task/decision/action components (built from its tool results).
+    allow_agent_types: bool = False
 
     def process(self, raw: Any, index: int) -> Outcome:
         raw_type = raw.get("type") if isinstance(raw, dict) else None
@@ -284,7 +394,8 @@ class ComponentProcessor:
         if not self.needs_visual:
             out.drop_reason = "needs_visual_false"
             return out
-        if raw_type not in COMPONENT_TYPES:
+        allowed = COMPONENT_TYPES + (AGENT_COMPONENT_TYPES if self.allow_agent_types else ())
+        if raw_type not in allowed:
             out.drop_reason = "unknown_type"
             return out
         raw = project_component(strip_nulls(raw))
@@ -326,6 +437,12 @@ class ComponentProcessor:
             _ground_quiz(comp, self.doc, out)
         elif isinstance(comp, FormulaComponent):
             _ground_formula(comp, self.doc, out)
+        elif isinstance(comp, TaskCardsComponent):
+            _ground_task_cards(comp, self.doc, out)
+        elif isinstance(comp, DecisionCardsComponent):
+            _ground_decision_cards(comp, self.doc, out)
+        elif isinstance(comp, ActionCardComponent):
+            _ground_action_card(comp, self.doc, out)
         else:
             if isinstance(comp, StepsComponent):
                 _fix_pages(comp.steps, self.doc)
