@@ -25,7 +25,7 @@ Event names follow AG-UI 1.0 so a real AG-UI adapter is a rename, not a redesign
 | `COMPONENT` | `{component_id, type, props, verification: {status: "verified"\|"partial"\|"unverified", dropped_points: n}, downgraded_from?}` | `TOOL_CALL_ARGS` + `TOOL_CALL_END`; A2UI: one catalog component in a surface update |
 | `COMPONENT_DROPPED` | `{component_id, type, reason, fallback_text?}` | custom |
 | `WARNING` | `{code, message, pages?}` — `HIDDEN_TEXT_DETECTED`, `FALLBACK_MODEL_USED`, `TRUNCATED_OUTPUT` | custom |
-| `METRICS` | tokens, cost, latency, component counts, cache (see README §9) | `STATE_SNAPSHOT` |
+| `METRICS` | tokens, cost, latency, component counts, cache (see docs/BUILD_SPEC.md §9) | `STATE_SNAPSHOT` |
 | `RUN_ERROR` | `{code, message}` — terminal | `RUN_ERROR` |
 | `RUN_FINISHED` | `{run_id}` — terminal | `RUN_FINISHED` |
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-"Arif Visual Answers": a demo where a user uploads a PDF and asks a question. The answer is a short direct text plus at most 3 typed, grounded visual components (comparison, steps, chart, table, diagram, formula, quiz, flashcards, text). It is Egyptian Arabic (RTL) by default, with an English (LTR) toggle. `README.md` is the original build spec (sections are referenced as §N). `BUILD_LOG.md` records every decision (D1…D18), the live-call log and the known limitations. Read the decisions before changing behaviour.
+"Arif Visual Answers": a demo where a user uploads a PDF and asks a question. The answer is a short direct text plus at most 3 typed, grounded visual components (comparison, steps, chart, table, diagram, formula, quiz, flashcards, text). It is Egyptian Arabic (RTL) by default, with an English (LTR) toggle. `docs/BUILD_SPEC.md` is the original build spec (sections are referenced as §N; `README.md` is the company-facing overview). `BUILD_LOG.md` records every decision (D1…D34), the live-call log and the known limitations. Read the decisions before changing behaviour.
 
 ## Commands
 

@@ -5,7 +5,7 @@ import { answer, expect, open, PDFS, ROOT, routeAsk, test, upload, waitDone } fr
 const OUT = path.join(ROOT, 'demo')
 const SHOTS = path.join(OUT, 'shots')
 
-/** The README §16 demo script, recorded as video plus key frames. Run with `make demo`. */
+/** The build spec (docs/BUILD_SPEC.md §16) demo script, recorded as video plus key frames. Run with `make demo`. */
 test('demo recording @demo', async ({ page }) => {
   fs.mkdirSync(SHOTS, { recursive: true })
   const shot = (name: string) => page.screenshot({ path: path.join(SHOTS, `${name}.png`) })
