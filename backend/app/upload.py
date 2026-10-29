@@ -6,6 +6,7 @@ import copy
 import hashlib
 import io
 import json
+import threading
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -188,6 +189,7 @@ def validate_upload(data: bytes, content_type: str | None, settings: Settings) -
 
 
 _PARSED: dict[str, list[PageText]] = {}
+_PARSE_LOCKS: dict[str, threading.Lock] = {}
 
 
 class DocStore:
@@ -205,14 +207,18 @@ class DocStore:
         validate_upload(data, content_type, self.settings)
         sha = hashlib.sha256(data).hexdigest()
         # Parsing a 43-page paper takes seconds; the same bytes always give the same text layers.
-        pages = copy.deepcopy(_PARSED[sha]) if sha in _PARSED else parse_pdf(data, self.settings)
+        # The per-hash lock makes concurrent uploads of one file parse it once (parallel parses
+        # thrash the GIL: 4 at once took 44 s instead of ~5 s).
+        with _PARSE_LOCKS.setdefault(sha, threading.Lock()):
+            if sha not in _PARSED:
+                _PARSED[sha] = parse_pdf(data, self.settings)
+                while len(_PARSED) > 32:
+                    _PARSED.pop(next(iter(_PARSED)))
+            pages = copy.deepcopy(_PARSED[sha])
         if len(pages) > self.settings.max_pages:
             raise UploadError(
                 "TOO_MANY_PAGES", f"The PDF has {len(pages)} pages; the limit is {self.settings.max_pages}.", 413
             )
-        _PARSED[sha] = copy.deepcopy(pages)
-        while len(_PARSED) > 32:
-            _PARSED.pop(next(iter(_PARSED)))
         doc_id = str(uuid.uuid4())
         path = self.uploads / f"{doc_id}.pdf"
         path.write_bytes(data)

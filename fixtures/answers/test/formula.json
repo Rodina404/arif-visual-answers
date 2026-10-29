@@ -1,0 +1,20 @@
+{
+  "answer_text": "Test fixture for the formula renderer: the exemplar's arithmetic from Figure 1.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "formula",
+      "id": "c1",
+      "lang": "en",
+      "title": "The exemplar adds the two counts",
+      "reason": "Renderer test: a calculation printed in the document.",
+      "latex": "5 + 2 \\times 3 = 11",
+      "explanation": "Roger starts with 5 balls and buys 2 cans of 3 balls each.",
+      "citation": {
+        "page": 1,
+        "quote": "2 cans of 3 tennis balls each is 6 tennis balls. 5 + 6 = 11. The answer is 11."
+      }
+    }
+  ]
+}

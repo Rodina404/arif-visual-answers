@@ -570,8 +570,8 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** a mock answer shows plausible metrics. A repeat question shows a cache hit in under 300 ms. Pytest covers the cost maths for both price periods.
 
 ### Phase 8 — Playwright suite
-- [ ] Every spec in section 13 (1–10), plus the `@live` smoke test.
-- [ ] Generate and commit the visual baselines.
+- [x] Every spec in section 13 (1–10), plus the `@live` smoke test.
+- [x] Generate and commit the visual baselines.
 - **Accept:** `make e2e` is green twice in a row (to rule out flaky tests). `make test-live` passes or is skipped because there is no key (logged).
 
 ### Phase 9 — Demo recording

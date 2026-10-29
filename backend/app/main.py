@@ -153,7 +153,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             handle = await handle_for(doc)
         except ProviderError as exc:
             return _error(exc.code, "The model provider could not read the document.", 502)
-        forced = request.headers.get("x-mock-fixture") if provider.name == "mock" else None
+        mock = provider.name == "mock"
+        forced = request.headers.get("x-mock-fixture") if mock else None
+        # Tests can bypass the answer cache to see streaming; never honoured outside mock mode.
+        no_cache = mock and request.headers.get("x-no-cache") == "1"
         return AskContext(
             settings=settings,
             provider=provider,
@@ -165,6 +168,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             metrics=metrics,
             text_only=body.text_only,
             mock_fixture=forced,
+            no_cache=no_cache,
         )
 
     def _stream(events: AsyncIterator[tuple[str, dict[str, Any]]]) -> StreamingResponse:

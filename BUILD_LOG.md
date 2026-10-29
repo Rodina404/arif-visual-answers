@@ -71,3 +71,17 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 ## Phase 7 — metrics & cache
 
 - `METRICS` event on every run; the strip shows time · tokens · cost · verified count, and the drawer shows each component's `reason` plus the raw JSON. A repeat question replays from SQLite (`app_cache_hit: true`, 0.0 s in the UI). Cost maths for both price periods is covered in `tests/test_providers.py`.
+
+## Phase 8 — Playwright
+
+- `make e2e`: **91 passed, twice in a row** (2.0 and 2.2 min) across `chromium-ar`, `chromium-en` and `mobile-ar` (390×844). The `@live` test is excluded from `make e2e`.
+- axe (`wcag2a`, `wcag2aa`) reports **0 violations** after q1, q2, q3, q5 and q6 render, in both locales.
+- 20 visual baselines (9 component types + Before/After, AR and EN) in `e2e/tests/__screenshots__/`. They are specific to the OS (Windows/Chromium 1.64) and mask the timing value.
+- Bugs found by the suite and fixed: (1) the chart's screen-reader table caused 39 px of horizontal scroll at 390 px in RTL (`sr-only` on a `<table>` doesn't shrink it; it is now on a wrapper div); (2) four parallel uploads of the same PDF took 44 s (GIL thrash), fixed with a per-hash parse lock (7 s); (3) Recharts 3 dropped the `.recharts-xAxis` class, so the tick test now selects by label; (4) the formula fixture's `\times` had been turned into a tab by the tool transport.
+- **D16 — Test-only headers.** In mock mode only: `X-Mock-Fixture: <dir>/<name>` forces a fixture, and `X-No-Cache: 1` bypasses the answer cache so streaming tests always see skeletons. The cache test uses a unique question so its first ask is always a miss.
+- **D17 — e2e server.** `e2e/helpers/serve.mjs` (Playwright's `webServer`) finds `uv`, builds the frontend, wipes `data/e2e` and starts uvicorn with mock mode and high rate limits (the rate limiter itself is covered in pytest; the 429 UI is tested with `page.route`).
+
+## Phase 9 — demo
+
+- `make demo` → `demo/arif-visual-answers.webm` (4.3 MB), `demo/arif-visual-answers.gif` (2.1 MB, 960 px, 12 fps) and 8 key frames in `demo/shots/` (AR Before/After streaming, quiz, source panel, text-only q4, EN chart, metrics drawer, injection warning). Mock mode with `MOCK_TTFT_MS=900`.
+- Not done: the optional live recording and `make bench` (10 live calls). The live budget was used up by schema debugging and the 503 overload.

@@ -51,7 +51,6 @@ record-fixtures:
 
 demo:
 	cd e2e && MOCK_TTFT_MS=900 npx playwright test --grep @demo --project=demo
-	cd backend && $(UV) run python scripts/collect_demo.py
 	ffmpeg -y -i demo/arif-visual-answers.webm -vf "fps=12,scale=960:-1:flags=lanczos" demo/arif-visual-answers.gif
 
 bench:

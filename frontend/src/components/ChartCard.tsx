@@ -85,7 +85,9 @@ export function ChartCard({ props, verification }: { props: ChartProps; verifica
           )}
         </ResponsiveContainer>
       </div>
-      <table className="sr-only">
+      {/* sr-only on a wrapper: a <table> sizes to its content and ignores width:1px. */}
+      <div className="sr-only">
+      <table data-testid="chart-data-table">
         <caption>{props.title}</caption>
         <thead>
           <tr>
@@ -108,6 +110,7 @@ export function ChartCard({ props, verification }: { props: ChartProps; verifica
           ))}
         </tbody>
       </table>
+      </div>
       <div className="mt-2 grid gap-1">
         {props.series.map((s, i) => (
           <p key={i} data-testid="chart-sources" className="m-0 flex flex-wrap items-center gap-1 text-xs text-muted">

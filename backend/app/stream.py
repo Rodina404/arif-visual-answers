@@ -91,6 +91,7 @@ class AskContext:
     metrics: MetricsLog
     text_only: bool = False
     mock_fixture: str | None = None
+    no_cache: bool = False
     sleep: Callable[[float], Any] = asyncio.sleep
 
 
@@ -251,7 +252,7 @@ class VisualRun:
             prompt_version=ctx.settings.prompt_version,
             mode=f"visual:{ctx.settings.schema_mode}:{int(ctx.text_only)}",
         )
-        hit = None if ctx.mock_fixture else ctx.cache.get(key)
+        hit = None if ctx.mock_fixture or ctx.no_cache else ctx.cache.get(key)
         st.model = ctx.settings.model
         yield self._started(cached=hit is not None)
         if hit is not None:
@@ -506,7 +507,7 @@ class TextRun:
             prompt_version=ctx.settings.prompt_version,
             mode="text",
         )
-        hit = ctx.cache.get(key)
+        hit = None if ctx.no_cache else ctx.cache.get(key)
         st.model = ctx.settings.model
         yield (
             "RUN_STARTED",
