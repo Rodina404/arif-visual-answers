@@ -19,8 +19,9 @@ Counted as **requests that reached the API** (a call that retried counts once pe
 | 12 | 2026-10-29 | q1 AR, real pipeline, `SCHEMA_MODE=json` | 3.8-flash | accepted (no 400), but **no chunk in 150 s** → client timeout |
 | 13 | 2026-10-29 | `diag_gemini.py base` | 3.8-flash | 503 UNAVAILABLE (high demand) |
 | 14 | 2026-10-29 | q1 AR via `record_live.py --provider gemini --retrieval on` | 3.8-flash | no response in 240 s → timeout |
+| 15 | 2026-10-29 | user question in the browser under `make serve`: the browser had Gemini remembered from an earlier visit (localStorage), overriding `PROVIDER=groq` | 3.8-flash | 503 UNAVAILABLE after 72 s; server stopped before a retry |
 
-**14 of 15 used; 1 left for the user** (e.g. `make test-live` = 1 call once the model is healthy).
+**15 of 15 used.** The model choice is now kept per tab (sessionStorage), so a new visit starts on the server's `PROVIDER`.
 
 **Conclusion.** Validation runs before the capacity check: the schema requests (1, 2, 4, 10) are rejected with 400, while the no-schema requests (11, 13) pass validation and hit 503. So `response_json_schema` with this catalog is rejected, and the thinking config is fine. `SCHEMA_MODE=json` (no API schema; schema text in the cached system prompt; strict Pydantic validation unchanged) is now the default. It passed validation in call 12 but couldn't be measured end to end because of the overload. **No live answer, latency or cost was measured.** Stop rule 3 (billing/permission) does not apply, so the build continued in mock mode.
 

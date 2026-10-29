@@ -47,8 +47,14 @@ function remember(key: string, value: string | null) {
     /* not remembered in private mode */
   }
 }
+// The model choice lasts for this tab only (survives reloads); a new visit starts on the server's PROVIDER.
 function storedProvider(): ProviderName | null {
-  const v = stored(PROVIDER_KEY)
+  let v: string | null = null
+  try {
+    v = window.sessionStorage.getItem(PROVIDER_KEY)
+  } catch {
+    /* private mode */
+  }
   return v === 'gemini' || v === 'groq' ? v : null
 }
 const viewFromPath = (): View => (window.location.pathname.replace(/\/+$/, '') === '/compare' ? 'compare' : 'ask')
@@ -150,7 +156,11 @@ export default function App() {
 
   const setProvider = (p: ProviderName) => {
     setProviderState(p)
-    remember(PROVIDER_KEY, p)
+    try {
+      window.sessionStorage.setItem(PROVIDER_KEY, p)
+    } catch {
+      /* not remembered in private mode */
+    }
   }
 
   const select = useCallback(
