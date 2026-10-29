@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* Colour tokens: light by default, dark when the OS asks for it. Utilities use them as bg-surface etc. */
+@theme {
+  --font-sans: "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-raised: #f0f2f5;
+  --color-ink: #16181d;
+  --color-muted: #555c68;
+  --color-line: #dde1e7;
+  --color-accent: #0b5cad;
+  --color-accent-soft: #e6f0fa;
+  --color-on-accent: #ffffff;
+  --color-ok: #146c43;
+  --color-ok-soft: #e3f4ea;
+  --color-warn: #8a5300;
+  --color-warn-soft: #fff4e0;
+  --color-bad: #b42318;
+  --color-bad-soft: #fdecea;
+  --color-mark: #fff1a8;
+  --color-series-1: #8a94a6;
+  --color-series-2: #0b5cad;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f1115;
+    --color-surface: #171a20;
+    --color-raised: #1f232b;
+    --color-ink: #e9ebef;
+    --color-muted: #a3aab6;
+    --color-line: #2e333d;
+    --color-accent: #6cb2ff;
+    --color-accent-soft: #15283d;
+    --color-on-accent: #0b1220;
+    --color-ok: #5fd39a;
+    --color-ok-soft: #12291e;
+    --color-warn: #f2b45a;
+    --color-warn-soft: #2d2212;
+    --color-bad: #ff8a80;
+    --color-bad-soft: #321716;
+    --color-mark: #5a4b00;
+    --color-series-1: #7d8796;
+    --color-series-2: #6cb2ff;
+  }
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--color-bg);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+/* Letter-spacing breaks Arabic joining; never apply it to Arabic text. */
+:lang(ar),
+[lang="ar"] * {
+  letter-spacing: 0 !important;
+}
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.ltr-island {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline;
+}
+.katex-display > .katex > .katex-html {
+  direction: ltr;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-raised) 25%, var(--color-line) 50%, var(--color-raised) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.card-flip {
+  transition: transform 0.35s ease;
+  transform-style: preserve-3d;
+}
+.fade-in {
+  animation: fadein 0.25s ease-out;
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.recharts-text {
+  font-family: var(--font-sans);
+}

@@ -89,7 +89,7 @@ class MockProvider:
         system: str,
         doc: ProviderDocHandle,
         question: str,
-        schema: dict[str, Any],
+        schema: dict[str, Any] | None,
         lang: str,
         max_output_tokens: int,
         model: str | None = None,
@@ -109,6 +109,11 @@ class MockProvider:
             await self._forced_error(forced, model)
             forced = None
         text = self._fixture_path(doc, question, lang, "json", forced).read_text(encoding="utf-8")
+        try:
+            # Fixtures are pretty-printed for humans; a real model streams compact JSON.
+            text = json.dumps(json.loads(text), ensure_ascii=False, separators=(",", ":"))
+        except ValueError:
+            pass  # deliberately malformed fixtures (e.g. truncated) replay as-is
         if text_only:
             # Honour the user's text-only preference the way the real model is told to.
             data = json.loads(text)

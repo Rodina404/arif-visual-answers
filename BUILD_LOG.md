@@ -47,3 +47,12 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 - **D10 — Retries.** 429/503 → 2 retries with backoff + jitter → 1 attempt on `FALLBACK_MODEL` (`WARNING FALLBACK_MODEL_USED`). Only before any output has streamed. Recording scripts never retry, so one recording = one request.
 - **D11 — Parse cache.** Parsed page layers are memoised by SHA-256 in-process (re-uploading `cot.pdf` is instant; the test suite went from 177 s to 14 s). Limits are re-checked on a cache hit.
 - **Tool note.** The tool transport decodes `\uXXXX` escapes in commands/content; source files that need escapes build them with `chr(92)` or use the literal characters.
+
+## Phase 4 — frontend
+
+- Checked with Playwright (`e2e/helpers/shoot.mjs`, `crop.mjs`) in AR and EN at 1280 and 390: RTL/LTR mirroring correct, Arabic letters join, no horizontal scroll at 390 px, the q2 chart shows a page chip for every point, the second identical question hits the app cache (0.0 s, "cached").
+- **D12 — e2e package.** `e2e/` is its own npm package (`@playwright/test`, `@axe-core/playwright`) so specs and helpers resolve their imports; `make setup` installs it.
+- **D13 — Bundle.** Recharts and KaTeX are lazy-loaded (main JS 1.1 MB → 473 kB; chart 390 kB and formula 260 kB load on demand).
+- **D14 — Diagram layout.** A "snake" flow layout (rows alternate direction, mirrored in RTL), with 1, 2 or 3 nodes per row chosen from the measured width, so labels stay readable on phones. Edge labels are drawn above the nodes.
+- **D15 — Mock replay is compact JSON.** Fixtures are pretty-printed; the mock replays them minified, like a real model. At the spec's 40 chars / 30 ms, q1 (3.7 KB) still takes about 3.2 s in mock mode, above the ≤ 2 s mock target; q2–q6 take ≤ 1.9 s.
+- Known: in the Before/After view, a cached visual answer shows $0 / 0.0 s, so the cost/latency comparison is only meaningful on a first (uncached) run.

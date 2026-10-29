@@ -341,11 +341,12 @@ class VisualRun:
         buf = ""
 
         def make(model: str) -> AsyncIterator[ProviderDelta]:
+            mode = ctx.settings.schema_mode
             return ctx.provider.stream_structured(
-                system=prompts.VISUAL_SYSTEM,
+                system=prompts.json_mode_system() if mode == "json" else prompts.VISUAL_SYSTEM,
                 doc=ctx.handle,
                 question=ctx.question,
-                schema=flat_answer_schema() if ctx.settings.schema_mode == "flat" else visual_answer_schema(),
+                schema={"flat": flat_answer_schema(), "json": None}.get(mode, visual_answer_schema()),
                 lang=ctx.lang,
                 max_output_tokens=ctx.settings.max_output_tokens,
                 model=model,

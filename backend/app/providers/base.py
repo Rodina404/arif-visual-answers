@@ -56,7 +56,7 @@ class LLMProvider(Protocol):
         system: str,
         doc: ProviderDocHandle,
         question: str,
-        schema: dict[str, Any],
+        schema: dict[str, Any] | None,
         lang: str,
         max_output_tokens: int,
         model: str | None = None,

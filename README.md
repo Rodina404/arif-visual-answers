@@ -552,9 +552,9 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** every rule in sections 4–5 has a pytest. The good fixtures come out `verified`, and the malformed ones degrade exactly as specified.
 
 ### Phase 4 — Frontend: catalog renderer
-- [ ] SSE client, registry, and all components as pure props-in components validated with Zod (`safeParse`; on failure render the ErrorBoundary fallback text).
-- [ ] Skeletons per type, citation chips, source panel, the upload panel, the question box with the 6 demo questions as suggestion chips, and a "text only" toggle (sends `needs_visual=false` as a preference).
-- [ ] Before/After view (`/compare` tab), with both panels streaming in parallel.
+- [x] SSE client, registry, and all components as pure props-in components validated with Zod (`safeParse`; on failure render the ErrorBoundary fallback text).
+- [x] Skeletons per type, citation chips, source panel, the upload panel, the question box with the 6 demo questions as suggestion chips, and a "text only" toggle (sends `needs_visual=false` as a preference).
+- [x] Before/After view (`/compare` tab), with both panels streaming in parallel.
 - **Accept:** `make serve-mock` → upload → q1 renders all components. A quick CLI screenshot shows a sensible layout. The ESLint rule blocks `dangerouslySetInnerHTML`.
 
 ### Phase 5 — Security hardening

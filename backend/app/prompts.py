@@ -87,6 +87,20 @@ you would draw and what each should show. Follow the same restraint rules.
 """.strip()
 
 
+def json_mode_system() -> str:
+    """SCHEMA_MODE=json: the schema travels in the (stable, cacheable) system prompt, not the API field."""
+    import json
+
+    from .catalog import flat_answer_schema
+
+    instructions = """
+
+Return ONE JSON object that matches this JSON Schema exactly (no prose, no code fences).
+Each component uses only the fields listed for its type:
+"""
+    return VISUAL_SYSTEM + instructions + json.dumps(flat_answer_schema(), separators=(",", ":"))
+
+
 def fill_system(kind: str) -> str:
     return (
         VISUAL_SYSTEM

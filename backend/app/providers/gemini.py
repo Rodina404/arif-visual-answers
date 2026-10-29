@@ -151,7 +151,7 @@ class GeminiProvider:
         system: str,
         doc: ProviderDocHandle,
         question: str,
-        schema: dict[str, Any],
+        schema: dict[str, Any] | None,
         lang: str,
         max_output_tokens: int,
         model: str | None = None,
@@ -165,7 +165,8 @@ class GeminiProvider:
             model=model or self.settings.model,
             config={
                 "response_mime_type": "application/json",
-                "response_json_schema": schema,
+                # SCHEMA_MODE=json sends no schema (it is in the system prompt instead).
+                **({"response_json_schema": schema} if schema else {}),
                 "max_output_tokens": max_output_tokens,
             },
         ):

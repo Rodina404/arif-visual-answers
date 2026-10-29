@@ -91,7 +91,7 @@ class OpenAICompatProvider:
         system: str,
         doc: ProviderDocHandle,
         question: str,
-        schema: dict[str, Any],
+        schema: dict[str, Any] | None,
         lang: str,
         max_output_tokens: int,
         model: str | None = None,
@@ -101,10 +101,11 @@ class OpenAICompatProvider:
         body = {
             "messages": self._messages(system, doc, question_block(question, lang, text_only=text_only, intent=intent)),
             "max_tokens": max_output_tokens,
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {"name": "visual_answer", "schema": schema, "strict": True},
-            },
+            "response_format": (
+                {"type": "json_schema", "json_schema": {"name": "visual_answer", "schema": schema, "strict": True}}
+                if schema
+                else {"type": "json_object"}
+            ),
         }
         async for d in self._stream(body):
             yield d
