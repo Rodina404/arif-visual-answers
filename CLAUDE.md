@@ -2,54 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current state
+## What this is
 
-This repo is **spec-first**. At the time of writing it holds only `README.md` (the full build brief for "Arif Visual Answers") and `.env` (which contains `GEMINI_API_KEY`). It is not yet a git repo. No code exists. `README.md` is the source of truth: work through its phases (§14) in order, tick its checkboxes, record every decision, version and live-call count in `BUILD_LOG.md`, and commit after each phase (`git commit -m "phase N: <summary>"`).
+"Arif Visual Answers": a demo where a user uploads a PDF and asks a question. The answer is a short direct text plus at most 3 typed, grounded visual components (comparison, steps, chart, table, diagram, formula, quiz, flashcards, text). It is Egyptian Arabic (RTL) by default, with an English (LTR) toggle. `README.md` is the original build spec (sections are referenced as §N). `BUILD_LOG.md` records every decision (D1…D18), the live-call log and the known limitations. Read the decisions before changing behaviour.
 
-Before the first commit, make sure `.gitignore` covers `.env`, `data/`, `.venv`, `node_modules`, `test-results` and `playwright-report`. Never print or log the key value.
+## Commands
 
-## What is being built
+On Windows, run `make` from Git Bash. `uv` and GNU make may not be on PATH: they live in `%APPDATA%/Python/Python313/Scripts` and the WinGet `ezwinports.make` package folder.
 
-This is a demo prototype for Arif, the Arabic-first assistant in Qriib. Given an uploaded PDF and a question, it returns a short direct answer plus **at most 3 typed visual components** (chart, comparison, steps, table, diagram, formula, quiz, flashcards, text). Every component is grounded with a page number and a verbatim quote, the output is safe because the model emits data and never HTML, Egyptian Arabic (RTL) is the default with an English (LTR) toggle, and each answer reports its tokens, USD cost and latency. The demo PDF is the Chain-of-Thought paper (arXiv 2201.11903), stored at `fixtures/pdfs/cot.pdf`.
+- `make setup` — `uv sync`, `npm ci` in `frontend/` and `e2e/`, Playwright Chromium.
+- `make serve-mock` — build the frontend and serve everything on :8000 with `MOCK_LLM=1` (no key needed).
+- `make test-backend` — pytest. Single test: `cd backend && uv run pytest tests/test_policy.py::test_page_fix_neighbour -q`.
+- `make lint` — ruff, mypy, oxlint, `tsc`, the Zod↔Pydantic check (`npm run test:schemas`), and greps for `dangerouslySetInnerHTML` and API keys.
+- `make e2e` — Playwright against a fresh mock server (`e2e/helpers/serve.mjs` builds the frontend and wipes `data/e2e`). Single spec: `cd e2e && npx playwright test tests/rtl.spec.ts --project=chromium-ar`. Baselines: `make e2e-update` (OS-specific).
+- `make demo` — records `demo/` (video, GIF, key frames).
+- Quick UI check against a running :8000: `cd e2e && node helpers/shoot.mjs <ar|en> <q1..q6> <width> <out.png> [compare]`.
+- Fixture check: `cd backend && PYTHONPATH=. uv run python scripts/check_fixtures.py`. Page text for writing quotes: `scripts/page_text.py ../fixtures/pdfs/cot.pdf 21`.
+- **Live calls** (they cost budget, so ask first): `make test-live`, `make record-fixtures`, `make bench`, `make check-models`, `scripts/diag_gemini.py`.
 
-## Stack
+## Architecture
 
-- Backend: Python 3.12, FastAPI, `uv`, `google-genai`, pdfplumber (avoid PyMuPDF, which is AGPL), rapidfuzz, jiter, slowapi, and pytest.
-- Frontend: React, TypeScript, Vite, Tailwind (logical utilities `ms-/me-/ps-/pe-/start-/end-` and `rtl:`/`ltr:` variants only), Zod, Recharts, KaTeX, and react-markdown.
-- E2E: Playwright and `@axe-core/playwright`.
+Request path: `POST /api/ask` → `stream.VisualRun` → provider streams JSON → `parse_partial` (jiter, trailing-strings). `answer_text` deltas become `TEXT_MESSAGE_CONTENT`. Each completed component goes through `policy.ComponentProcessor` (project to type → Pydantic validate → `grounding` → per-type downgrade rules) and then `policy.Selector` (cap of 3, quiz last). The result is emitted as SSE events named after AG-UI events (`docs/protocol.md`). `/api/ask_text` (`TextRun`) is the plain-prose "Before" answer.
 
-## Commands (planned Makefile targets, README §11)
+- **Catalog**: one source of truth in `backend/app/catalog.py`. `make schema` writes `frontend/src/catalog/schema.json`, which the hand-written Zod in `frontend/src/catalog/schemas.ts` must match (`npm run test:schemas`).
+- **`SCHEMA_MODE`** (D5/D18): `json` (default — no API schema; the schema text goes in the cached system prompt), `flat` (one object, no anyOf), `single` (full anyOf), `plan` (plan, then one call per component). Gemini rejected `single` and `flat` with 400 on build day.
+- **Grounding** checks against `visible_text` only (excluding chars under 4 pt, white, or off the crop box; hidden text raises `HIDDEN_TEXT_DETECTED`). The quote check is `partial_ratio >= 90` with a ±1 page fix. Numbers must appear in the quote **and** on the page. Digits glued to words (`GSM8K`, `GPT-3`) are not numbers.
+- **Providers** (`backend/app/providers/`): `gemini` (Files API, `thinking_level`, never `thinking_budget`), `openai_compat` (self-hosted; sends page-marked text, not the PDF), `mock` (replays `fixtures/answers/<slug>/<qid>.<lang>.json`, chosen by PDF sha256 via `index.json` plus question fuzzy/keyword match). Mock-only headers: `X-Mock-Fixture: dir/name`, `X-No-Cache: 1`.
+- **Retries**: 429/503 → 2 backoff retries → `FALLBACK_MODEL`, only before any output has streamed. Timeout keeps the partial text and then sends `RUN_ERROR`.
+- **Caches**: parsed PDF pages are memoised per sha256 with a per-hash lock; answers are cached in SQLite (`data/cache.sqlite`), keyed on sha + normalised question + lang + model + prompt version + mode.
+- **Frontend** (`frontend/src`): `state/useAnswer.ts` reduces SSE events into slots (planned → ready/dropped); `catalog/registry.tsx` maps types to pure props-in renderers (chart and formula are lazy-loaded). i18n lives in `i18n/` (`useI18n` from `i18n/context`).
 
-- `make setup` runs `uv sync`, `npm ci` and the Playwright Chromium install.
-- `make dev` starts uvicorn on :8000 and Vite on :5173, with `/api` proxied to the backend.
-- `make serve-mock` builds the frontend and serves it from FastAPI with `MOCK_LLM=1`. This is the deterministic mode.
-- `make test-backend` runs `uv run pytest -q`. For a single test, `cd backend && uv run pytest tests/test_grounding.py::test_name -q`.
-- `make lint` runs ruff, mypy, eslint, typecheck and the `dangerouslySetInnerHTML` grep.
-- `make e2e` runs Playwright against `make serve-mock`. For a single spec, `npx playwright test e2e/tests/rtl.spec.ts --project=chromium-ar`.
-- `make e2e-update` regenerates the visual baselines. They are OS-specific.
-- These targets make **live** calls: `make test-live`, `make record-fixtures`, `make bench` and `make check-models`.
-- For quick UI checks: `npx playwright screenshot --viewport-size=1280,800 http://localhost:8000 shot.png`, then read the PNG. Prefer the Playwright CLI over Playwright MCP.
+## Rules that are easy to break
 
-## Architecture (the big picture)
-
-Request flow: `POST /api/ask` → provider streams JSON → `stream.py` parses it incrementally (jiter partial mode) → each completed component goes through **Pydantic validation → `grounding.py` → `policy.py`** → it is emitted as an SSE event. Event names follow AG-UI (`RUN_STARTED`, `TEXT_MESSAGE_*`, `COMPONENT_PLANNED`, `COMPONENT`, `COMPONENT_DROPPED`, `WARNING`, `METRICS`, `RUN_ERROR`, `RUN_FINISHED`; see `docs/protocol.md`). The client reads SSE with `fetch` + `ReadableStream`, not `EventSource`, because the endpoint is a POST. `/api/ask_text` produces the plain-prose "Before" panel.
-
-- **The catalog is defined once** in `backend/app/catalog.py` (Pydantic, `additionalProperties: false`). `to_gemini_schema()` turns `const` into `enum`, inlines `$ref` and strips `title`/`default`/`examples`. `scripts/export_schema.py` writes `frontend/src/catalog/schema.json`, and the Zod schemas in `frontend/src/catalog/schemas.ts` must stay equivalent to it. Gemini does not enforce `minLength`/`maxLength`/`uniqueItems`, so Pydantic and Zod enforce them. `answer_text` comes first in the schema because property order drives streaming.
-- **`SCHEMA_MODE=single|plan`.** In plan mode one call returns a plan, then each component gets its own call. Use it if Gemini rejects the full schema with a 400.
-- **Grounding** checks claims against `visible_text` only. `visible_text` excludes characters under 4 pt, near-white characters and characters outside the crop box. `all_text` is used only to detect hidden text and emit `HIDDEN_TEXT_DETECTED`. Both the quote and the page go through `normalize()` (NFKC, Arabic digit and separator folding, removal of tashkeel and tatweel, alef/ya/ta-marbuta unification, hyphen joining, lowercasing). The quote check is `partial_ratio ≥ 90`, with a ±1 page fix. Numbers must appear in the quote, within ±0.05 or one decimal place of rounding. Quotes stay verbatim English even in Arabic answers.
-- **Policy** (also stated in the system prompt) rules: `needs_visual=false` → no components; at most 3 components, prioritized `comparison > steps > chart > table > diagram > formula > text`; the quiz is always last and at most one is allowed; a chart with fewer than 3 verified points becomes a table, and a table with fewer than 2 rows becomes text; comparisons need matching attribute keys. Every drop emits `COMPONENT_DROPPED`.
-- **Providers** implement the `LLMProvider` protocol in `backend/app/providers/`:
-  - `gemini` uses the Files API (uploads are reused for up to 47 h), `generate_content_stream`, and `thinking_level` (never also `thinking_budget`). Temperature stays at 1.0.
-  - `openai_compat` sends the visible text with `[[page N]]` markers. It is tested only with respx mocks.
-  - `mock` replays `fixtures/answers/` in chunks. Select it with `LLM_PROVIDER`; `MOCK_LLM=1` forces mock. In mock mode only, the `X-Mock-Fixture: malformed/<name>` header forces a specific fixture.
-- **Caching and metrics.** Keep the stable prefix (system prompt + catalog + file) first so Gemini's implicit cache can hit. The app cache lives in `data/cache.sqlite`, keyed on sha256(pdf) + normalized question + lang + model + `PROMPT_VERSION`. Costs come from `backend/app/prices.json`, which has `valid_from`/`valid_until` dates (3.8 Flash prices double on 2027-01-01). Thinking tokens are billed at the output rate.
-
-## Non-negotiable rules
-
-- **The live-call budget is 15 Gemini calls for the whole build.** Count every call in `BUILD_LOG.md`. Build against `MOCK_LLM=1` by default.
-- Default `MODEL=gemini-3.8-flash` and `FALLBACK_MODEL=gemini-3.1-flash-lite`. Do not use `gemini-2.5-*` or `gemini-3.5-flash`. Verify model IDs and SDK field names with `make check-models` instead of trusting the README.
-- XSS: never use `dangerouslySetInnerHTML` (an ESLint rule and a grep enforce this). Use react-markdown without `rehype-raw` and with an `allowedElements` whitelist. Never render model-supplied URLs, links or images. Draw diagrams with our own SVG; do not use Mermaid. Run KaTeX with `trust: false`.
-- The key is read by the backend only, and a test greps `frontend/dist` for `AIza`. Strict CSP applies when FastAPI serves the build.
-- RTL: each component root sets `dir`/`lang`, and model strings get `dir="auto"`. Mixed tokens go in `<bdi>`, and quotes and KaTeX go in LTR islands. In RTL, Recharts uses `XAxis reversed` and `YAxis orientation="right"`. Never apply `letter-spacing` to Arabic text. The font is self-hosted IBM Plex Sans Arabic. Display Western digits by default.
-- Fixture quotes must be copied from the real `visible_text` of `cot.pdf` and must pass `grounding.py`.
-- Stop rules (README §2): ask the user only when the key is missing after all mock-capable phases are done, when no usable model ID exists, when a billing or permission error can't be fixed by configuration, or when a dependency install fails after two attempts. Otherwise decide, log the decision and continue.
+- Never render model HTML, links or images. No `dangerouslySetInnerHTML` (lint fails); markdown goes through react-markdown with an allowlist and `<` escaped; KaTeX uses `katex.render` into a ref with `trust:false`.
+- Fixture quotes must be verbatim from `visible_text` of `cot.pdf`; every `fixtures/answers/cot/q*.json` must stay fully `verified` (`tests/test_fixtures.py`).
+- RTL: components set `dir`/`lang` from `props.lang`; use `<bdi>` for mixed tokens and LTR islands for quotes; never apply letter-spacing to Arabic; `sr-only` goes on a wrapper, never on a `<table>`.
+- The tool transport decodes backslash escapes (`\u....`, `\t`) in written content. To put a real backslash in source or fixtures, build it with `chr(92)`.
+- Live budget: 15 Gemini calls total, 13 used (see BUILD_LOG). Default to `MOCK_LLM=1`.

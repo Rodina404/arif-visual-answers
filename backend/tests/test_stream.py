@@ -177,3 +177,22 @@ def test_flat_mode_same_result(tmp_path):
     with TestClient(create_app(make_settings(tmp_path, schema_mode="flat"))) as c:
         ev = ask(c, cot_doc(c), Q1_EN)
     assert [c["type"] for c in components(ev)] == ["comparison", "steps", "quiz"]
+
+
+def test_json_mode_sends_no_api_schema(tmp_path, monkeypatch):
+    from app import prompts
+    from app.providers.mock import MockProvider
+
+    seen = {}
+    original = MockProvider.stream_structured
+
+    def spy(self, **kw):
+        seen.update(schema=kw["schema"], system=kw["system"])
+        return original(self, **kw)
+
+    monkeypatch.setattr(MockProvider, "stream_structured", spy)
+    with TestClient(create_app(make_settings(tmp_path, schema_mode="json"))) as c:
+        ev = ask(c, cot_doc(c), Q1_EN)
+    assert seen["schema"] is None
+    assert seen["system"] == prompts.json_mode_system() and '"components"' in seen["system"]
+    assert [c["type"] for c in components(ev)] == ["comparison", "steps", "quiz"]

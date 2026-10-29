@@ -14,6 +14,14 @@ Counted as **requests that reached the API** (a call that retried counts once pe
 | 4 | 2026-10-29 | same schema, 150 s timeout | 3.8-flash | 400 INVALID_ARGUMENT after 13 s |
 | 5–8 | 2026-10-29 | flat schema (no anyOf), q1 EN | 3.8-flash ×3, 3.1-flash-lite ×1 | 3× retryable error on primary → fallback → 400 on flash-lite. Retries burned 4 requests: recording now never retries |
 | 9 | 2026-10-29 | `diag_gemini.py schema` (tiny prompt + flat schema, no PDF) | 3.8-flash | **503 UNAVAILABLE "model is currently experiencing high demand"** |
+| 10 | 2026-10-29 | `diag_gemini.py schema` again (~15 min later) | 3.8-flash | **400 INVALID_ARGUMENT** (flat schema, no PDF, no media_resolution) |
+| 11 | 2026-10-29 | `diag_gemini.py base` (thinking=low, no schema, no PDF) | 3.8-flash | 503 UNAVAILABLE (high demand) |
+| 12 | 2026-10-29 | q1 AR, real pipeline, `SCHEMA_MODE=json` | 3.8-flash | accepted (no 400), but **no chunk in 150 s** → client timeout |
+| 13 | 2026-10-29 | `diag_gemini.py base` | 3.8-flash | 503 UNAVAILABLE (high demand) |
+
+**13 of 15 used; 2 left for the user** (e.g. `make test-live` = 1 call once the model is healthy).
+
+**Conclusion.** Validation runs before the capacity check: the schema requests (1, 2, 4, 10) are rejected with 400, while the no-schema requests (11, 13) pass validation and hit 503. So `response_json_schema` with this catalog is rejected, and the thinking config is fine. `SCHEMA_MODE=json` (no API schema; schema text in the cached system prompt; strict Pydantic validation unchanged) is now the default. It passed validation in call 12 but couldn't be measured end to end because of the overload. **No live answer, latency or cost was measured.** Stop rule 3 (billing/permission) does not apply, so the build continued in mock mode.
 
 Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase 0 `make check-models`).
 
@@ -85,3 +93,29 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 
 - `make demo` → `demo/arif-visual-answers.webm` (4.3 MB), `demo/arif-visual-answers.gif` (2.1 MB, 960 px, 12 fps) and 8 key frames in `demo/shots/` (AR Before/After streaming, quiz, source panel, text-only q4, EN chart, metrics drawer, injection warning). Mock mode with `MOCK_TTFT_MS=900`.
 - Not done: the optional live recording and `make bench` (10 live calls). The live budget was used up by schema debugging and the 503 overload.
+
+## Phase 10 — hand-off
+
+- Checked: light and dark mode follow `prefers-color-scheme` (colour tokens in `frontend/src/styles/index.css`), AR and EN, 1280 and 390 px.
+- **D18 — Default `SCHEMA_MODE=json`** (see the live-call conclusion above). `flat`, `single` and `plan` remain available.
+
+### Measured cost & latency
+
+- **Live: not measured.** No live call succeeded (400 for API schemas, then 503 / hang from overload). The cost model is tested against prices.json for both price periods.
+- **Mock** (MOCK_TTFT_MS=400, 40 chars / 30 ms): time to first text ≈ 0.4–1.0 s; total ≈ 3.2 s for q1 (3.7 KB of JSON) and 1.3–1.9 s for q2–q6; repeat question (app cache) 0.0 s in the UI and under 300 ms (asserted in `cache.spec`). Mock-reported tokens ≈ 24.1k input (43 pages × 560) plus output ≈ chars/3, so ≈ $0.02 per answer at 3.8 Flash prices (illustrative only).
+
+### Known limitations
+
+- **No live verification.** The Gemini path (Files API upload, JSON mode, streaming, usage metadata, fallback) is unit-tested with mocks and passed `count_tokens`, but never produced a full live answer. Run `make test-live` (1 call) when the model is healthy; 2 of the 15 budgeted calls remain.
+- **Fixtures are hand-authored**, not recorded. The Egyptian Arabic was written by the build agent and has not been reviewed by a native speaker.
+- **Scanned PDFs**: pages without a text layer give `unverified` badges; there is no OCR.
+- **Arabic PDF extraction**: pdfplumber on RTL Arabic PDFs was not tested (the demo PDF is English). NFKC folds presentation forms, but visual-order extraction could still break quote matching.
+- **Values only in figures** (e.g. Figure 4) can't be grounded; q2 uses Appendix Table 2 instead.
+- **Diagram bidi**: an Arabic SVG label with inline arithmetic reorders visually (SVG has no `bdi`).
+- **Mock latency target**: q1 misses the ≤ 2 s mock total (3.2 s) because of the spec'd 40-char / 30 ms chunking.
+- **Visual baselines** are Windows-specific.
+- **Phase 11 (AG-UI / CopilotKit / A2UI)** was not attempted (optional). `docs/protocol.md` describes the mapping.
+
+### Final checks (2026-10-29)
+
+- `make lint`: pass. `make test-backend`: **124 passed**. `make e2e`: **90 passed, twice in a row** (cache-timing now runs alone in its own project after the parallel ones; it once measured a cache hit at 301 ms while 4 workers were parsing PDFs, just over the 300 ms limit).

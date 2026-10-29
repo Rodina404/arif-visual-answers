@@ -4,6 +4,20 @@
 
 ---
 
+## Quick start (built prototype)
+
+```bash
+make setup                 # uv sync, npm ci (frontend + e2e), Playwright Chromium
+make serve-mock            # build + serve on http://localhost:8000 with MOCK_LLM=1 (no key needed)
+make test-backend          # 124 pytest tests
+make e2e                   # 90 Playwright tests (mocked, deterministic)
+make demo                  # demo/arif-visual-answers.{webm,gif} + demo/shots/
+```
+
+Live mode: put `GEMINI_API_KEY` in `.env` and run `cd backend && uv run uvicorn app.main:app --port 8000` (after `make build`). **The demo sends the uploaded PDF to Google (Gemini Files API).** Production would use `LLM_PROVIDER=openai_compat` with a self-hosted model, which receives only the extracted text. Decisions, the live-call log and known limitations are in `BUILD_LOG.md`. On Windows, run `make` from Git Bash.
+
+---
+
 ## 0. Context: what we are building and why
 
 **Arif (عارف)** is the AI assistant inside **Qriib**, an Arabic-first, "sovereign AI" product suite made by Tawteen Tech / V.Connct (Egypt). When a user uploads a PDF and asks about it, Arif today replies with a **long block of Egyptian-Arabic text**. The structure is hidden in the prose: comparisons sit inside sentences, steps are not numbered, and numbers have no source.
@@ -56,6 +70,13 @@ These come from research and **may already be out of date**. Your first task in 
 | `gemini-3.1-flash-lite` | 0.25 | 1.50 | 0.025 | Yes | Defaults to minimal thinking. Fallback and cheap path. |
 | `gemini-3.1-pro-preview` | 2.00 | 12.00 | 0.20 | No | Not needed. |
 | `gemini-4-argon` | 2.00 | 10.00 | 0.10 | No | Not needed. Access may be limited. |
+
+**Measured on 2026-10-29 (build day) — see `BUILD_LOG.md`:**
+
+- `gemini-3.8-flash` and `gemini-3.1-flash-lite` both appear in `models.list()`. Prices on ai.google.dev match the table above; the 3.8 Flash cache *storage* price also doubles on 2027-01-01 ($0.50 → $1.00 per 1M tokens per hour).
+- `count_tokens` on `cot.pdf` (43 pages) = **24,081 tokens ≈ 560 tokens/page**, not ~258.
+- The full catalog schema in `response_json_schema` (and a flattened 6 KB version) was **rejected with `400 INVALID_ARGUMENT`**. A request with no schema passed validation. The build therefore defaults to `SCHEMA_MODE=json`: JSON mode, with the schema in the cached system prompt and strict server-side validation.
+- During the build, `gemini-3.8-flash` repeatedly returned **`503 UNAVAILABLE` ("high demand")** or hung, so no live answer was obtained within the 15-call budget.
 
 Other facts to rely on (verify each):
 
@@ -411,7 +432,7 @@ MODEL=gemini-3.8-flash         # verify with `make check-models`
 FALLBACK_MODEL=gemini-3.1-flash-lite
 THINKING_LEVEL=low             # minimal | low | medium | high
 MEDIA_RESOLUTION=medium
-SCHEMA_MODE=single             # single | plan
+SCHEMA_MODE=json               # json (schema in prompt, default) | flat | single | plan
 MAX_OUTPUT_TOKENS=4096
 REQUEST_TIMEOUT_S=45
 ENABLE_EXPLICIT_CACHE=0
@@ -542,7 +563,7 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - [x] `LLMProvider` + `MockProvider` + `GeminiProvider` + `OpenAICompatProvider`.
 - [x] Prompts (`prompts.py`): system prompt with the catalog descriptions, restraint rules, language rules, and untrusted-document delimiters. Version it with `PROMPT_VERSION`.
 - [x] `stream.py` incremental parser → `/api/ask` SSE with the AG-UI-named events. Add `/api/ask_text` for the Before panel.
-- [x] If a key exists: **one** live call with q1 in EN to confirm the schema is accepted (switch to `SCHEMA_MODE=plan` on a 400).
+- [ ] BLOCKED: live — one live call with q1 in EN to confirm the schema is accepted. Result: `single`/`flat` schemas → 400; `json` mode accepted but the model was overloaded (503 / hang). See BUILD_LOG.
 - **Accept:** pytest streams fixture JSON in chunks and gets the right event order. `curl -N` against mock mode shows the events. The live call (if any) returns valid JSON. Call count is logged.
 
 ### Phase 3 — Grounding and policy
@@ -580,9 +601,9 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** the GIF is under about 15 MB, plays the full script, and shows Arabic RTL and English.
 
 ### Phase 10 — Polish and hand-off
-- [ ] Visual polish: a calm, professional look, clear hierarchy, generous spacing, no decorative clutter (the coherence principle applies to the UI itself). Follow the user's system color scheme for dark and light mode.
-- [ ] Update this README's checkboxes, finish `BUILD_LOG.md` (decisions, measured cost and latency, known limitations), and check that `docs/protocol.md` is complete.
-- [ ] Final `make lint test-backend e2e`.
+- [x] Visual polish: a calm, professional look, clear hierarchy, generous spacing, no decorative clutter (the coherence principle applies to the UI itself). Follow the user's system color scheme for dark and light mode.
+- [x] Update this README's checkboxes, finish `BUILD_LOG.md` (decisions, measured cost and latency, known limitations), and check that `docs/protocol.md` is complete.
+- [x] Final `make lint test-backend e2e`.
 - **Accept:** every item in the Definition of done passes.
 
 ### Phase 11 — OPTIONAL stretch (only if Phases 0–10 are done and time remains)
@@ -595,19 +616,19 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 
 ## 15. Definition of done
 
-- [ ] `make setup && make build && make e2e` works from a clean clone with **no API key** (mock mode).
-- [ ] With a key: upload `cot.pdf` → q1 in Arabic streams a short Egyptian-Arabic answer plus up to 3 grounded components, with the quiz last.
-- [ ] q4 ("who are the authors") returns **text only**.
-- [ ] Every chart or table number has a page chip and a verbatim quote. Ungrounded values are dropped or marked, never shown as verified.
-- [ ] The Before/After view shows a long text answer next to the visual answer, each with tokens, cost (USD) and latency.
-- [ ] AR (RTL) and EN (LTR) both pass the layout assertions, axe (0 violations) and visual baselines.
-- [ ] Security tests pass: no HTML or script execution from model output, no model links, hidden-text warning on the injection PDF, CSP present, key absent from the bundle, upload limits enforced, rate limits active.
-- [ ] Malformed JSON, unknown types and timeouts degrade to text without crashing.
-- [ ] `MODEL`, `FALLBACK_MODEL`, `THINKING_LEVEL`, `LLM_PROVIDER` and `MOCK_LLM` all work. The OpenAI-compatible adapter passes its mocked unit tests.
-- [ ] Repeat question → cache hit in under 300 ms.
-- [ ] `demo/arif-visual-answers.gif` and `.webm` exist.
-- [ ] `BUILD_LOG.md` records the versions, model check, live-call count, measured cost and latency (or "not measured: no key"), decisions, and known limitations (scanned PDFs, Arabic PDF extraction quirks, values found only in figures, Egyptian-Arabic quality reviewed by a human only).
-- [ ] All phases are committed, and the checkboxes in this README are updated.
+- [x] `make setup && make build && make e2e` works from a clean clone with **no API key** (mock mode).
+- [ ] BLOCKED: model overloaded (503) during the build — With a key: upload `cot.pdf` → q1 in Arabic streams a short Egyptian-Arabic answer plus up to 3 grounded components, with the quiz last.
+- [x] q4 ("who are the authors") returns **text only**.
+- [x] Every chart or table number has a page chip and a verbatim quote. Ungrounded values are dropped or marked, never shown as verified.
+- [x] The Before/After view shows a long text answer next to the visual answer, each with tokens, cost (USD) and latency.
+- [x] AR (RTL) and EN (LTR) both pass the layout assertions, axe (0 violations) and visual baselines.
+- [x] Security tests pass: no HTML or script execution from model output, no model links, hidden-text warning on the injection PDF, CSP present, key absent from the bundle, upload limits enforced, rate limits active.
+- [x] Malformed JSON, unknown types and timeouts degrade to text without crashing.
+- [x] `MODEL`, `FALLBACK_MODEL`, `THINKING_LEVEL`, `LLM_PROVIDER` and `MOCK_LLM` all work. The OpenAI-compatible adapter passes its mocked unit tests.
+- [x] Repeat question → cache hit in under 300 ms.
+- [x] `demo/arif-visual-answers.gif` and `.webm` exist.
+- [x] `BUILD_LOG.md` records the versions, model check, live-call count, measured cost and latency (or "not measured: no key"), decisions, and known limitations (scanned PDFs, Arabic PDF extraction quirks, values found only in figures, Egyptian-Arabic quality reviewed by a human only).
+- [x] All phases are committed, and the checkboxes in this README are updated.
 
 ---
 

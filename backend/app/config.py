@@ -26,7 +26,7 @@ class Settings:
     fallback_model: str = field(default_factory=lambda: os.getenv("FALLBACK_MODEL", "gemini-3.1-flash-lite"))
     thinking_level: str = field(default_factory=lambda: os.getenv("THINKING_LEVEL", "low"))
     media_resolution: str = field(default_factory=lambda: os.getenv("MEDIA_RESOLUTION", "medium"))
-    schema_mode: str = field(default_factory=lambda: os.getenv("SCHEMA_MODE", "single"))
+    schema_mode: str = field(default_factory=lambda: os.getenv("SCHEMA_MODE", "json"))
     max_output_tokens: int = field(default_factory=lambda: _int("MAX_OUTPUT_TOKENS", 4096))
     request_timeout_s: int = field(default_factory=lambda: _int("REQUEST_TIMEOUT_S", 45))
     enable_explicit_cache: bool = field(default_factory=lambda: _bool("ENABLE_EXPLICIT_CACHE"))

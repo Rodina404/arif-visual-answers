@@ -31,12 +31,23 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, locale: 'ar-EG' },
       metadata: { lang: 'ar' },
       grepInvert: /@mobile|@demo/,
+      testIgnore: /cache\.spec/,
     },
     {
       name: 'chromium-en',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, locale: 'en-US' },
       metadata: { lang: 'en' },
       grepInvert: /@mobile|@demo|@live/,
+      testIgnore: /cache\.spec/,
+    },
+    {
+      // Latency assertions run alone, after the parallel projects, so other workers' PDF parsing
+      // can't eat into the <300 ms cache-hit budget.
+      name: 'cache-timing',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      metadata: { lang: 'ar' },
+      testMatch: /cache\.spec/,
+      dependencies: ['chromium-ar', 'chromium-en', 'mobile-ar'],
     },
     {
       name: 'mobile-ar',
