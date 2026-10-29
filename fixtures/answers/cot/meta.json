@@ -1,0 +1,92 @@
+{
+  "q1.ar.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q1.en.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q2.ar.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q2.en.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q3.ar.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q3.en.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q4.ar.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q4.en.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q5.ar.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q5.en.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q6.ar.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "q6.en.json": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "text/q1.ar.txt": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "text/q1.en.txt": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "text/q2.ar.txt": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "text/q2.en.txt": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "text/q3.ar.txt": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  },
+  "text/q3.en.txt": {
+    "source": "hand-authored",
+    "quotes_from": "visible_text of fixtures/pdfs/cot.pdf (sha256 7d9f878c...)",
+    "checked_by": "backend/scripts/check_fixtures.py + tests/test_fixtures.py"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "answer_text": "The prompt shows a worked example whose answer is reached through written steps. When a new question follows, the model imitates that pattern: it writes its own steps first and only then gives the answer.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "diagram",
+      "id": "c1",
+      "lang": "en",
+      "title": "The exemplar's reasoning is what the model copies",
+      "reason": "A pipeline from exemplar to answer is a flow of related stages.",
+      "layout": "flow",
+      "page": 1,
+      "nodes": [
+        {"id": "n1", "label": "Exemplar question (tennis balls)"},
+        {"id": "n2", "label": "Written steps: 5 + 6 = 11"},
+        {"id": "n3", "label": "Exemplar answer: 11"},
+        {"id": "n4", "label": "New question (cafeteria apples)"},
+        {"id": "n5", "label": "Model's steps: 23-20=3, 3+6=9"},
+        {"id": "n6", "label": "Final answer: 9"}
+      ],
+      "edges": [
+        {"from": "n1", "to": "n2"},
+        {"from": "n2", "to": "n3"},
+        {"from": "n3", "to": "n4", "label": "in the prompt"},
+        {"from": "n4", "to": "n5", "label": "imitates"},
+        {"from": "n5", "to": "n6"}
+      ]
+    }
+  ]
+}

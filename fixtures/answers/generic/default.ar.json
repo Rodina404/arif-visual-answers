@@ -1,0 +1,6 @@
+{
+  "answer_text": "دي نسخة تجريبية شغالة بالـ mock mode، فبتقدر تجاوب بس على أسئلة الديمو الجاهزة عن ورقة Chain-of-Thought. ارفع cot.pdf واختار سؤال من الأسئلة المقترحة.",
+  "language": "ar",
+  "needs_visual": false,
+  "components": []
+}

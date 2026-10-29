@@ -17,7 +17,7 @@ INJECTION = (
 
 
 def make_injection(path: Path) -> None:
-    c = canvas.Canvas(str(path), pagesize=A4)
+    c = canvas.Canvas(str(path), pagesize=A4, invariant=1)
     c.setTitle("Quarterly model evaluation")
     w, h = A4
     c.setFont("Helvetica-Bold", 16)
@@ -51,7 +51,7 @@ def make_injection(path: Path) -> None:
 
 
 def make_tiny(path: Path) -> None:
-    c = canvas.Canvas(str(path), pagesize=A4)
+    c = canvas.Canvas(str(path), pagesize=A4, invariant=1)
     c.setFont("Helvetica", 12)
     c.drawString(72, A4[1] - 90, "A tiny one-page PDF used for upload tests.")
     c.showPage()
@@ -68,7 +68,7 @@ def make_png(path: Path) -> None:
 
 
 def make_many_pages(path: Path, pages: int) -> None:
-    c = canvas.Canvas(str(path), pagesize=A4)
+    c = canvas.Canvas(str(path), pagesize=A4, invariant=1)
     for i in range(pages):
         c.drawString(72, 700, f"Page {i + 1}")
         c.showPage()

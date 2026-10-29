@@ -1,0 +1,42 @@
+{
+  "answer_text": "Chain-of-thought prompting gives the model a few worked examples whose answers spell out the intermediate reasoning steps before the final answer. Standard prompting shows only question–answer pairs, so the model jumps straight to an answer. Seeing the reasoning, large models learn to reason step by step and solve far more multi-step problems.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "comparison",
+      "id": "c1",
+      "lang": "en",
+      "title": "The difference: the model writes out its reasoning",
+      "reason": "Two prompting methods compared on the same attributes.",
+      "items": [
+        {
+          "name": "Standard prompting",
+          "summary": "Exemplars are plain question–answer pairs; the model answers directly.",
+          "attributes": [
+            {"key": "Exemplars", "value": "Input–output pairs only", "citation": {"page": 3, "quote": "in which a language model is given in-context exemplars of input–output pairs before outputting a prediction for a test-time example"}},
+            {"key": "Model output", "value": "The final answer, directly", "citation": {"page": 3, "quote": "The model gives the answer directly, as shown in Figure 1 (left)."}},
+            {"key": "Cafeteria question (Fig. 1)", "value": "27 (wrong)", "citation": {"page": 1, "quote": "A: The answer is 27."}}
+          ]
+        },
+        {
+          "name": "Chain-of-thought prompting",
+          "summary": "Each exemplar shows the reasoning before the answer, and the model imitates it.",
+          "attributes": [
+            {"key": "Exemplars", "value": "Question + chain of thought + answer", "citation": {"page": 3, "quote": "Our proposed approach is to augment each exemplar in few-shot prompting with a chain of thought for an associated answer"}},
+            {"key": "Model output", "value": "Intermediate reasoning steps, then the answer", "citation": {"page": 2, "quote": "A chain of thought is a series of intermediate natural language reasoning steps that lead to the final output"}},
+            {"key": "Cafeteria question (Fig. 1)", "value": "9 (correct)", "citation": {"page": 1, "quote": "so they have 3 + 6 = 9. The answer is 9."}}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "id": "c2",
+      "lang": "en",
+      "title": "How to build a chain-of-thought prompt",
+      "reason": "Building the prompt is an ordered procedure.",
+      "ordered": true,
+      "steps": [
+        {"title": "Pick a few exemplars", "detail": "Write a handful of questions like the ones you want solved. The paper used eight exemplars for its math benchmarks.", "page": 3},
+        {"title": "Write out the reasoning", "detail": "Fo

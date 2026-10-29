@@ -78,7 +78,7 @@ def test_storage_uses_random_uuid_outside_static(client, settings):
     assert [f.name for f in stored] == [f"{body['doc_id']}.pdf"]
 
 
-@pytest.mark.parametrize("bad", ["../../etc/passwd", "not-a-uuid"])
+@pytest.mark.parametrize("bad", ["..%2F..%2Fetc%2Fpasswd", "not-a-uuid"])
 def test_unknown_doc_ids(client, bad):
     assert client.get(f"/api/documents/{bad}/pages/1").status_code == 404
 

@@ -1,0 +1,216 @@
+{
+  "answer_text": "Malformed-fixture test answer: the visual below is a test case.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "comparison",
+      "id": "c1",
+      "lang": "en",
+      "title": "The difference: the model writes out its reasoning",
+      "reason": "Two prompting methods compared on the same attributes.",
+      "items": [
+        {
+          "name": "Standard prompting",
+          "summary": "Exemplars are plain question–answer pairs; the model answers directly.",
+          "attributes": [
+            {
+              "key": "Exemplars",
+              "value": "Input–output pairs only",
+              "citation": {
+                "page": 3,
+                "quote": "in which a language model is given in-context exemplars of input–output pairs before outputting a prediction for a test-time example"
+              }
+            },
+            {
+              "key": "Model output",
+              "value": "The final answer, directly",
+              "citation": {
+                "page": 3,
+                "quote": "The model gives the answer directly, as shown in Figure 1 (left)."
+              }
+            },
+            {
+              "key": "Cafeteria question (Fig. 1)",
+              "value": "27 (wrong)",
+              "citation": {
+                "page": 1,
+                "quote": "A: The answer is 27."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chain-of-thought prompting",
+          "summary": "Each exemplar shows the reasoning before the answer, and the model imitates it.",
+          "attributes": [
+            {
+              "key": "Exemplars",
+              "value": "Question + chain of thought + answer",
+              "citation": {
+                "page": 3,
+                "quote": "Our proposed approach is to augment each exemplar in few-shot prompting with a chain of thought for an associated answer"
+              }
+            },
+            {
+              "key": "Model output",
+              "value": "Intermediate reasoning steps, then the answer",
+              "citation": {
+                "page": 2,
+                "quote": "A chain of thought is a series of intermediate natural language reasoning steps that lead to the final output"
+              }
+            },
+            {
+              "key": "Cafeteria question (Fig. 1)",
+              "value": "9 (correct)",
+              "citation": {
+                "page": 1,
+                "quote": "so they have 3 + 6 = 9. The answer is 9."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "id": "c2",
+      "lang": "en",
+      "title": "How to build a chain-of-thought prompt",
+      "reason": "Building the prompt is an ordered procedure.",
+      "ordered": true,
+      "steps": [
+        {
+          "title": "Pick a few exemplars",
+          "detail": "Write a handful of questions like the ones you want solved. The paper used eight exemplars for its math benchmarks.",
+          "page": 3
+        },
+        {
+          "title": "Write out the reasoning",
+          "detail": "For each exemplar, write the intermediate steps in plain language that lead to the answer.",
+          "page": 2
+        },
+        {
+          "title": "End with the answer",
+          "detail": "Finish every exemplar with the final answer, e.g. \"The answer is 11.\"",
+          "page": 1
+        },
+        {
+          "title": "Append the new question",
+          "detail": "Put the test question last. The model continues the pattern: its own chain of thought, then the answer.",
+          "page": 3
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": "c3",
+      "lang": "en",
+      "title": "Five model families, from 350M to 540B parameters",
+      "reason": "Exact model sizes are worth scanning side by side.",
+      "columns": [
+        "Model",
+        "Sizes (parameters)"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "GPT-3 (InstructGPT)",
+            "350M, 1.3B, 6.7B, 175B"
+          ],
+          "citation": {
+            "page": 4,
+            "quote": "presumably correspond to InstructGPT models of 350M, 1.3B, 6.7B, and 175B parameters"
+          }
+        },
+        {
+          "cells": [
+            "LaMDA",
+            "422M, 2B, 8B, 68B, 137B"
+          ],
+          "citation": {
+            "page": 4,
+            "quote": "LaMDA (Thoppilan et al., 2022), which has models of 422M, 2B, 8B, 68B, and 137B parameters"
+          }
+        },
+        {
+          "cells": [
+            "PaLM",
+            "8B, 62B, 540B"
+          ],
+          "citation": {
+            "page": 4,
+            "quote": "The third is PaLM, which has models of 8B, 62B, and 540B parameters."
+          }
+        },
+        {
+          "cells": [
+            "UL2",
+            "20B"
+          ],
+          "citation": {
+            "page": 4,
+            "quote": "The fourth is UL2 20B (Tay et al., 2022)"
+          }
+        },
+        {
+          "cells": [
+            "Codex (code-davinci-002)",
+            "Not stated"
+          ],
+          "citation": {
+            "page": 4,
+            "quote": "the fifth is Codex (Chen et al., 2021, code-davinci-002 in the OpenAI API)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "c4",
+      "lang": "en",
+      "title": "Extra text",
+      "reason": "Low-priority extra component.",
+      "body": "An extra explanation that should be dropped by the cap."
+    },
+    {
+      "type": "quiz",
+      "id": "c5",
+      "lang": "en",
+      "title": "Check yourself",
+      "reason": "Retrieval practice at the end of an explanatory answer.",
+      "questions": [
+        {
+          "prompt": "In Figure 1, what does standard prompting answer for the cafeteria question?",
+          "options": [
+            "9",
+            "27",
+            "11",
+            "23"
+          ],
+          "correct_index": 1,
+          "explanation": "Standard prompting answers 27 directly, which is wrong; with a chain of thought the model reaches the correct 9.",
+          "citation": {
+            "page": 1,
+            "quote": "A: The answer is 27."
+          }
+        },
+        {
+          "prompt": "Which property of a chain of thought helps you see where a model went wrong?",
+          "options": [
+            "It needs no exemplars",
+            "It gives an interpretable window into the model's behavior",
+            "It makes the model smaller",
+            "It removes the need for a large model"
+          ],
+          "correct_index": 1,
+          "explanation": "The paper says a chain of thought is an interpretable window into the model's behavior, so you can debug where the reasoning went wrong.",
+          "citation": {
+            "page": 3,
+            "quote": "a chain of thought provides an interpretable window into the behavior of the model"
+          }
+        }
+      ]
+    }
+  ]
+}

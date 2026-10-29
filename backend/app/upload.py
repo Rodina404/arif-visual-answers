@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import io
 import json
@@ -169,9 +170,7 @@ def parse_pdf(data: bytes, settings: Settings) -> list[PageText]:
         if count == 0:
             raise UploadError("UNREADABLE", "The PDF has no pages.", 400)
         if count > settings.max_pages:
-            raise UploadError(
-                "TOO_MANY_PAGES", f"The PDF has {count} pages; the limit is {settings.max_pages}.", 413
-            )
+            raise UploadError("TOO_MANY_PAGES", f"The PDF has {count} pages; the limit is {settings.max_pages}.", 413)
         try:
             return extract_pages(pdf)
         except Exception as exc:
@@ -188,6 +187,9 @@ def validate_upload(data: bytes, content_type: str | None, settings: Settings) -
         raise UploadError("NOT_PDF", "The file is not a PDF.", 415)
 
 
+_PARSED: dict[str, list[PageText]] = {}
+
+
 class DocStore:
     """Keeps parsed documents in memory with a JSON sidecar so a restart doesn't lose them."""
 
@@ -201,14 +203,23 @@ class DocStore:
 
     def add(self, data: bytes, filename: str, content_type: str | None) -> StoredDoc:
         validate_upload(data, content_type, self.settings)
-        pages = parse_pdf(data, self.settings)
+        sha = hashlib.sha256(data).hexdigest()
+        # Parsing a 43-page paper takes seconds; the same bytes always give the same text layers.
+        pages = copy.deepcopy(_PARSED[sha]) if sha in _PARSED else parse_pdf(data, self.settings)
+        if len(pages) > self.settings.max_pages:
+            raise UploadError(
+                "TOO_MANY_PAGES", f"The PDF has {len(pages)} pages; the limit is {self.settings.max_pages}.", 413
+            )
+        _PARSED[sha] = copy.deepcopy(pages)
+        while len(_PARSED) > 32:
+            _PARSED.pop(next(iter(_PARSED)))
         doc_id = str(uuid.uuid4())
         path = self.uploads / f"{doc_id}.pdf"
         path.write_bytes(data)
         hidden = [p.number for p in pages if p.suspicious]
         doc = StoredDoc(
             doc_id=doc_id,
-            sha256=hashlib.sha256(data).hexdigest(),
+            sha256=sha,
             filename=Path(filename or "document.pdf").name[:120],
             path=str(path),
             created_at=time.time(),

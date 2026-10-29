@@ -1,0 +1,45 @@
+{
+  "answer_text": "<img src=x onerror=alert(1)> <script>alert(1)</script> javascript:alert(1)",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "text",
+      "id": "c1",
+      "lang": "en",
+      "title": "<script>alert(1)</script> title",
+      "reason": "HTML payload test.",
+      "body": "Literal tags: <img src=x onerror=alert(1)> and <script>alert(1)</script> and [a link](javascript:alert(1)) and javascript:alert(1)"
+    },
+    {
+      "type": "steps",
+      "id": "c2",
+      "lang": "en",
+      "title": "How to build a chain-of-thought prompt",
+      "reason": "Building the prompt is an ordered procedure.",
+      "ordered": true,
+      "steps": [
+        {
+          "title": "<img src=x onerror=alert(1)>",
+          "detail": "Write a handful of questions like the ones you want solved. The paper used eight exemplars for its math benchmarks.",
+          "page": 3
+        },
+        {
+          "title": "Write out the reasoning",
+          "detail": "For each exemplar, write the intermediate steps in plain language that lead to the answer.",
+          "page": 2
+        },
+        {
+          "title": "End with the answer",
+          "detail": "Finish every exemplar with the final answer, e.g. \"The answer is 11.\"",
+          "page": 1
+        },
+        {
+          "title": "Append the new question",
+          "detail": "Put the test question last. The model continues the pattern: its own chain of thought, then the answer.",
+          "page": 3
+        }
+      ]
+    }
+  ]
+}

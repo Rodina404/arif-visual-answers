@@ -1,0 +1,1 @@
+This is a demo build running in mock mode, so the plain-text answer is only prepared for the demo questions about the Chain-of-Thought paper. Upload cot.pdf and pick one of the suggested questions to see the full comparison between the long text answer and the visual answer.

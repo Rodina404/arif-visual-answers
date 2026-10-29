@@ -1,0 +1,71 @@
+{
+  "answer_text": "الـ Chain-of-Thought prompting إنك تدّي الموديل كام مثال محلول، وكل مثال فيه خطوات التفكير اللي بتوصل للإجابة قبل ما يقول الإجابة النهائية. أما الـ standard prompting فبيدّيله سؤال وإجابة بس، فالموديل بينط على الإجابة على طول. ولما الخطوات بتبان، الموديلات الكبيرة بتتعلم تفكر خطوة بخطوة وبتحل المسائل اللي محتاجة كذا خطوة أحسن بكتير.",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "comparison",
+      "id": "c1",
+      "lang": "ar",
+      "title": "الفرق كله إن الموديل بيكتب خطوات تفكيره",
+      "reason": "Two prompting methods compared on the same attributes.",
+      "items": [
+        {
+          "name": "Standard prompting",
+          "summary": "الأمثلة سؤال وإجابة بس، والموديل بيرد بالإجابة على طول.",
+          "attributes": [
+            {"key": "شكل الأمثلة", "value": "سؤال وإجابة (input–output) بس", "citation": {"page": 3, "quote": "in which a language model is given in-context exemplars of input–output pairs before outputting a prediction for a test-time example"}},
+            {"key": "الموديل بيكتب إيه", "value": "الإجابة النهائية على طول", "citation": {"page": 3, "quote": "The model gives the answer directly, as shown in Figure 1 (left)."}},
+            {"key": "مسألة الكافيتريا (Figure 1)", "value": "27 (غلط)", "citation": {"page": 1, "quote": "A: The answer is 27."}}
+          ]
+        },
+        {
+          "name": "Chain-of-Thought prompting",
+          "summary": "كل مثال فيه خطوات التفكير قبل الإجابة، والموديل بيقلّدها.",
+          "attributes": [
+            {"key": "شكل الأمثلة", "value": "سؤال + خطوات تفكير + إجابة", "citation": {"page": 3, "quote": "Our proposed approach is to augment each exemplar in few-shot prompting with a chain of thought for an associated answer"}},
+            {"key": "الموديل بيكتب إيه", "value": "خطوات تفكير وسيطة وبعدين الإجابة", "citation": {"page": 2, "quote": "A chain of thought is a series of intermediate natural language reasoning steps that lead to the final output"}},
+            {"key": "مسألة الكافيتريا (Figure 1)", "value": "9 (صح)", "citation": {"page": 1, "quote": "so they have 3 + 6 = 9. The answer is 9."}}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "id": "c2",
+      "lang": "ar",
+      "title": "إزاي تبني prompt بالـ Chain-of-Thought",
+      "reason": "Building the prompt is an ordered procedure.",
+      "ordered": true,
+      "steps": [
+        {"title": "اختار كام مثال", "detail": "اكتب شوية أسئلة شبه اللي عايز تحلها. الورقة استخدمت 8 أمثلة في مسائل الحساب.", "page": 3},
+        {"title": "اكتب خطوات التفكير", "detail": "لكل مثال اكتب الخطوات الوسيطة بكلام عادي لحد ما توصل للإجابة.", "page": 2},
+        {"title": "اختم بالإجابة", "detail": "خلّي آخر سطر في كل مثال هو الإجابة النهائية، زي \"The answer is 11.\"", "page": 1},
+        {"title": "حط السؤال الجديد في الآخر", "detail": "الموديل هيكمّل بنفس الأسلوب: يكتب سلسلة تفكيره الأول وبعدين الإجابة.", "page": 3}
+      ]
+    },
+    {
+      "type": "quiz",
+      "id": "c3",
+      "lang": "ar",
+      "title": "اختبر نفسك",
+      "reason": "Retrieval practice at the end of an explanatory answer.",
+      "questions": [
+        {
+          "prompt": "في Figure 1، الـ standard prompting جاوب على مسألة الكافيتريا بكام؟",
+          "options": ["9", "27", "11", "23"],
+          "correct_index": 1,
+          "explanation": "الـ standard prompting قال 27 على طول وده غلط، لكن مع الـ chain of thought الموديل وصل لـ 9 الصح.",
+          "citation": {"page": 1, "quote": "A: The answer is 27."}
+        },
+        {
+          "prompt": "أنهي ميزة في الـ chain of thought بتساعدك تعرف الموديل غلط فين؟",
+          "options": ["إنه مش محتاج أمثلة", "إنه بيدّيك شباك تشوف منه تفكير الموديل", "إنه بيصغّر حجم الموديل", "إنه بيلغي الحاجة لموديل كبير"],
+          "correct_index": 1,
+          "explanation": "الورقة بتقول إن الـ chain of thought بيدّي interpretable window على سلوك الموديل، فتقدر تعرف الاستدلال باظ فين.",
+          "citation": {"page": 3, "quote": "a chain of thought provides an interpretable window into the behavior of the model"}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "answer_text": "جرّبوا خمس عائلات موديلات (GPT-3 وLaMDA وPaLM وUL2 وCodex) على تلات أنواع من الاستدلال: حسابي، ومنطق عام (commonsense)، ورمزي (symbolic).",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "table",
+      "id": "c1",
+      "lang": "ar",
+      "title": "تلات أنواع استدلال و12 benchmark",
+      "reason": "Many benchmarks grouped by type are easier to scan in a table.",
+      "columns": ["نوع الاستدلال", "الـ Benchmarks"],
+      "rows": [
+        {"cells": ["حسابي (Arithmetic)", "GSM8K, SVAMP, ASDiv, AQuA, MAWPS"], "citation": {"page": 3, "quote": "We consider the following five math word problem benchmarks: (1) the GSM8K benchmark of math word problems"}},
+        {"cells": ["منطق عام (Commonsense)", "CSQA, StrategyQA, Date, Sports, SayCan"], "citation": {"page": 7, "quote": "We consider five datasets covering a diverse range of commonsense reasoning types."}},
+        {"cells": ["رمزي (Symbolic)", "Last letter concatenation, Coin flip"], "citation": {"page": 8, "quote": "to concatenate the last letters of words in a name"}}
+      ]
+    },
+    {
+      "type": "table",
+      "id": "c2",
+      "lang": "ar",
+      "title": "خمس عائلات موديلات من 350M لحد 540B",
+      "reason": "Exact model sizes are worth scanning side by side.",
+      "columns": ["الموديل", "الأحجام (عدد البارامترات)"],
+      "rows": [
+        {"cells": ["GPT-3 (InstructGPT)", "350M, 1.3B, 6.7B, 175B"], "citation": {"page": 4, "quote": "presumably correspond to InstructGPT models of 350M, 1.3B, 6.7B, and 175B parameters"}},
+        {"cells": ["LaMDA", "422M, 2B, 8B, 68B, 137B"], "citation": {"page": 4, "quote": "LaMDA (Thoppilan et al., 2022), which has models of 422M, 2B, 8B, 68B, and 137B parameters"}},
+        {"cells": ["PaLM", "8B, 62B, 540B"], "citation": {"page": 4, "quote": "The third is PaLM, which has models of 8B, 62B, and 540B parameters."}},
+        {"cells": ["UL2", "20B"], "citation": {"page": 4, "quote": "The fourth is UL2 20B (Tay et al., 2022)"}},
+        {"cells": ["Codex (code-davinci-002)", "مش مذكور"], "citation": {"page": 4, "quote": "the fifth is Codex (Chen et al., 2021, code-davinci-002 in the OpenAI API)"}}
+      ]
+    }
+  ]
+}

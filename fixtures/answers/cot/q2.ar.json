@@ -1,0 +1,44 @@
+{
+  "answer_text": "على GSM8K، الـ chain-of-thought تقريبًا مش بيفرق مع الموديلات الصغيرة، لكن بيفرق جامد مع الكبيرة. في PaLM 540B الدقة طلعت من 17.9% بالـ standard prompting لـ 56.9% بالـ chain of thought، بينما في 8B كانت أقل شوية (4.9% مقابل 4.1%).",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "chart",
+      "id": "c1",
+      "lang": "ar",
+      "title": "الـ CoT بيكسب بس مع الموديلات الكبيرة (PaLM على GSM8K)",
+      "reason": "Accuracy across three model sizes: a trend with numbers printed in Table 2.",
+      "chart_type": "line",
+      "x_label": "حجم موديل PaLM",
+      "y_label": "دقة GSM8K",
+      "unit": "%",
+      "series": [
+        {
+          "name": "Standard prompting",
+          "points": [
+            {"label": "8B", "value": 4.9, "citation": {"page": 21, "quote": "PaLM 8B 4.9 4.1 15.1 16.8 23.7 25.2 19.3 21.7 26.2 30.5"}},
+            {"label": "62B", "value": 9.6, "citation": {"page": 21, "quote": "62B 9.6 29.9 48.2 46.7 58.7 61.9 25.6 22.4 61.8 80.3"}},
+            {"label": "540B", "value": 17.9, "citation": {"page": 21, "quote": "540B 17.9 56.9 69.4 79.0 72.1 73.9 25.2 35.8 79.2 93.3"}}
+          ]
+        },
+        {
+          "name": "Chain-of-thought",
+          "points": [
+            {"label": "8B", "value": 4.1, "citation": {"page": 21, "quote": "PaLM 8B 4.9 4.1 15.1 16.8 23.7 25.2 19.3 21.7 26.2 30.5"}},
+            {"label": "62B", "value": 29.9, "citation": {"page": 21, "quote": "62B 9.6 29.9 48.2 46.7 58.7 61.9 25.6 22.4 61.8 80.3"}},
+            {"label": "540B", "value": 56.9, "citation": {"page": 21, "quote": "540B 17.9 56.9 69.4 79.0 72.1 73.9 25.2 35.8 79.2 93.3"}}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "c2",
+      "lang": "ar",
+      "title": "قدرة بتظهر مع الحجم",
+      "reason": "Names the pattern the chart shows, which the answer does not explain.",
+      "body": "الورقة بتسمي ده **emergent ability**: الـ chain of thought *مش بيحسّن الأداء* غير لما الموديل يبقى كبير كفاية. ونفس الحكاية بتحصل مع LaMDA وGPT-3 في Table 2."
+    }
+  ]
+}

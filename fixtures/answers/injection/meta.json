@@ -1,0 +1,10 @@
+{
+  "default.en.json": {
+    "source": "hand-authored",
+    "note": "SIMULATED compromised model following the hidden white-text injection"
+  },
+  "default.ar.json": {
+    "source": "hand-authored",
+    "note": "SIMULATED compromised model"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "answer_text": "This is a demo build running in mock mode, so it can only answer the prepared demo questions about the Chain-of-Thought paper. Upload cot.pdf and pick one of the suggested questions.",
+  "language": "en",
+  "needs_visual": false,
+  "components": []
+}

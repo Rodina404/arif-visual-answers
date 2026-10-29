@@ -1,0 +1,35 @@
+{
+  "answer_text": "They tested five model families (GPT-3, LaMDA, PaLM, UL2 and Codex) across three kinds of reasoning: arithmetic, commonsense and symbolic.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "table",
+      "id": "c1",
+      "lang": "en",
+      "title": "Three kinds of reasoning, twelve benchmarks",
+      "reason": "Many benchmarks grouped by type are easier to scan in a table.",
+      "columns": ["Reasoning type", "Benchmarks"],
+      "rows": [
+        {"cells": ["Arithmetic", "GSM8K, SVAMP, ASDiv, AQuA, MAWPS"], "citation": {"page": 3, "quote": "We consider the following five math word problem benchmarks: (1) the GSM8K benchmark of math word problems"}},
+        {"cells": ["Commonsense", "CSQA, StrategyQA, Date, Sports, SayCan"], "citation": {"page": 7, "quote": "We consider five datasets covering a diverse range of commonsense reasoning types."}},
+        {"cells": ["Symbolic", "Last letter concatenation, Coin flip"], "citation": {"page": 8, "quote": "to concatenate the last letters of words in a name"}}
+      ]
+    },
+    {
+      "type": "table",
+      "id": "c2",
+      "lang": "en",
+      "title": "Five model families, from 350M to 540B parameters",
+      "reason": "Exact model sizes are worth scanning side by side.",
+      "columns": ["Model", "Sizes (parameters)"],
+      "rows": [
+        {"cells": ["GPT-3 (InstructGPT)", "350M, 1.3B, 6.7B, 175B"], "citation": {"page": 4, "quote": "presumably correspond to InstructGPT models of 350M, 1.3B, 6.7B, and 175B parameters"}},
+        {"cells": ["LaMDA", "422M, 2B, 8B, 68B, 137B"], "citation": {"page": 4, "quote": "LaMDA (Thoppilan et al., 2022), which has models of 422M, 2B, 8B, 68B, and 137B parameters"}},
+        {"cells": ["PaLM", "8B, 62B, 540B"], "citation": {"page": 4, "quote": "The third is PaLM, which has models of 8B, 62B, and 540B parameters."}},
+        {"cells": ["UL2", "20B"], "citation": {"page": 4, "quote": "The fourth is UL2 20B (Tay et al., 2022)"}},
+        {"cells": ["Codex (code-davinci-002)", "Not stated"], "citation": {"page": 4, "quote": "the fifth is Codex (Chen et al., 2021, code-davinci-002 in the OpenAI API)"}}
+      ]
+    }
+  ]
+}

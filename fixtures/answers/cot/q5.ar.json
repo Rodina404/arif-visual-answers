@@ -1,0 +1,22 @@
+{
+  "answer_text": "دي 6 flashcards للأفكار الأساسية في الورقة. حاول تجاوب على الوش قبل ما تقلب الكارت.",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "flashcards",
+      "id": "c1",
+      "lang": "ar",
+      "title": "6 كروت للأفكار الأساسية",
+      "reason": "The user asked to review and memorise the key ideas.",
+      "cards": [
+        {"front": "يعني إيه chain of thought؟", "back": "سلسلة خطوات تفكير وسيطة بكلام عادي بتوصل للإجابة النهائية.", "page": 2},
+        {"front": "Chain-of-thought prompting", "back": "few-shot prompting كل مثال فيه سلسلة التفكير قبل الإجابة.", "page": 3},
+        {"front": "Standard prompting", "back": "few-shot prompting بأمثلة سؤال وإجابة بس، والموديل بيرد على طول.", "page": 3},
+        {"front": "Emergent ability of scale", "back": "الـ chain of thought مش بيفيد غير لما الموديل يبقى كبير كفاية، والموديلات الصغيرة ممكن كمان تسوء.", "page": 21},
+        {"front": "أهم نتيجة على GSM8K", "back": "PaLM 540B بـ 8 أمثلة chain-of-thought بس وصل لأحسن دقة (state of the art) على GSM8K.", "page": 1},
+        {"front": "ليه بيساعد؟", "back": "بيخلّي الموديل يصرف حسابات أكتر على المسائل اللي فيها كذا خطوة، وبيورّيك وصل للإجابة إزاي.", "page": 3}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "answer_text": "الـ prompt بيورّي مثال محلول، والإجابة فيه جاية بعد خطوات مكتوبة. ولما ييجي سؤال جديد، الموديل بيقلّد نفس الطريقة: يكتب خطواته هو الأول وبعدين يقول الإجابة.",
+  "language": "ar",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "diagram",
+      "id": "c1",
+      "lang": "ar",
+      "title": "الموديل بينقل طريقة التفكير اللي في المثال",
+      "reason": "A pipeline from exemplar to answer is a flow of related stages.",
+      "layout": "flow",
+      "page": 1,
+      "nodes": [
+        {"id": "n1", "label": "سؤال المثال (كور التنس)"},
+        {"id": "n2", "label": "خطوات مكتوبة: 5 + 6 = 11"},
+        {"id": "n3", "label": "إجابة المثال: 11"},
+        {"id": "n4", "label": "سؤال جديد (تفاح الكافيتريا)"},
+        {"id": "n5", "label": "خطوات الموديل: 23-20=3، 3+6=9"},
+        {"id": "n6", "label": "الإجابة النهائية: 9"}
+      ],
+      "edges": [
+        {"from": "n1", "to": "n2"},
+        {"from": "n2", "to": "n3"},
+        {"from": "n3", "to": "n4", "label": "في الـ prompt"},
+        {"from": "n4", "to": "n5", "label": "بيقلّد"},
+        {"from": "n5", "to": "n6"}
+      ]
+    }
+  ]
+}

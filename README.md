@@ -546,9 +546,9 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** pytest streams fixture JSON in chunks and gets the right event order. `curl -N` against mock mode shows the events. The live call (if any) returns valid JSON. Call count is logged.
 
 ### Phase 3 — Grounding and policy
-- [ ] `grounding.py` (normalization, quote/number checks, page fix, statuses) and `policy.py` (all rules).
-- [ ] Wire both into the stream before each `COMPONENT` is emitted.
-- [ ] Hand-author or record the q1–q6 AR/EN fixtures (section 12) and the malformed fixtures. All good fixtures must pass grounding.
+- [x] `grounding.py` (normalization, quote/number checks, page fix, statuses) and `policy.py` (all rules).
+- [x] Wire both into the stream before each `COMPONENT` is emitted.
+- [x] Hand-author or record the q1–q6 AR/EN fixtures (section 12) and the malformed fixtures. All good fixtures must pass grounding.
 - **Accept:** every rule in sections 4–5 has a pytest. The good fixtures come out `verified`, and the malformed ones degrade exactly as specified.
 
 ### Phase 4 — Frontend: catalog renderer

@@ -1,0 +1,22 @@
+{
+  "answer_text": "Here are six flashcards on the paper's key ideas. Try to answer each front before you flip it.",
+  "language": "en",
+  "needs_visual": true,
+  "components": [
+    {
+      "type": "flashcards",
+      "id": "c1",
+      "lang": "en",
+      "title": "Six cards on the key ideas",
+      "reason": "The user asked to review and memorise the key ideas.",
+      "cards": [
+        {"front": "What is a chain of thought?", "back": "A series of intermediate natural-language reasoning steps that lead to the final output.", "page": 2},
+        {"front": "Chain-of-thought prompting", "back": "Few-shot prompting where each exemplar includes a chain of thought before its answer.", "page": 3},
+        {"front": "Standard prompting", "back": "Few-shot prompting with plain input–output exemplars; the model answers directly.", "page": 3},
+        {"front": "Emergent ability of scale", "back": "Chain of thought does not help until the model is large enough; small models can even get worse.", "page": 21},
+        {"front": "Headline GSM8K result", "back": "PaLM 540B with just eight chain-of-thought exemplars reached state-of-the-art accuracy on GSM8K.", "page": 1},
+        {"front": "Why does it help?", "back": "It lets the model spend more computation on multi-step problems and shows how it reached an answer.", "page": 3}
+      ]
+    }
+  ]
+}
