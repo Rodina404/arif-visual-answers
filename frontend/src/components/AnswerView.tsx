@@ -39,7 +39,7 @@ function KeyNumber({ stat, unit }: { stat: Stat; unit: string }) {
         : t('key.unitAt', { unit, label: stat.label })
   return (
     <div data-testid="key-number" className="shrink-0 text-end">
-      <div className="text-4xl font-bold leading-none text-hot tabular-nums">
+      <div className="text-3xl font-bold leading-none text-hot tabular-nums">
         <StatNumber stat={stat} />
       </div>
       <div className="mt-1 text-xs font-semibold text-ink">
@@ -90,7 +90,7 @@ export function AnswerView({ state, onRetry, showDrawer = true }: { state: Answe
       <Warnings items={state.warnings} />
       {lead ? (
         <div data-testid="takeaway" dir={lead.lang === 'ar' ? 'rtl' : 'ltr'} lang={lead.lang} className="flex items-start justify-between gap-4">
-          <h2 dir="auto" className="m-0 text-2xl font-bold leading-tight text-ink [text-wrap:balance] sm:text-[28px]">
+          <h2 dir="auto" className="m-0 text-xl font-bold leading-snug text-ink [text-wrap:balance] sm:text-[22px]">
             {lead.title}
           </h2>
           {key && chartProps ? <KeyNumber stat={key} unit={chartProps.unit} /> : null}

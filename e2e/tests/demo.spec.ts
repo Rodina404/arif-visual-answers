@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { answer, expect, open, PDFS, ROOT, routeAsk, test, upload, waitDone } from '../helpers/fixtures'
+import { answer, expect, open, openMenu, PDFS, ROOT, routeAsk, test, upload, waitDone } from '../helpers/fixtures'
 
 const OUT = path.join(ROOT, 'demo')
 const SHOTS = path.join(OUT, 'shots')
@@ -44,6 +44,7 @@ test('demo recording @demo', async ({ page }) => {
   await page.keyboard.press('Escape')
 
   // 1:30 Restraint: q4 is plain text.
+  await openMenu(page)
   await page.getByTestId('tab-ask').click()
   await page.getByTestId('suggest-q4').click()
   await waitDone(page)
@@ -51,7 +52,9 @@ test('demo recording @demo', async ({ page }) => {
   await shot('05-ar-text-only')
 
   // 1:45 Toggle to English, ask q2: the chart mirrors back to LTR.
+  await openMenu(page)
   await page.getByTestId('lang-toggle').locator('button[lang="en"]').click()
+  await page.keyboard.press('Escape')
   await page.getByTestId('suggest-q2').click()
   await waitDone(page)
   await page.getByTestId('chart').scrollIntoViewIfNeeded()

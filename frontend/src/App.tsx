@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   deleteDocument,
   getConfig,
@@ -13,10 +13,13 @@ import {
 import { HttpError } from './api/sse'
 import { AnswerView } from './components/AnswerView'
 import { BeforeAfter } from './components/BeforeAfter'
-import { DocSidebar } from './components/DocSidebar'
+import { Composer, Logo, SuggestionChips, SuggestionGrid, Turn } from './components/Chat'
+import { DocBar, FILE_INPUT_ID } from './components/DocBar'
+import { Icon } from './components/Icons'
+import { Menu, MenuRow } from './components/Menu'
 import { LangToggle } from './components/LangToggle'
 import { ProviderSwitch } from './components/ProviderSwitch'
-import { QuestionBox, type Suggestion } from './components/QuestionBox'
+import type { Suggestion } from './components/QuestionBox'
 import { SourcePanel } from './components/SourcePanel'
 import { Warnings } from './components/Warnings'
 import { useI18n } from './i18n/context'
@@ -63,6 +66,10 @@ export default function App() {
   const [provider, setProviderState] = useState<ProviderName | null>(storedProvider)
   const [historyVersion, setHistoryVersion] = useState(0)
   const [suggested, setSuggested] = useState<{ key: string; questions: string[] } | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [windowOpen, setWindowOpen] = useState(true)
+  const [textOnly, setTextOnly] = useState(false)
+  const turnRef = useRef<HTMLDivElement>(null)
   const { state, ask, stop, restore } = useAnswer()
   // The answer on screen for each document, restored when switching back to it.
   const answers = useRef(new Map<string, AnswerState>())
@@ -129,7 +136,7 @@ export default function App() {
 
   const suggestions: Suggestion[] = useMemo(() => {
     if (!doc) return []
-    if (doc.is_demo) return DEMO_QUESTIONS.map((id) => ({ id, text: t(`q.${id}`) }))
+    if (doc.is_demo) return DEMO_QUESTIONS.map((id) => ({ id, text: t(`q.${id}`), title: t(`q.short.${id}`) }))
     if (suggested?.key !== suggestKey) return []
     return suggested.questions.map((text, i) => ({ id: `g${i + 1}`, text }))
   }, [doc, suggested, suggestKey, t])
@@ -137,6 +144,7 @@ export default function App() {
 
   const go = (v: View) => {
     setView(v)
+    setMenuOpen(false)
     window.history.pushState(null, '', v === 'compare' ? '/compare' : '/')
   }
 
@@ -207,140 +215,258 @@ export default function App() {
     [doc, ask, lang, provider],
   )
 
-  const ctx = useMemo(() => ({ docId: doc?.doc_id ?? null, openSource: setSource }), [doc])
   const busy = state.phase === 'thinking' || state.phase === 'streaming'
+  // Bring each new question to the top of the conversation.
+  useEffect(() => {
+    if (state.phase === 'thinking') turnRef.current?.scrollIntoView({ block: 'start' })
+  }, [state.phase, state.question])
+
+  const newChat = () => {
+    if (busy) stop()
+    restore(null)
+    setLast(null)
+  }
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
+
+  const ctx = useMemo(() => ({ docId: doc?.doc_id ?? null, openSource: setSource }), [doc])
   const canAsk = Boolean(doc && doc.status === 'ready')
   const earlier = history.filter((q) => q !== state.question)
 
-  return (
-    <AppContext.Provider value={ctx}>
-      <div className="min-h-screen bg-bg text-ink">
-        <header data-testid="app-header" className="sticky top-0 z-30 bg-bg/90 backdrop-blur">
-          <div className="mx-auto flex max-w-[1060px] flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3">
-            <div data-testid="brand" className="flex min-w-0 items-center gap-2.5">
-              <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-lg font-bold text-on-accent">
-                ع
-              </span>
-              <div className="min-w-0">
-                <h1 className="m-0 flex items-center gap-2 text-base font-bold leading-tight">
-                  {t('app.title')}
-                  {config?.mock ? (
-                    <span data-testid="mock-badge" title={t('notice.mock')} className="rounded-full bg-hot px-2 py-0.5 text-[10px] font-bold text-white">
-                      {t('badge.mock')}
-                    </span>
-                  ) : null}
-                </h1>
-                <p className="m-0 text-xs text-muted">{t('app.subtitle')}</p>
-              </div>
-            </div>
-            <nav aria-label="views" className="flex flex-wrap items-center gap-1.5">
-              <div className="flex rounded-full bg-raised p-0.5">
-                {(['ask', 'compare'] as const).map((v) => (
-                  <a
-                    key={v}
-                    href={v === 'compare' ? '/compare' : '/'}
-                    data-testid={`tab-${v}`}
-                    aria-current={view === v ? 'page' : undefined}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      go(v)
-                    }}
-                    className={`rounded-full px-3 py-1 text-sm font-semibold no-underline ${view === v ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink'}`}
-                  >
-                    {t(`tab.${v}`)}
-                  </a>
-                ))}
-              </div>
-              {config && provider ? <ProviderSwitch providers={config.providers} value={provider} onChange={setProvider} /> : null}
-              <LangToggle />
-            </nav>
-          </div>
-        </header>
-
-        <div className="mx-auto grid max-w-[1060px] grid-cols-[minmax(0,1fr)] gap-6 px-4 pb-8 pt-2 lg:grid-cols-[260px_minmax(0,760px)]">
-          <div className="lg:sticky lg:top-20 lg:self-start">
-            <DocSidebar
-              docs={docs}
-              activeId={currentId}
-              busy={uploading}
-              error={uploadError}
-              limits={{ mb: config?.max_upload_mb ?? 20, pages: config?.max_pages ?? 60 }}
-              onAdd={(files) => void addFiles(files)}
-              onSelect={select}
-              onDelete={(id) => void remove(id)}
-            />
-          </div>
-
-          <main className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6">
-            {doc ? (
-              <div data-testid="doc-info" className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="m-0 min-w-0 truncate text-lg font-bold">
-                  <bdi>{doc.filename}</bdi>
-                </h2>
-                {doc.status === 'reading' ? <span className="text-xs font-semibold text-warn">{t('docs.readingLong')}</span> : null}
-              </div>
-            ) : (
-              <p className="m-0 rounded-2xl bg-surface px-4 py-6 text-center text-sm text-muted shadow-card">{t('docs.empty')}</p>
-            )}
-            {doc ? <Warnings items={doc.warnings} /> : null}
-            {view === 'ask' ? (
-              <>
-                <QuestionBox
-                  key={doc?.doc_id ?? 'none'}
-                  disabled={!canAsk}
-                  busy={busy}
-                  onAsk={run}
-                  onStop={stop}
-                  suggestions={suggestions}
-                  suggestionsLoading={suggestionsLoading}
-                />
-                {earlier.length ? (
-                  <section aria-labelledby="history-title" data-testid="history" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5">
-                    <h3 id="history-title" className="m-0 px-1 text-xs font-semibold text-muted">
-                      {t('docs.history')}
-                    </h3>
-                    <div className="flex min-w-0 flex-wrap gap-1.5">
-                      {earlier.slice(0, 6).map((q) => (
-                        <button
-                          key={q}
-                          type="button"
-                          data-testid="history-item"
-                          disabled={!canAsk}
-                          onClick={() => run(q, false)}
-                          className="max-w-full truncate rounded-full bg-raised px-3 py-1 text-xs text-ink hover:bg-sunken"
-                        >
-                          <bdi>{q}</bdi>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                ) : null}
-                {state.phase === 'idle' ? (
-                  doc ? <p className="m-0 py-6 text-center text-sm text-muted">{t('answer.empty')}</p> : null
-                ) : (
-                  <AnswerView state={state} onRetry={last ? () => run(last.question, last.textOnly) : undefined} />
-                )}
-              </>
-            ) : (
-              <BeforeAfter
-                key={doc?.doc_id ?? 'none'}
-                docId={canAsk ? (doc?.doc_id ?? null) : null}
-                provider={provider ?? undefined}
-                suggestions={suggestions}
-                suggestionsLoading={suggestionsLoading}
-              />
-            )}
-          </main>
-        </div>
-
-        <footer className="mx-auto grid max-w-[1060px] gap-1 px-4 pb-10 pt-2 text-xs text-muted">
+  const header: ReactNode = (
+    <header data-testid="app-header" className="relative flex items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
+      <div data-testid="brand" className="flex min-w-0 items-center gap-3">
+        <span className="flex shrink-0 items-center gap-2">
+          <Logo className="h-8 w-8" />
+          <h1 className="m-0 text-lg font-bold leading-none text-ink">{t('app.name')}</h1>
+        </span>
+        <span aria-hidden className="h-6 w-px shrink-0 bg-line" />
+        <span className="flex min-w-0 items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-strong max-sm:hidden">
+          <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+          <span className="truncate">{t(view === 'compare' ? 'tab.compare' : 'widget.mode')}</span>
+        </span>
+        {config?.mock ? (
+          <span data-testid="mock-badge" title={t('notice.mock')} className="shrink-0 rounded-full bg-hot px-2 py-0.5 text-[10px] font-bold text-white">
+            {t('badge.mock')}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-0.5 text-muted">
+        <button
+          type="button"
+          data-testid="new-chat"
+          onClick={newChat}
+          aria-label={t('widget.new')}
+          title={t('widget.new')}
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-raised hover:text-ink"
+        >
+          <Icon name="edit" className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          type="button"
+          data-testid="menu-button"
+          data-menu-trigger
+          aria-expanded={menuOpen}
+          aria-controls="arif-menu"
+          aria-label={t('widget.menu')}
+          onClick={() => setMenuOpen((o) => !o)}
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-raised hover:text-ink"
+        >
+          <Icon name="dots" />
+        </button>
+        <button
+          type="button"
+          data-testid="close-window"
+          onClick={() => setWindowOpen(false)}
+          aria-label={t('widget.close')}
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-raised hover:text-ink"
+        >
+          <Icon name="close" className="h-[18px] w-[18px]" />
+        </button>
+      </div>
+      <Menu open={menuOpen} onClose={closeMenu}>
+        <MenuRow label={t('widget.view')}>
+          <nav aria-label="views" className="flex rounded-full bg-raised p-0.5">
+            {(['ask', 'compare'] as const).map((v) => (
+              <a
+                key={v}
+                href={v === 'compare' ? '/compare' : '/'}
+                data-testid={`tab-${v}`}
+                aria-current={view === v ? 'page' : undefined}
+                onClick={(e) => {
+                  e.preventDefault()
+                  go(v)
+                }}
+                className={`flex-1 rounded-full px-3 py-1 text-center text-sm font-semibold no-underline ${view === v ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink'}`}
+              >
+                {t(`tab.${v}`)}
+              </a>
+            ))}
+          </nav>
+        </MenuRow>
+        {config && provider && config.providers.length > 1 ? (
+          <MenuRow label={t('widget.provider')}>
+            <ProviderSwitch providers={config.providers} value={provider} onChange={setProvider} />
+          </MenuRow>
+        ) : null}
+        <MenuRow label={t('widget.lang')}>
+          <LangToggle />
+        </MenuRow>
+        <div className="grid gap-1 border-t border-line pt-2 text-[11px] leading-4 text-muted">
           <p data-testid="residency-badge" className="m-0">
             {t('footer.residency')}
           </p>
           <p data-testid="demo-notice" className="m-0">
             {t('notice.demo')}
           </p>
-        </footer>
+        </div>
+      </Menu>
+    </header>
+  )
+
+  const welcome = (
+    <div className="grid gap-1">
+      <p className="m-0 text-sm text-muted">{t('widget.hello')}</p>
+      <h2 className="m-0 text-xl font-semibold leading-snug text-ink">{doc ? t('widget.help') : t('widget.helpNoDoc')}</h2>
+    </div>
+  )
+
+  const conversation = (
+    <>
+      {earlier.length ? (
+        <section aria-labelledby="history-title" data-testid="history" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5">
+          <h3 id="history-title" className="m-0 text-xs font-normal text-muted">
+            {t('docs.history')}
+          </h3>
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            {earlier.slice(0, 6).map((q) => (
+              <button
+                key={q}
+                type="button"
+                data-testid="history-item"
+                disabled={!canAsk}
+                onClick={() => run(q, false)}
+                className="max-w-full truncate rounded-full border border-line px-3 py-1 text-xs text-ink hover:bg-raised"
+              >
+                <bdi>{q}</bdi>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {state.phase === 'idle' ? (
+        doc ? (
+          <>
+            {welcome}
+            <SuggestionGrid suggestions={suggestions} loading={suggestionsLoading} disabled={!canAsk} onPick={(q) => run(q, textOnly)} />
+          </>
+        ) : null
+      ) : (
+        <div ref={turnRef} className="min-w-0 scroll-mt-4">
+          <Turn question={state.question} note={t(last?.textOnly ? 'widget.noteText' : 'widget.note')}>
+            <AnswerView state={state} onRetry={last ? () => run(last.question, last.textOnly) : undefined} />
+          </Turn>
+        </div>
+      )}
+    </>
+  )
+
+  return (
+    <AppContext.Provider value={ctx}>
+      <div className="relative min-h-dvh overflow-hidden bg-bg text-ink">
+        {/* A quiet workspace behind the window, so it reads as Arif floating over a page. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden sm:block">
+          <div className="h-14 border-b border-line bg-surface/70" />
+          <div className="absolute bottom-0 start-0 top-14 grid w-16 content-start justify-items-center gap-4 border-e border-line bg-surface/70 pt-5">
+            {Array.from({ length: 8 }, (_, i) => (
+              <span key={i} className="h-7 w-7 rounded-lg bg-sunken" />
+            ))}
+          </div>
+        </div>
+
+        {windowOpen ? (
+          <div
+            data-testid="arif-window"
+            className={`relative mx-auto flex h-dvh w-full flex-col overflow-hidden bg-surface sm:my-[3vh] sm:h-[94vh] sm:max-h-[960px] sm:rounded-[22px] sm:border sm:border-line sm:shadow-float ${view === 'compare' ? 'sm:w-[min(1100px,calc(100%-2rem))]' : 'sm:w-[min(720px,calc(100%-2rem))]'}`}
+          >
+            {header}
+            <DocBar
+              docs={docs}
+              activeId={currentId}
+              busy={uploading}
+              onAdd={(files) => void addFiles(files)}
+              onSelect={select}
+              onDelete={(id) => void remove(id)}
+            />
+            <main className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] content-start gap-5 overflow-y-auto px-4 py-5 sm:px-6">
+              {uploadError ? (
+                <p role="alert" data-testid="upload-error" className="m-0 rounded-xl bg-bad-soft px-3 py-2 text-xs text-bad">
+                  {t('upload.error')}: <bdi>{uploadError}</bdi>
+                </p>
+              ) : null}
+              {doc?.status === 'reading' ? <p className="m-0 text-xs font-semibold text-warn">{t('docs.readingLong')}</p> : null}
+              {doc ? <Warnings items={doc.warnings} /> : null}
+              {!doc ? (
+                <>
+                  {welcome}
+                  <label
+                    htmlFor={FILE_INPUT_ID}
+                    data-testid="drop-zone"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      void addFiles(Array.from(e.dataTransfer.files))
+                    }}
+                    className="grid cursor-pointer justify-items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-accent-line bg-raised px-4 py-10 text-center hover:border-accent"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent-strong">
+                      <Icon name="file" />
+                    </span>
+                    <span className="text-sm font-semibold text-ink">{uploading ? t('upload.uploading') : t('widget.drop')}</span>
+                    <span className="text-xs text-muted">{t('upload.hint', { mb: config?.max_upload_mb ?? 20, pages: config?.max_pages ?? 60 })}</span>
+                  </label>
+                </>
+              ) : null}
+              {view === 'ask' ? (
+                conversation
+              ) : (
+                <BeforeAfter
+                  key={doc?.doc_id ?? 'none'}
+                  docId={canAsk ? (doc?.doc_id ?? null) : null}
+                  provider={provider ?? undefined}
+                  suggestions={suggestions}
+                  suggestionsLoading={suggestionsLoading}
+                />
+              )}
+            </main>
+            {view === 'ask' ? (
+              <Composer
+                key={doc?.doc_id ?? 'none'}
+                disabled={!canAsk}
+                busy={busy}
+                textOnly={textOnly}
+                onTextOnly={setTextOnly}
+                onAsk={(q) => run(q, textOnly)}
+                onStop={stop}
+                onSettings={() => setMenuOpen((o) => !o)}
+                above={
+                  state.phase !== 'idle' ? (
+                    <SuggestionChips suggestions={suggestions} disabled={!canAsk || busy} onPick={(q) => run(q, textOnly)} />
+                  ) : null
+                }
+              />
+            ) : null}
+          </div>
+        ) : (
+          <button
+            type="button"
+            data-testid="open-window"
+            onClick={() => setWindowOpen(true)}
+            aria-label={t('widget.open')}
+            className="fixed bottom-6 end-6 flex h-14 w-14 items-center justify-center rounded-full border border-line bg-surface shadow-float hover:scale-105"
+          >
+            <Logo className="h-8 w-8" />
+          </button>
+        )}
 
         {source && doc ? (
           <SourcePanel key={`${doc.doc_id}:${source.page}:${source.quote ?? ''}`} docId={doc.doc_id} req={source} onClose={() => setSource(null)} />

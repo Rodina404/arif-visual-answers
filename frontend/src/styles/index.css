@@ -1,22 +1,23 @@
 @import "tailwindcss";
 
-/* Calm study app: one teal accent for actions and data, one warm coral ("hot") reserved for key numbers.
+/* Arif chat window: one violet accent for actions and data, one warm coral ("hot") reserved for key numbers.
    Soft tinted surfaces and shadows instead of borders; at most one card level. Each component type
    has its own deep band colour (white label text passes AA in both themes). */
 @theme static {
   --font-sans: "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
-  --color-bg: #f2f7f6;
+  --color-bg: #f3f3f6;
   --color-surface: #ffffff;
-  --color-raised: #eaf2f0;
-  --color-sunken: #e1ebe8;
-  --color-ink: #13211f;
-  --color-muted: #52625f;
-  --color-faint: #7d8d8a;
-  --color-line: #d5e2df;
-  --color-accent: #0f766e;
-  --color-accent-strong: #0b5c55;
-  --color-accent-soft: #dcf1ed;
+  --color-raised: #f6f6f9;
+  --color-sunken: #ececf1;
+  --color-ink: #1d1d24;
+  --color-muted: #62626f;
+  --color-faint: #8a8a96;
+  --color-line: #e6e6ec;
+  --color-accent: #6d28d9;
+  --color-accent-strong: #5b21b6;
+  --color-accent-soft: #f1ecff;
   --color-on-accent: #ffffff;
+  --color-accent-line: #c9b8fb;
   --color-hot: #c2462f;
   --color-hot-soft: #fde9e3;
   --color-ok: #17734a;
@@ -26,36 +27,37 @@
   --color-warn: #8a5300;
   --color-warn-soft: #fff1da;
   --color-mark: #ffe9a8;
-  --color-series-1: #93a6a2;
-  --color-series-2: #0f766e;
+  --color-series-1: #a3a3b2;
+  --color-series-2: #6d28d9;
   /* component bands */
-  --color-band-chart: #0f766e;
+  --color-band-chart: #6d28d9;
   --color-band-comparison: #b0432c;
   --color-band-steps: #3d5ca6;
   --color-band-table: #586a24;
-  --color-band-diagram: #7a4c9f;
+  --color-band-diagram: #0f766e;
   --color-band-formula: #85570f;
   --color-band-quiz: #a8365e;
   --color-band-flashcards: #1c6a85;
   --color-band-text: #4a5562;
-  --shadow-card: 0 1px 2px rgb(16 40 36 / 0.06), 0 8px 24px -12px rgb(16 40 36 / 0.18);
-  --shadow-float: 0 2px 6px rgb(16 40 36 / 0.08), 0 16px 40px -16px rgb(16 40 36 / 0.25);
+  --shadow-card: 0 1px 2px rgb(24 20 48 / 0.06), 0 8px 24px -12px rgb(24 20 48 / 0.18);
+  --shadow-float: 0 2px 6px rgb(24 20 48 / 0.08), 0 16px 40px -16px rgb(24 20 48 / 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #0e1615;
-    --color-surface: #16211f;
-    --color-raised: #1c2a28;
-    --color-sunken: #223230;
-    --color-ink: #e5efed;
-    --color-muted: #a0b3af;
-    --color-faint: #788b87;
-    --color-line: #2a3a37;
-    --color-accent: #3cc2b2;
-    --color-accent-strong: #6ad8ca;
-    --color-accent-soft: #123a35;
-    --color-on-accent: #04201c;
+    --color-bg: #0e0e13;
+    --color-surface: #17171f;
+    --color-raised: #1e1e28;
+    --color-sunken: #262631;
+    --color-ink: #ececf2;
+    --color-muted: #a6a6b5;
+    --color-faint: #7c7c8b;
+    --color-line: #2c2c38;
+    --color-accent: #a78bfa;
+    --color-accent-strong: #c4b5fd;
+    --color-accent-soft: #2a2142;
+    --color-on-accent: #160b33;
+    --color-accent-line: #5a4a92;
     --color-hot: #ff8f78;
     --color-hot-soft: #3a211b;
     --color-ok: #5fd39a;
@@ -65,8 +67,8 @@
     --color-warn: #f2b45a;
     --color-warn-soft: #2d2212;
     --color-mark: #5a4b00;
-    --color-series-1: #6f8581;
-    --color-series-2: #3cc2b2;
+    --color-series-1: #6f6f80;
+    --color-series-2: #a78bfa;
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
     --shadow-float: 0 2px 6px rgb(0 0 0 / 0.35), 0 16px 40px -16px rgb(0 0 0 / 0.7);
   }

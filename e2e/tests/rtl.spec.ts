@@ -1,4 +1,4 @@
-import { askDemo, expect, open, test, upload } from '../helpers/fixtures'
+import { askDemo, expect, open, openMenu, test, upload } from '../helpers/fixtures'
 
 async function centerX(loc: import('@playwright/test').Locator) {
   const b = await loc.boundingBox()
@@ -12,6 +12,7 @@ test.describe('direction', () => {
     const html = page.locator('html')
     await expect(html).toHaveAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr')
     await expect(html).toHaveAttribute('lang', lang)
+    await openMenu(page)
     const brand = await centerX(page.getByTestId('brand'))
     const toggle = await centerX(page.getByTestId('lang-toggle'))
     // The brand sits on the start side: right in RTL, left in LTR.
@@ -43,6 +44,7 @@ test.describe('direction', () => {
     await open(page)
     const other = lang === 'ar' ? 'en' : 'ar'
     await page.evaluate(() => ((window as unknown as { marker: number }).marker = 42))
+    await openMenu(page)
     await page.getByTestId('lang-toggle').locator(`button[lang="${other}"]`).click()
     await expect(page.locator('html')).toHaveAttribute('dir', other === 'ar' ? 'rtl' : 'ltr')
     expect(await page.evaluate(() => (window as unknown as { marker?: number }).marker)).toBe(42)

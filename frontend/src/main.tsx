@@ -5,7 +5,10 @@ import './styles/index.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import logo from './assets/arif-logo.png'
 import { I18nProvider } from './i18n'
+
+document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', logo)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

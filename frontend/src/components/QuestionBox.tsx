@@ -4,6 +4,8 @@ import { useI18n } from '../i18n/context'
 export interface Suggestion {
   id: string
   text: string
+  /** A short label shown instead of the full question where space is tight. */
+  title?: string
 }
 
 /** One-line question input with a send button; suggestions (demo or generated) as numbered rows. */

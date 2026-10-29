@@ -31,9 +31,15 @@ A student who asks *"how much does chain-of-thought improve GSM8K as models grow
 
 ## Screenshots
 
-| Arabic answer (RTL) | Before vs After |
+The UI is the Arif chat window: a floating panel with the Arif logo, the document it is working in, suggested questions as cards, and the answer under Arif's name with an "Execution audit" drawer.
+
+| Welcome: suggested questions | Arabic answer (RTL) |
 |---|---|
-| ![Arabic answer](docs/images/ar-answer.png) | ![Before vs after](docs/images/ar-before-after.png) |
+| ![Welcome](docs/images/ar-welcome.png) | ![Arabic answer](docs/images/ar-answer.png) |
+
+**Before vs After**: the same question as plain prose and as a visual answer, with cost and time for each.
+
+![Before vs after](docs/images/ar-before-after.png)
 
 | English chart with verified points | Mobile (390 px) |
 |---|---|

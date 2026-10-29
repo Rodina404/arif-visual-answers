@@ -1,4 +1,4 @@
-import { answer, askDemo, askText, expect, open, test, upload, waitDone, routeAsk } from '../helpers/fixtures'
+import { answer, askDemo, askText, expect, open, openMenu, test, upload, waitDone, routeAsk } from '../helpers/fixtures'
 
 const masks = (page: import('@playwright/test').Page) => [page.getByTestId('metric-time')]
 
@@ -36,6 +36,7 @@ test.describe('visual', () => {
   })
 
   test('before/after view (q1)', async ({ page }) => {
+    await openMenu(page)
     await page.getByTestId('tab-compare').click()
     await routeAsk(page)
     await page.getByTestId('suggest-q1').click()

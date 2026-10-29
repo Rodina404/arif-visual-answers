@@ -1,4 +1,4 @@
-import { answer, askDemo, expect, open, test, upload } from '../helpers/fixtures'
+import { answer, askDemo, expect, open, openMenu, test, upload } from '../helpers/fixtures'
 
 test.describe('provider switch', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,7 @@ test.describe('provider switch', () => {
   })
 
   test('Gemini is the default; Groq answers are labelled and use retrieval', async ({ page, lang }) => {
+    await openMenu(page)
     const sw = page.getByTestId('provider-switch')
     await expect(sw.locator('button')).toHaveCount(2)
     await expect(sw.locator('[data-provider="gemini"]')).toHaveAttribute('aria-pressed', 'true')
@@ -16,6 +17,7 @@ test.describe('provider switch', () => {
     await answer(page).getByTestId('metrics-drawer').locator('summary').click()
     await expect(answer(page).getByTestId('metrics-retrieval')).toContainText(/Whole document|الملف كله/)
 
+    await openMenu(page)
     await sw.locator('[data-provider="groq"]').click()
     await expect(sw.locator('[data-provider="groq"]')).toHaveAttribute('aria-pressed', 'true')
     await askDemo(page, 'q2')
@@ -29,8 +31,10 @@ test.describe('provider switch', () => {
   })
 
   test('the provider choice survives a reload', async ({ page }) => {
+    await openMenu(page)
     await page.getByTestId('provider-switch').locator('[data-provider="groq"]').click()
     await page.reload()
+    await openMenu(page)
     await expect(page.getByTestId('provider-switch').locator('[data-provider="groq"]')).toHaveAttribute(
       'aria-pressed',
       'true',

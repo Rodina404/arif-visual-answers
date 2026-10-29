@@ -103,3 +103,10 @@ export function makePdf(pages: number): Buffer {
   out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`
   return Buffer.from(out, 'latin1')
 }
+
+/** View, model and language live in the header's options menu: open it if it is closed. */
+export async function openMenu(page: Page) {
+  const menu = page.getByTestId('menu')
+  if (!(await menu.isVisible())) await page.getByTestId('menu-button').click()
+  await expect(menu).toBeVisible()
+}

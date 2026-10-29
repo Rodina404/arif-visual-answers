@@ -8,9 +8,15 @@ export function MetricsDrawer({ m, slots }: { m: Metrics; slots: Slot[] }) {
     s.state === 'ready' ? [{ id: s.id, type: s.type, reason: String((s.props as { reason?: string }).reason ?? '') }] : [],
   )
   return (
-    <details data-testid="metrics-drawer" className="group rounded-2xl bg-raised text-sm">
-      <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-muted">{t('metrics.title')}</summary>
-      <div className="grid gap-3 px-3 pb-3">
+    <details data-testid="metrics-drawer" className="group rounded-2xl border border-line bg-surface text-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 select-none [&::-webkit-details-marker]:hidden">
+        <span className="text-xs font-semibold text-ink">{t('metrics.title')}</span>
+        <span className="text-xs font-semibold text-muted">{t('metrics.completed', { n: num(m.components.emitted) })}</span>
+        <svg viewBox="0 0 24 24" className="ms-auto h-4 w-4 text-muted transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+      <div className="grid gap-3 border-t border-line px-4 pb-3 pt-3">
         <div data-testid="metrics-retrieval">
           <h4 className="m-0 mb-1 text-xs font-semibold text-muted">{t('metrics.retrieval')}</h4>
           <p className="m-0 text-xs text-ink">
@@ -37,7 +43,7 @@ export function MetricsDrawer({ m, slots }: { m: Metrics; slots: Slot[] }) {
         ) : null}
         <div>
           <h4 className="m-0 mb-1 text-xs font-semibold text-muted">{t('metrics.raw')}</h4>
-          <pre data-testid="metrics-json" dir="ltr" className="m-0 max-h-72 overflow-auto rounded-xl bg-surface p-2 text-[11px] leading-4 text-ink">
+          <pre data-testid="metrics-json" dir="ltr" className="m-0 max-h-72 overflow-auto rounded-xl bg-raised p-2 text-[11px] leading-4 text-ink">
             {JSON.stringify(m, null, 2)}
           </pre>
         </div>
