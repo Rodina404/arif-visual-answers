@@ -1,0 +1,14 @@
+.env
+data/
+.venv/
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+frontend/dist/
+shot*.png

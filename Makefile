@@ -1,0 +1,59 @@
+# Run from Git Bash (or any POSIX sh) on Windows.
+SHELL := sh
+UV ?= uv
+export PYTHONUTF8 := 1
+
+.PHONY: setup dev build serve-mock test-backend lint e2e e2e-update test-live record-fixtures demo bench check-models schema fixtures-pdfs
+
+setup:
+	cd backend && $(UV) sync
+	cd frontend && (npm ci || npm install)
+	cd frontend && npx playwright install chromium
+
+dev:
+	(cd backend && $(UV) run uvicorn app.main:app --reload --port 8000) & \
+	(cd frontend && npx vite --port 5173) & \
+	wait
+
+build:
+	cd frontend && npm run build
+
+serve-mock: build
+	cd backend && MOCK_LLM=1 $(UV) run uvicorn app.main:app --port 8000
+
+test-backend:
+	cd backend && $(UV) run pytest -q
+
+schema:
+	cd backend && $(UV) run python scripts/export_schema.py
+
+fixtures-pdfs:
+	cd backend && $(UV) run python scripts/make_injection_pdf.py
+
+lint:
+	cd backend && $(UV) run ruff check . && $(UV) run mypy app --ignore-missing-imports
+	cd frontend && npm run lint && npm run typecheck
+	@if grep -rn "dangerouslySetInnerHTML" frontend/src; then echo "dangerouslySetInnerHTML is forbidden"; exit 1; fi
+
+e2e:
+	cd frontend && npx playwright test -c ../e2e/playwright.config.ts --grep-invert "@live|@demo"
+
+e2e-update:
+	cd frontend && npx playwright test -c ../e2e/playwright.config.ts --grep-invert "@live|@demo" --update-snapshots
+
+test-live:
+	cd frontend && npx playwright test -c ../e2e/playwright.config.ts --grep @live --project=chromium-ar
+
+record-fixtures:
+	cd backend && $(UV) run python scripts/record_fixtures.py
+
+demo:
+	cd frontend && MOCK_TTFT_MS=900 npx playwright test -c ../e2e/playwright.config.ts --grep @demo --project=demo
+	cd backend && $(UV) run python scripts/collect_demo.py
+	ffmpeg -y -i demo/arif-visual-answers.webm -vf "fps=12,scale=960:-1:flags=lanczos" demo/arif-visual-answers.gif
+
+bench:
+	cd backend && $(UV) run python scripts/bench.py
+
+check-models:
+	cd backend && $(UV) run python scripts/check_models.py
