@@ -562,7 +562,7 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** security pytest passes. A manual `curl -I` shows the headers. The `AIza` grep of `dist/` is empty.
 
 ### Phase 6 — Bilingual and RTL
-- [ ] i18n strings, the toggle, per-component `dir`, `bdi`, fonts, digit setting, chart mirroring, diagram mirroring, KaTeX islands, icon mirroring, and the mobile layout.
+- [x] i18n strings, the toggle, per-component `dir`, `bdi`, fonts, digit setting, chart mirroring, diagram mirroring, KaTeX islands, icon mirroring, and the mobile layout.
 - **Accept:** CLI screenshots in AR and EN at 1280 and 390 widths look correct, with no horizontal scroll. Arabic text has no broken letter joining. Note any issues in `BUILD_LOG.md`.
 
 ### Phase 7 — Metrics panel and caching
