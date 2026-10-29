@@ -1,0 +1,473 @@
+{
+  "description": "What the model fills. Property order matters: answer_text streams first.",
+  "properties": {
+    "answer_text": {
+      "description": "(max 700 characters)",
+      "type": "string"
+    },
+    "language": {
+      "enum": [
+        "ar",
+        "en"
+      ],
+      "type": "string"
+    },
+    "needs_visual": {
+      "type": "boolean"
+    },
+    "components": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "chart",
+              "comparison",
+              "steps",
+              "table",
+              "diagram",
+              "formula",
+              "quiz",
+              "flashcards"
+            ],
+            "description": "Component type; decides which fields apply."
+          },
+          "id": {
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "description": "(max 80 characters)",
+            "type": "string"
+          },
+          "reason": {
+            "description": "(max 140 characters)",
+            "type": "string"
+          },
+          "body": {
+            "description": "Only for type text. (max 1200 characters)",
+            "type": "string"
+          },
+          "chart_type": {
+            "enum": [
+              "bar",
+              "line"
+            ],
+            "type": "string",
+            "description": "Only for type chart."
+          },
+          "x_label": {
+            "description": "Only for type chart. (max 40 characters)",
+            "type": "string"
+          },
+          "y_label": {
+            "description": "Only for type chart. (max 40 characters)",
+            "type": "string"
+          },
+          "unit": {
+            "description": "Only for type chart. (max 12 characters)",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "properties": {
+                "name": {
+                  "description": "(max 40 characters)",
+                  "type": "string"
+                },
+                "points": {
+                  "items": {
+                    "properties": {
+                      "label": {
+                        "description": "(max 30 characters)",
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "citation": {
+                        "properties": {
+                          "page": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "quote": {
+                            "description": "(max 300 characters)",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "page",
+                          "quote"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "value",
+                      "citation"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 12,
+                  "minItems": 3,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "name",
+                "points"
+              ],
+              "type": "object"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "type": "array",
+            "description": "Only for type chart."
+          },
+          "items": {
+            "items": {
+              "properties": {
+                "name": {
+                  "description": "(max 40 characters)",
+                  "type": "string"
+                },
+                "summary": {
+                  "description": "(max 160 characters)",
+                  "type": "string"
+                },
+                "attributes": {
+                  "items": {
+                    "properties": {
+                      "key": {
+                        "description": "(max 30 characters)",
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "(max 80 characters)",
+                        "type": "string"
+                      },
+                      "citation": {
+                        "properties": {
+                          "page": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "quote": {
+                            "description": "(max 300 characters)",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "page",
+                          "quote"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "value"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 6,
+                  "minItems": 2,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "name",
+                "summary",
+                "attributes"
+              ],
+              "type": "object"
+            },
+            "maxItems": 4,
+            "minItems": 2,
+            "type": "array",
+            "description": "Only for type comparison."
+          },
+          "ordered": {
+            "type": "boolean",
+            "description": "Only for type steps."
+          },
+          "steps": {
+            "items": {
+              "properties": {
+                "title": {
+                  "description": "(max 60 characters)",
+                  "type": "string"
+                },
+                "detail": {
+                  "description": "(max 220 characters)",
+                  "type": "string"
+                },
+                "page": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "detail"
+              ],
+              "type": "object"
+            },
+            "maxItems": 8,
+            "minItems": 2,
+            "type": "array",
+            "description": "Only for type steps."
+          },
+          "columns": {
+            "items": {
+              "description": "(max 30 characters)",
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 2,
+            "type": "array",
+            "description": "Only for type table."
+          },
+          "rows": {
+            "items": {
+              "properties": {
+                "cells": {
+                  "items": {
+                    "description": "(max 60 characters)",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "citation": {
+                  "properties": {
+                    "page": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "quote": {
+                      "description": "(max 300 characters)",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "page",
+                    "quote"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "cells",
+                "citation"
+              ],
+              "type": "object"
+            },
+            "maxItems": 12,
+            "minItems": 2,
+            "type": "array",
+            "description": "Only for type table."
+          },
+          "layout": {
+            "enum": [
+              "flow",
+              "cycle"
+            ],
+            "type": "string",
+            "description": "Only for type diagram."
+          },
+          "nodes": {
+            "items": {
+              "properties": {
+                "id": {
+                  "description": "(max 20 characters)",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "(max 40 characters)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "label"
+              ],
+              "type": "object"
+            },
+            "maxItems": 10,
+            "minItems": 2,
+            "type": "array",
+            "description": "Only for type diagram."
+          },
+          "edges": {
+            "items": {
+              "properties": {
+                "from": {
+                  "description": "(max 20 characters)",
+                  "type": "string"
+                },
+                "to": {
+                  "description": "(max 20 characters)",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "(max 24 characters)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "type": "object"
+            },
+            "maxItems": 14,
+            "minItems": 1,
+            "type": "array",
+            "description": "Only for type diagram."
+          },
+          "page": {
+            "minimum": 1,
+            "type": "integer",
+            "description": "Only for type diagram."
+          },
+          "latex": {
+            "description": "Only for type formula. (max 300 characters)",
+            "type": "string"
+          },
+          "explanation": {
+            "description": "Only for type formula. (max 220 characters)",
+            "type": "string"
+          },
+          "citation": {
+            "properties": {
+              "page": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "quote": {
+                "description": "(max 300 characters)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "page",
+              "quote"
+            ],
+            "type": "object",
+            "description": "Only for type formula."
+          },
+          "questions": {
+            "items": {
+              "properties": {
+                "prompt": {
+                  "description": "(max 160 characters)",
+                  "type": "string"
+                },
+                "options": {
+                  "items": {
+                    "description": "(max 80 characters)",
+                    "type": "string"
+                  },
+                  "maxItems": 4,
+                  "minItems": 3,
+                  "type": "array"
+                },
+                "correct_index": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "explanation": {
+                  "description": "(max 220 characters)",
+                  "type": "string"
+                },
+                "citation": {
+                  "properties": {
+                    "page": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "quote": {
+                      "description": "(max 300 characters)",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "page",
+                    "quote"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "prompt",
+                "options",
+                "correct_index",
+                "explanation",
+                "citation"
+              ],
+              "type": "object"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "type": "array",
+            "description": "Only for type quiz."
+          },
+          "cards": {
+            "items": {
+              "properties": {
+                "front": {
+                  "description": "(max 60 characters)",
+                  "type": "string"
+                },
+                "back": {
+                  "description": "(max 200 characters)",
+                  "type": "string"
+                },
+                "page": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "front",
+                "back"
+              ],
+              "type": "object"
+            },
+            "maxItems": 8,
+            "minItems": 3,
+            "type": "array",
+            "description": "Only for type flashcards."
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "lang",
+          "title",
+          "reason"
+        ]
+      }
+    }
+  },
+  "required": [
+    "answer_text",
+    "language",
+    "needs_visual",
+    "components"
+  ],
+  "type": "object"
+}

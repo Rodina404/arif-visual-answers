@@ -538,11 +538,11 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** pytest covers valid, non-PDF, oversize, too many pages, encrypted, and injection-hidden-text cases. All pass.
 
 ### Phase 2 — Catalog, schema, provider adapter and streaming
-- [ ] Pydantic catalog (section 4), `to_gemini_schema()`, `scripts/export_schema.py` → `frontend/src/catalog/schema.json`.
-- [ ] `LLMProvider` + `MockProvider` + `GeminiProvider` + `OpenAICompatProvider`.
-- [ ] Prompts (`prompts.py`): system prompt with the catalog descriptions, restraint rules, language rules, and untrusted-document delimiters. Version it with `PROMPT_VERSION`.
-- [ ] `stream.py` incremental parser → `/api/ask` SSE with the AG-UI-named events. Add `/api/ask_text` for the Before panel.
-- [ ] If a key exists: **one** live call with q1 in EN to confirm the schema is accepted (switch to `SCHEMA_MODE=plan` on a 400).
+- [x] Pydantic catalog (section 4), `to_gemini_schema()`, `scripts/export_schema.py` → `frontend/src/catalog/schema.json`.
+- [x] `LLMProvider` + `MockProvider` + `GeminiProvider` + `OpenAICompatProvider`.
+- [x] Prompts (`prompts.py`): system prompt with the catalog descriptions, restraint rules, language rules, and untrusted-document delimiters. Version it with `PROMPT_VERSION`.
+- [x] `stream.py` incremental parser → `/api/ask` SSE with the AG-UI-named events. Add `/api/ask_text` for the Before panel.
+- [x] If a key exists: **one** live call with q1 in EN to confirm the schema is accepted (switch to `SCHEMA_MODE=plan` on a 400).
 - **Accept:** pytest streams fixture JSON in chunks and gets the right event order. `curl -N` against mock mode shows the events. The live call (if any) returns valid JSON. Call count is logged.
 
 ### Phase 3 — Grounding and policy

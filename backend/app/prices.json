@@ -1,0 +1,16 @@
+{
+  "price_table_date": "2026-10-29",
+  "source": "https://ai.google.dev/gemini-api/docs/pricing (checked 2026-10-29), USD per 1M tokens, Standard paid tier",
+  "models": {
+    "gemini-3.8-flash": [
+      {"valid_from": "2026-09-02", "valid_until": "2026-12-31", "input": 0.75, "cached_input": 0.075, "output": 3.75},
+      {"valid_from": "2027-01-01", "valid_until": null, "input": 1.50, "cached_input": 0.15, "output": 7.50}
+    ],
+    "gemini-3.1-flash-lite": [
+      {"valid_from": "2026-01-01", "valid_until": null, "input": 0.25, "cached_input": 0.025, "output": 1.50}
+    ],
+    "gemini-3.1-pro-preview": [
+      {"valid_from": "2026-01-01", "valid_until": null, "input": 2.00, "cached_input": 0.20, "output": 12.00}
+    ]
+  }
+}

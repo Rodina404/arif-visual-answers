@@ -6,19 +6,50 @@ import asyncio
 import contextlib
 import logging
 from collections.abc import AsyncIterator
+from pathlib import Path
+from typing import Any, Literal
 
 from fastapi import FastAPI, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
+from . import security
+from .cache import AnswerCache
 from .config import Settings, get_settings
-from .upload import DocStore, UploadError
+from .metrics import MetricsLog
+from .providers import get_provider
+from .providers.base import ProviderDocHandle, ProviderError
+from .stream import AskContext, TextRun, VisualRun, sse
+from .upload import DocStore, StoredDoc, UploadError
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("arif")
+
+
+class AskRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    doc_id: str = Field(max_length=64)
+    question: str = Field(min_length=1, max_length=500)
+    lang: Literal["ar", "en"] = "ar"
+    text_only: bool = False
+
+
+def _error(code: str, message: str, status: int) -> JSONResponse:
+    return JSONResponse({"code": code, "message": message}, status_code=status)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     store = DocStore(settings)
+    provider = get_provider(settings)
+    cache = AnswerCache(settings.data_dir / "cache.sqlite")
+    metrics = MetricsLog()
+    handles: dict[str, ProviderDocHandle] = {}
+    preparing: dict[str, asyncio.Task[ProviderDocHandle]] = {}
+    limiter = Limiter(key_func=get_remote_address)
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -30,26 +61,69 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 store.cleanup()
 
         task = asyncio.create_task(hourly())
+        log.info("provider=%s model=%s schema_mode=%s", provider.name, settings.model, settings.schema_mode)
         yield
         task.cancel()
+        cache.close()
 
-    app = FastAPI(title="Arif Visual Answers", lifespan=lifespan)
+    app = FastAPI(title="Arif Visual Answers", lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.settings = settings
     app.state.store = store
+    app.state.cache = cache
+    app.state.provider = provider
+    security.install(app, settings)
+    app.state.limiter = limiter
+
+    async def _prepare(doc: StoredDoc) -> ProviderDocHandle:
+        handle = await provider.prepare_document(doc)
+        handles[doc.doc_id] = handle
+        store.save(doc)
+        try:
+            doc.token_count = await provider.count_tokens(handle)
+            log.info("doc %s: %s pages, %s tokens (count_tokens)", doc.doc_id, doc.page_count, doc.token_count)
+        except Exception as exc:  # token counting is informational only
+            log.warning("count_tokens failed: %s", exc)
+        return handle
+
+    async def handle_for(doc: StoredDoc) -> ProviderDocHandle:
+        if doc.doc_id in handles:
+            return handles[doc.doc_id]
+        task = preparing.get(doc.doc_id)
+        if task is None or (task.done() and task.exception() is not None):
+            task = preparing[doc.doc_id] = asyncio.create_task(_prepare(doc))
+        return await task
 
     @app.exception_handler(UploadError)
     async def upload_error(_: Request, exc: UploadError) -> JSONResponse:
-        return JSONResponse({"code": exc.code, "message": exc.message}, status_code=exc.status)
+        return _error(exc.code, exc.message, exc.status)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+        fields = sorted({str(e["loc"][-1]) for e in exc.errors()})
+        return _error("INVALID_REQUEST", f"Invalid request: {', '.join(fields)}", 422)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/api/config")
+    async def public_config() -> dict[str, Any]:
+        return {
+            "provider": provider.name,
+            "model": settings.model,
+            "digits": settings.digits,
+            "mock": provider.name == "mock",
+            "max_upload_mb": settings.max_upload_mb,
+            "max_pages": settings.max_pages,
+        }
+
     @app.post("/api/documents")
-    async def upload_document(request: Request, file: UploadFile) -> dict:
+    @limiter.limit(lambda: settings.rate_limit_upload)
+    async def upload_document(request: Request, file: UploadFile) -> dict[str, Any]:
         limit = settings.max_upload_mb * 1024 * 1024
         data = await file.read(limit + 1)
         doc = await asyncio.to_thread(store.add, data, file.filename or "document.pdf", file.content_type)
+        preparing[doc.doc_id] = asyncio.create_task(_prepare(doc))
         return {
             "doc_id": doc.doc_id,
             "pages": doc.page_count,
@@ -62,13 +136,88 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def page_text(doc_id: str, n: int) -> JSONResponse:
         doc = store.get(doc_id)
         if doc is None:
-            return JSONResponse({"code": "NOT_FOUND", "message": "Unknown document."}, status_code=404)
+            return _error("NOT_FOUND", "Unknown document.", 404)
         page = doc.page(n)
         if page is None:
-            return JSONResponse({"code": "NOT_FOUND", "message": "Unknown page."}, status_code=404)
+            return _error("NOT_FOUND", "Unknown page.", 404)
         return JSONResponse({"page": n, "text": page.visible_text, "has_text": bool(page.visible_text.strip())})
 
+    async def _start(request: Request, body: AskRequest) -> AskContext | JSONResponse:
+        doc = store.get(body.doc_id)
+        if doc is None:
+            return _error("NOT_FOUND", "Unknown document. Please upload it again.", 404)
+        if doc.questions_asked >= settings.max_questions_per_doc:
+            return _error("QUESTION_LIMIT", "This document has reached its question limit.", 429)
+        doc.questions_asked += 1
+        try:
+            handle = await handle_for(doc)
+        except ProviderError as exc:
+            return _error(exc.code, "The model provider could not read the document.", 502)
+        forced = request.headers.get("x-mock-fixture") if provider.name == "mock" else None
+        return AskContext(
+            settings=settings,
+            provider=provider,
+            doc=doc,
+            handle=handle,
+            question=body.question.strip(),
+            lang=body.lang,
+            cache=cache,
+            metrics=metrics,
+            text_only=body.text_only,
+            mock_fixture=forced,
+        )
+
+    def _stream(events: AsyncIterator[tuple[str, dict[str, Any]]]) -> StreamingResponse:
+        async def gen() -> AsyncIterator[str]:
+            async for name, data in events:
+                yield sse(name, data)
+
+        return StreamingResponse(
+            gen(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    @app.post("/api/ask", response_model=None)
+    @limiter.limit(lambda: settings.rate_limit_ask)
+    async def ask(request: Request, body: AskRequest) -> StreamingResponse | JSONResponse:
+        ctx = await _start(request, body)
+        if isinstance(ctx, JSONResponse):
+            return ctx
+        return _stream(VisualRun(ctx).events())
+
+    @app.post("/api/ask_text", response_model=None)
+    @limiter.limit(lambda: settings.rate_limit_ask)
+    async def ask_text(request: Request, body: AskRequest) -> StreamingResponse | JSONResponse:
+        ctx = await _start(request, body)
+        if isinstance(ctx, JSONResponse):
+            return ctx
+        return _stream(TextRun(ctx).events())
+
+    @app.get("/api/metrics/summary")
+    async def metrics_summary() -> dict[str, Any]:
+        return metrics.summary()
+
+    _mount_frontend(app, settings.frontend_dist)
     return app
+
+
+def _mount_frontend(app: FastAPI, dist: Path) -> None:
+    """Serve the built SPA from the same origin (strict CSP). Unknown paths fall back to index.html."""
+    index = dist / "index.html"
+    root = dist.resolve()
+
+    @app.get("/{path:path}", include_in_schema=False, response_model=None)
+    async def spa(path: str) -> FileResponse | JSONResponse:
+        if path.startswith("api/"):
+            return _error("NOT_FOUND", "Not found.", 404)
+        if not index.exists():
+            return _error("NO_FRONTEND", "Frontend not built. Run `make build`.", 404)
+        target = (dist / path).resolve()
+        if path and target.is_file() and target.is_relative_to(root):
+            headers = {"Cache-Control": "public, max-age=31536000, immutable"} if path.startswith("assets/") else {}
+            return FileResponse(target, headers=headers)
+        return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
 app = create_app()

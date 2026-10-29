@@ -4,8 +4,16 @@
 
 Budget: 15 Gemini **generation** calls. `models.list`, `files.upload` and `count_tokens` are logged separately; they don't use generation quota.
 
+Counted as **requests that reached the API** (a call that retried counts once per attempt).
+
 | # | Date | Purpose | Model | Result |
 |---|---|---|---|---|
+| 1 | 2026-10-29 | Phase 2 schema check, q1 EN (anyOf schema with min/maxLength) | 3.8-flash | 400 INVALID_ARGUMENT |
+| 2 | 2026-10-29 | same, with error reporting | 3.8-flash | 400 INVALID_ARGUMENT |
+| 3 | 2026-10-29 | anyOf schema, length keywords moved to descriptions, bool enum removed | 3.8-flash | client timeout at 45 s, no text (probably 503s + retries, statuses weren't logged yet) |
+| 4 | 2026-10-29 | same schema, 150 s timeout | 3.8-flash | 400 INVALID_ARGUMENT after 13 s |
+| 5–8 | 2026-10-29 | flat schema (no anyOf), q1 EN | 3.8-flash ×3, 3.1-flash-lite ×1 | 3× retryable error on primary → fallback → 400 on flash-lite. Retries burned 4 requests: recording now never retries |
+| 9 | 2026-10-29 | `diag_gemini.py schema` (tiny prompt + flat schema, no PDF) | 3.8-flash | **503 UNAVAILABLE "model is currently experiencing high demand"** |
 
 Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase 0 `make check-models`).
 
@@ -31,3 +39,11 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 - **D2 — Text extraction.** pdfplumber `extract_text(x_tolerance=1.5)`: the default tolerance (3) glued words together in the LaTeX-typeset CoT paper ("Weexplorehow…"), which would break quote matching.
 - **D3 — Hidden-text threshold.** The real paper has dark figure tick labels under 4 pt (e.g. 27 on page 5). Hidden chars are classified as `white`, `offpage` or `tiny`; a page is flagged when white+offpage ≥ 10 or tiny ≥ 60. All hidden chars are still excluded from `visible_text`. cot.pdf: 0 flagged pages; injection.pdf: page 1 flagged.
 - **D4 — Doc store.** Parsed docs are kept in memory with a JSON sidecar in `data/docs/` so a server restart keeps them; cleanup removes both after 48 h.
+- **D5 — Schema modes.** Gemini returned `400 INVALID_ARGUMENT` for the full catalog schema (9-branch `anyOf`, ~9 KB) even after removing `minLength`/`maxLength` (now description hints; Pydantic enforces them) and the boolean `enum` (`steps.ordered`; the server sets it to `true`). Added `SCHEMA_MODE=flat`: one component object with a `type` enum and every type's fields optional, no `anyOf`, no `additionalProperties` (6.3 KB). The server projects each component onto its real model and validates strictly, so the contract is unchanged. `plan` is implemented too but costs 1 + up to 3 calls per answer. Live status: see the call log and Phase 2 notes below.
+- **D6 — Fixtures are hand-authored.** The live budget went on schema debugging and a 503 overload ("high demand") on gemini-3.8-flash, so all q1–q6 AR/EN fixtures were written by hand with quotes copied from `visible_text` of the real `cot.pdf` (marked `"source": "hand-authored"` in `fixtures/answers/cot/meta.json`). `scripts/check_fixtures.py` and `tests/test_fixtures.py` prove each one is fully `verified`.
+- **D7 — q2 numbers.** GSM8K-by-model-size values are in the text layer: Appendix Table 2 (page 21), e.g. PaLM 8B 4.9→4.1, 62B 9.6→29.9, 540B 17.9→56.9. Figure 4's values are image-only and are not used.
+- **D8 — Grounding hardening beyond the README.** (a) Numbers must appear in the quote *and* that quote number must appear on the page, so a fuzzy-matching quote (score ≥ 90) with one digit changed can't verify an invented value. (b) If `partial_ratio` < 90, retry with all spaces removed (PDF extraction sometimes drops spaces). (c) Digits glued to words (`GSM8K`, `GPT-3`, `code-davinci-002`) are identifiers, not numbers.
+- **D9 — Streaming cap.** The first two non-quiz components are emitted as soon as they are validated (lower latency). Later ones are held until the stream ends, then the remaining slot(s) go to the highest-priority held component; a quiz is held and always emitted last.
+- **D10 — Retries.** 429/503 → 2 retries with backoff + jitter → 1 attempt on `FALLBACK_MODEL` (`WARNING FALLBACK_MODEL_USED`). Only before any output has streamed. Recording scripts never retry, so one recording = one request.
+- **D11 — Parse cache.** Parsed page layers are memoised by SHA-256 in-process (re-uploading `cot.pdf` is instant; the test suite went from 177 s to 14 s). Limits are re-checked on a cache hit.
+- **Tool note.** The tool transport decodes `\uXXXX` escapes in commands/content; source files that need escapes build them with `chr(92)` or use the literal characters.

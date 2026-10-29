@@ -1,0 +1,2041 @@
+{
+  "answer": {
+    "$defs": {
+      "Attribute": {
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "maxLength": 30,
+            "minLength": 0,
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Value",
+            "type": "string"
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Citation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "Attribute",
+        "type": "object"
+      },
+      "ChartComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "chart",
+            "title": "Type",
+            "type": "string"
+          },
+          "chart_type": {
+            "enum": [
+              "bar",
+              "line"
+            ],
+            "title": "Chart Type",
+            "type": "string"
+          },
+          "x_label": {
+            "maxLength": 40,
+            "minLength": 0,
+            "title": "X Label",
+            "type": "string"
+          },
+          "y_label": {
+            "maxLength": 40,
+            "minLength": 0,
+            "title": "Y Label",
+            "type": "string"
+          },
+          "unit": {
+            "maxLength": 12,
+            "minLength": 0,
+            "title": "Unit",
+            "type": "string"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/$defs/ChartSeries"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Series",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "chart_type",
+          "x_label",
+          "y_label",
+          "unit",
+          "series"
+        ],
+        "title": "ChartComponent",
+        "type": "object"
+      },
+      "ChartPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "maxLength": 30,
+            "minLength": 0,
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          },
+          "citation": {
+            "$ref": "#/$defs/Citation"
+          }
+        },
+        "required": [
+          "label",
+          "value",
+          "citation"
+        ],
+        "title": "ChartPoint",
+        "type": "object"
+      },
+      "ChartSeries": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 40,
+            "minLength": 0,
+            "title": "Name",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/ChartPoint"
+            },
+            "maxItems": 12,
+            "minItems": 3,
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "points"
+        ],
+        "title": "ChartSeries",
+        "type": "object"
+      },
+      "Citation": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "title": "Page",
+            "type": "integer"
+          },
+          "quote": {
+            "maxLength": 300,
+            "minLength": 10,
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "page",
+          "quote"
+        ],
+        "title": "Citation",
+        "type": "object"
+      },
+      "ComparisonComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "comparison",
+            "title": "Type",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ComparisonItem"
+            },
+            "maxItems": 4,
+            "minItems": 2,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "items"
+        ],
+        "title": "ComparisonComponent",
+        "type": "object"
+      },
+      "ComparisonItem": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 40,
+            "minLength": 0,
+            "title": "Name",
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 160,
+            "minLength": 0,
+            "title": "Summary",
+            "type": "string"
+          },
+          "attributes": {
+            "items": {
+              "$ref": "#/$defs/Attribute"
+            },
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Attributes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "summary",
+          "attributes"
+        ],
+        "title": "ComparisonItem",
+        "type": "object"
+      },
+      "DiagramComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "diagram",
+            "title": "Type",
+            "type": "string"
+          },
+          "layout": {
+            "enum": [
+              "flow",
+              "cycle"
+            ],
+            "title": "Layout",
+            "type": "string"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/$defs/DiagramNode"
+            },
+            "maxItems": 10,
+            "minItems": 2,
+            "title": "Nodes",
+            "type": "array"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/$defs/DiagramEdge"
+            },
+            "maxItems": 14,
+            "minItems": 1,
+            "title": "Edges",
+            "type": "array"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "layout",
+          "nodes",
+          "edges"
+        ],
+        "title": "DiagramComponent",
+        "type": "object"
+      },
+      "DiagramEdge": {
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "maxLength": 20,
+            "title": "From",
+            "type": "string"
+          },
+          "to": {
+            "maxLength": 20,
+            "minLength": 0,
+            "title": "To",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Label"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "title": "DiagramEdge",
+        "type": "object"
+      },
+      "DiagramNode": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 40,
+            "minLength": 0,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "DiagramNode",
+        "type": "object"
+      },
+      "Flashcard": {
+        "additionalProperties": false,
+        "properties": {
+          "front": {
+            "maxLength": 60,
+            "minLength": 0,
+            "title": "Front",
+            "type": "string"
+          },
+          "back": {
+            "maxLength": 200,
+            "minLength": 0,
+            "title": "Back",
+            "type": "string"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          }
+        },
+        "required": [
+          "front",
+          "back"
+        ],
+        "title": "Flashcard",
+        "type": "object"
+      },
+      "FlashcardsComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "flashcards",
+            "title": "Type",
+            "type": "string"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/$defs/Flashcard"
+            },
+            "maxItems": 8,
+            "minItems": 3,
+            "title": "Cards",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "cards"
+        ],
+        "title": "FlashcardsComponent",
+        "type": "object"
+      },
+      "FormulaComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "formula",
+            "title": "Type",
+            "type": "string"
+          },
+          "latex": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Latex",
+            "type": "string"
+          },
+          "explanation": {
+            "maxLength": 220,
+            "minLength": 0,
+            "title": "Explanation",
+            "type": "string"
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Citation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "latex",
+          "explanation"
+        ],
+        "title": "FormulaComponent",
+        "type": "object"
+      },
+      "QuizComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "quiz",
+            "title": "Type",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/$defs/QuizQuestion"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Questions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "questions"
+        ],
+        "title": "QuizComponent",
+        "type": "object"
+      },
+      "QuizQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "prompt": {
+            "maxLength": 160,
+            "minLength": 0,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "maxLength": 80,
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 3,
+            "title": "Options",
+            "type": "array"
+          },
+          "correct_index": {
+            "maximum": 3,
+            "minimum": 0,
+            "title": "Correct Index",
+            "type": "integer"
+          },
+          "explanation": {
+            "maxLength": 220,
+            "minLength": 0,
+            "title": "Explanation",
+            "type": "string"
+          },
+          "citation": {
+            "$ref": "#/$defs/Citation"
+          }
+        },
+        "required": [
+          "prompt",
+          "options",
+          "correct_index",
+          "explanation",
+          "citation"
+        ],
+        "title": "QuizQuestion",
+        "type": "object"
+      },
+      "Step": {
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "maxLength": 60,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "detail": {
+            "maxLength": 220,
+            "minLength": 0,
+            "title": "Detail",
+            "type": "string"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          }
+        },
+        "required": [
+          "title",
+          "detail"
+        ],
+        "title": "Step",
+        "type": "object"
+      },
+      "StepsComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "steps",
+            "title": "Type",
+            "type": "string"
+          },
+          "ordered": {
+            "const": true,
+            "title": "Ordered",
+            "type": "boolean"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/$defs/Step"
+            },
+            "maxItems": 8,
+            "minItems": 2,
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "ordered",
+          "steps"
+        ],
+        "title": "StepsComponent",
+        "type": "object"
+      },
+      "TableComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "table",
+            "title": "Type",
+            "type": "string"
+          },
+          "columns": {
+            "items": {
+              "maxLength": 30,
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Columns",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/TableRow"
+            },
+            "maxItems": 12,
+            "minItems": 2,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "columns",
+          "rows"
+        ],
+        "title": "TableComponent",
+        "type": "object"
+      },
+      "TableRow": {
+        "additionalProperties": false,
+        "properties": {
+          "cells": {
+            "items": {
+              "maxLength": 60,
+              "type": "string"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "citation": {
+            "$ref": "#/$defs/Citation"
+          }
+        },
+        "required": [
+          "cells",
+          "citation"
+        ],
+        "title": "TableRow",
+        "type": "object"
+      },
+      "TextComponent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^c[1-9]$",
+            "title": "Id",
+            "type": "string"
+          },
+          "lang": {
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Lang",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 0,
+            "title": "Title",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 140,
+            "minLength": 0,
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "text",
+            "title": "Type",
+            "type": "string"
+          },
+          "body": {
+            "maxLength": 1200,
+            "minLength": 0,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "title",
+          "reason",
+          "type",
+          "body"
+        ],
+        "title": "TextComponent",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "What the model fills. Property order matters: answer_text streams first.",
+    "properties": {
+      "answer_text": {
+        "maxLength": 700,
+        "minLength": 1,
+        "title": "Answer Text",
+        "type": "string"
+      },
+      "language": {
+        "enum": [
+          "ar",
+          "en"
+        ],
+        "title": "Language",
+        "type": "string"
+      },
+      "needs_visual": {
+        "title": "Needs Visual",
+        "type": "boolean"
+      },
+      "components": {
+        "items": {
+          "discriminator": {
+            "mapping": {
+              "chart": "#/$defs/ChartComponent",
+              "comparison": "#/$defs/ComparisonComponent",
+              "diagram": "#/$defs/DiagramComponent",
+              "flashcards": "#/$defs/FlashcardsComponent",
+              "formula": "#/$defs/FormulaComponent",
+              "quiz": "#/$defs/QuizComponent",
+              "steps": "#/$defs/StepsComponent",
+              "table": "#/$defs/TableComponent",
+              "text": "#/$defs/TextComponent"
+            },
+            "propertyName": "type"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TextComponent"
+            },
+            {
+              "$ref": "#/$defs/ChartComponent"
+            },
+            {
+              "$ref": "#/$defs/ComparisonComponent"
+            },
+            {
+              "$ref": "#/$defs/StepsComponent"
+            },
+            {
+              "$ref": "#/$defs/TableComponent"
+            },
+            {
+              "$ref": "#/$defs/DiagramComponent"
+            },
+            {
+              "$ref": "#/$defs/FormulaComponent"
+            },
+            {
+              "$ref": "#/$defs/QuizComponent"
+            },
+            {
+              "$ref": "#/$defs/FlashcardsComponent"
+            }
+          ]
+        },
+        "maxItems": 3,
+        "title": "Components",
+        "type": "array"
+      }
+    },
+    "required": [
+      "answer_text",
+      "language",
+      "needs_visual"
+    ],
+    "title": "VisualAnswer",
+    "type": "object"
+  },
+  "citation": {
+    "additionalProperties": false,
+    "properties": {
+      "page": {
+        "minimum": 1,
+        "title": "Page",
+        "type": "integer"
+      },
+      "quote": {
+        "maxLength": 300,
+        "minLength": 10,
+        "title": "Quote",
+        "type": "string"
+      }
+    },
+    "required": [
+      "page",
+      "quote"
+    ],
+    "title": "Citation",
+    "type": "object"
+  },
+  "components": {
+    "text": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "title": "Type",
+          "type": "string"
+        },
+        "body": {
+          "maxLength": 1200,
+          "minLength": 0,
+          "title": "Body",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "body"
+      ],
+      "title": "TextComponent",
+      "type": "object"
+    },
+    "chart": {
+      "$defs": {
+        "ChartPoint": {
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "maxLength": 30,
+              "minLength": 0,
+              "title": "Label",
+              "type": "string"
+            },
+            "value": {
+              "title": "Value",
+              "type": "number"
+            },
+            "citation": {
+              "$ref": "#/$defs/Citation"
+            }
+          },
+          "required": [
+            "label",
+            "value",
+            "citation"
+          ],
+          "title": "ChartPoint",
+          "type": "object"
+        },
+        "ChartSeries": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 40,
+              "minLength": 0,
+              "title": "Name",
+              "type": "string"
+            },
+            "points": {
+              "items": {
+                "$ref": "#/$defs/ChartPoint"
+              },
+              "maxItems": 12,
+              "minItems": 3,
+              "title": "Points",
+              "type": "array"
+            }
+          },
+          "required": [
+            "name",
+            "points"
+          ],
+          "title": "ChartSeries",
+          "type": "object"
+        },
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "chart",
+          "title": "Type",
+          "type": "string"
+        },
+        "chart_type": {
+          "enum": [
+            "bar",
+            "line"
+          ],
+          "title": "Chart Type",
+          "type": "string"
+        },
+        "x_label": {
+          "maxLength": 40,
+          "minLength": 0,
+          "title": "X Label",
+          "type": "string"
+        },
+        "y_label": {
+          "maxLength": 40,
+          "minLength": 0,
+          "title": "Y Label",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 12,
+          "minLength": 0,
+          "title": "Unit",
+          "type": "string"
+        },
+        "series": {
+          "items": {
+            "$ref": "#/$defs/ChartSeries"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Series",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "chart_type",
+        "x_label",
+        "y_label",
+        "unit",
+        "series"
+      ],
+      "title": "ChartComponent",
+      "type": "object"
+    },
+    "comparison": {
+      "$defs": {
+        "Attribute": {
+          "additionalProperties": false,
+          "properties": {
+            "key": {
+              "maxLength": 30,
+              "minLength": 0,
+              "title": "Key",
+              "type": "string"
+            },
+            "value": {
+              "maxLength": 80,
+              "minLength": 0,
+              "title": "Value",
+              "type": "string"
+            },
+            "citation": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Citation"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "key",
+            "value"
+          ],
+          "title": "Attribute",
+          "type": "object"
+        },
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        },
+        "ComparisonItem": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 40,
+              "minLength": 0,
+              "title": "Name",
+              "type": "string"
+            },
+            "summary": {
+              "maxLength": 160,
+              "minLength": 0,
+              "title": "Summary",
+              "type": "string"
+            },
+            "attributes": {
+              "items": {
+                "$ref": "#/$defs/Attribute"
+              },
+              "maxItems": 6,
+              "minItems": 2,
+              "title": "Attributes",
+              "type": "array"
+            }
+          },
+          "required": [
+            "name",
+            "summary",
+            "attributes"
+          ],
+          "title": "ComparisonItem",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "comparison",
+          "title": "Type",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ComparisonItem"
+          },
+          "maxItems": 4,
+          "minItems": 2,
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "items"
+      ],
+      "title": "ComparisonComponent",
+      "type": "object"
+    },
+    "steps": {
+      "$defs": {
+        "Step": {
+          "additionalProperties": false,
+          "properties": {
+            "title": {
+              "maxLength": 60,
+              "minLength": 0,
+              "title": "Title",
+              "type": "string"
+            },
+            "detail": {
+              "maxLength": 220,
+              "minLength": 0,
+              "title": "Detail",
+              "type": "string"
+            },
+            "page": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Page"
+            }
+          },
+          "required": [
+            "title",
+            "detail"
+          ],
+          "title": "Step",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "steps",
+          "title": "Type",
+          "type": "string"
+        },
+        "ordered": {
+          "const": true,
+          "title": "Ordered",
+          "type": "boolean"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/Step"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "ordered",
+        "steps"
+      ],
+      "title": "StepsComponent",
+      "type": "object"
+    },
+    "table": {
+      "$defs": {
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        },
+        "TableRow": {
+          "additionalProperties": false,
+          "properties": {
+            "cells": {
+              "items": {
+                "maxLength": 60,
+                "type": "string"
+              },
+              "title": "Cells",
+              "type": "array"
+            },
+            "citation": {
+              "$ref": "#/$defs/Citation"
+            }
+          },
+          "required": [
+            "cells",
+            "citation"
+          ],
+          "title": "TableRow",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "table",
+          "title": "Type",
+          "type": "string"
+        },
+        "columns": {
+          "items": {
+            "maxLength": 30,
+            "type": "string"
+          },
+          "maxItems": 6,
+          "minItems": 2,
+          "title": "Columns",
+          "type": "array"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/TableRow"
+          },
+          "maxItems": 12,
+          "minItems": 2,
+          "title": "Rows",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "columns",
+        "rows"
+      ],
+      "title": "TableComponent",
+      "type": "object"
+    },
+    "diagram": {
+      "$defs": {
+        "DiagramEdge": {
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "maxLength": 20,
+              "title": "From",
+              "type": "string"
+            },
+            "to": {
+              "maxLength": 20,
+              "minLength": 0,
+              "title": "To",
+              "type": "string"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "maxLength": 24,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            }
+          },
+          "required": [
+            "from",
+            "to"
+          ],
+          "title": "DiagramEdge",
+          "type": "object"
+        },
+        "DiagramNode": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "maxLength": 20,
+              "minLength": 1,
+              "title": "Id",
+              "type": "string"
+            },
+            "label": {
+              "maxLength": 40,
+              "minLength": 0,
+              "title": "Label",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "label"
+          ],
+          "title": "DiagramNode",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "diagram",
+          "title": "Type",
+          "type": "string"
+        },
+        "layout": {
+          "enum": [
+            "flow",
+            "cycle"
+          ],
+          "title": "Layout",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/DiagramNode"
+          },
+          "maxItems": 10,
+          "minItems": 2,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/DiagramEdge"
+          },
+          "maxItems": 14,
+          "minItems": 1,
+          "title": "Edges",
+          "type": "array"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "layout",
+        "nodes",
+        "edges"
+      ],
+      "title": "DiagramComponent",
+      "type": "object"
+    },
+    "formula": {
+      "$defs": {
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "formula",
+          "title": "Type",
+          "type": "string"
+        },
+        "latex": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Latex",
+          "type": "string"
+        },
+        "explanation": {
+          "maxLength": 220,
+          "minLength": 0,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "citation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Citation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "latex",
+        "explanation"
+      ],
+      "title": "FormulaComponent",
+      "type": "object"
+    },
+    "quiz": {
+      "$defs": {
+        "Citation": {
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "quote": {
+              "maxLength": 300,
+              "minLength": 10,
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          "required": [
+            "page",
+            "quote"
+          ],
+          "title": "Citation",
+          "type": "object"
+        },
+        "QuizQuestion": {
+          "additionalProperties": false,
+          "properties": {
+            "prompt": {
+              "maxLength": 160,
+              "minLength": 0,
+              "title": "Prompt",
+              "type": "string"
+            },
+            "options": {
+              "items": {
+                "maxLength": 80,
+                "type": "string"
+              },
+              "maxItems": 4,
+              "minItems": 3,
+              "title": "Options",
+              "type": "array"
+            },
+            "correct_index": {
+              "maximum": 3,
+              "minimum": 0,
+              "title": "Correct Index",
+              "type": "integer"
+            },
+            "explanation": {
+              "maxLength": 220,
+              "minLength": 0,
+              "title": "Explanation",
+              "type": "string"
+            },
+            "citation": {
+              "$ref": "#/$defs/Citation"
+            }
+          },
+          "required": [
+            "prompt",
+            "options",
+            "correct_index",
+            "explanation",
+            "citation"
+          ],
+          "title": "QuizQuestion",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "quiz",
+          "title": "Type",
+          "type": "string"
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/QuizQuestion"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "questions"
+      ],
+      "title": "QuizComponent",
+      "type": "object"
+    },
+    "flashcards": {
+      "$defs": {
+        "Flashcard": {
+          "additionalProperties": false,
+          "properties": {
+            "front": {
+              "maxLength": 60,
+              "minLength": 0,
+              "title": "Front",
+              "type": "string"
+            },
+            "back": {
+              "maxLength": 200,
+              "minLength": 0,
+              "title": "Back",
+              "type": "string"
+            },
+            "page": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Page"
+            }
+          },
+          "required": [
+            "front",
+            "back"
+          ],
+          "title": "Flashcard",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^c[1-9]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lang": {
+          "enum": [
+            "ar",
+            "en"
+          ],
+          "title": "Lang",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 0,
+          "title": "Title",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 140,
+          "minLength": 0,
+          "title": "Reason",
+          "type": "string"
+        },
+        "type": {
+          "const": "flashcards",
+          "title": "Type",
+          "type": "string"
+        },
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/Flashcard"
+          },
+          "maxItems": 8,
+          "minItems": 3,
+          "title": "Cards",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "title",
+        "reason",
+        "type",
+        "cards"
+      ],
+      "title": "FlashcardsComponent",
+      "type": "object"
+    }
+  }
+}
