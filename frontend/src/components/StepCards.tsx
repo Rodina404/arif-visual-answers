@@ -9,17 +9,18 @@ export function StepCards({ props, verification }: { props: StepsProps; verifica
   const { t, num } = useI18n()
   return (
     <Card lang={props.lang} type="steps" title={props.title} verification={verification}>
-      <ol className="m-0 grid list-none gap-2 p-0">
+      <ol className="m-0 grid list-none gap-4 p-0">
         {props.steps.map((s, i) => (
-          <li key={i} data-testid="step" className="flex gap-3 rounded-xl border border-line bg-raised p-3">
+          <li key={i} data-testid="step" className="flex gap-3">
             <span
               aria-label={t('steps.step', { n: i + 1 })}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+              style={{ background: 'var(--color-band-steps)' }}
             >
               {num(i + 1)}
             </span>
-            <div className="min-w-0">
-              <p dir="auto" className="m-0 text-sm font-semibold text-ink">
+            <div className="min-w-0 pt-0.5">
+              <p dir="auto" className="m-0 text-[15px] font-semibold text-ink">
                 {stripUrls(s.title)}
               </p>
               <p dir="auto" className="m-0 mt-0.5 text-sm leading-6 text-muted">

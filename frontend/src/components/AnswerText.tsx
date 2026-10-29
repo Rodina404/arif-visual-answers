@@ -38,7 +38,7 @@ export function AnswerText({
       data-testid={long ? 'before-text' : 'answer-text'}
       dir={lang === 'ar' ? 'rtl' : 'ltr'}
       lang={lang}
-      className={`m-0 whitespace-pre-line text-ink ${long ? 'text-sm leading-7' : 'text-base leading-8 sm:text-lg'}`}
+      className={`m-0 whitespace-pre-line ${long ? 'text-[13px] leading-6 text-muted' : 'text-base leading-7 text-ink'}`}
     >
       {stripUrls(text)}
     </p>

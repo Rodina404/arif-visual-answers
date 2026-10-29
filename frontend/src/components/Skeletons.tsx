@@ -1,16 +1,21 @@
-/** Skeletons shaped like the planned component, so the layout doesn't jump when it arrives. */
+/** Skeletons shaped like the planned component (band + body), so the layout doesn't jump when it arrives. */
 export function Skeleton({ type }: { type: string }) {
-  const bars = (n: number, h = 'h-4') =>
-    Array.from({ length: n }, (_, i) => <div key={i} className={`skeleton ${h}`} style={{ width: `${90 - i * 12}%` }} />)
   let body
   switch (type) {
     case 'chart':
       body = (
-        <div className="flex h-52 items-end gap-3 px-2">
-          {[40, 65, 30, 85, 55].map((h, i) => (
-            <div key={i} className="skeleton flex-1" style={{ height: `${h}%` }} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-3 gap-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton h-14" />
+            ))}
+          </div>
+          <div className="flex h-44 items-end gap-3 px-2">
+            {[40, 65, 30, 85, 55].map((h, i) => (
+              <div key={i} className="skeleton flex-1" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </>
       )
       break
     case 'comparison':
@@ -21,15 +26,23 @@ export function Skeleton({ type }: { type: string }) {
         </div>
       )
       break
-    case 'table':
-      body = <div className="grid gap-2">{Array.from({ length: 5 }, (_, i) => <div key={i} className="skeleton h-7" />)}</div>
-      break
-    case 'steps':
     case 'quiz':
-      body = <div className="grid gap-2">{Array.from({ length: 3 }, (_, i) => <div key={i} className="skeleton h-14" />)}</div>
+      body = (
+        <div className="grid grid-cols-2 gap-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="skeleton h-16" />
+          ))}
+        </div>
+      )
       break
     case 'flashcards':
-      body = <div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }, (_, i) => <div key={i} className="skeleton h-24" />)}</div>
+      body = (
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="skeleton h-28" />
+          ))}
+        </div>
+      )
       break
     case 'diagram':
       body = (
@@ -41,12 +54,21 @@ export function Skeleton({ type }: { type: string }) {
       )
       break
     default:
-      body = <div className="grid gap-2">{bars(3)}</div>
+      body = (
+        <div className="grid gap-3">
+          {[90, 78, 66].map((w) => (
+            <div key={w} className="skeleton h-5" style={{ width: `${w}%` }} />
+          ))}
+        </div>
+      )
   }
   return (
-    <div data-testid="skeleton" data-skeleton-type={type} aria-hidden className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
-      <div className="skeleton mb-4 h-5 w-1/2" />
-      {body}
+    <div data-testid="skeleton" data-skeleton-type={type} aria-hidden className="overflow-hidden rounded-2xl bg-surface shadow-card">
+      <div className="h-7 opacity-60" style={{ background: `var(--color-band-${type}, var(--color-band-text))` }} />
+      <div className="grid gap-3 p-4 sm:p-5">
+        <div className="skeleton h-5 w-1/2" />
+        {body}
+      </div>
     </div>
   )
 }

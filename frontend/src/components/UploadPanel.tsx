@@ -46,10 +46,10 @@ export function UploadPanel({
           setDrag(false)
           void send(e.dataTransfer.files[0])
         }}
-        className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-surface px-4 py-3 ${drag ? 'border-accent' : 'border-line'}`}
+        className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 shadow-card ${drag ? 'outline-2 outline-accent' : ''}`}
       >
         <div className="min-w-0">
-          <h2 id="upload-title" className="m-0 text-xs font-semibold uppercase text-muted">
+          <h2 id="upload-title" className="m-0 text-xs font-semibold text-muted">
             {t('upload.title')}
           </h2>
           {doc ? (
@@ -60,7 +60,7 @@ export function UploadPanel({
             <p className="m-0 text-sm text-muted">{t('upload.hint', { mb: limits.mb, pages: limits.pages })}</p>
           )}
         </div>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:opacity-90">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-accent-soft px-4 py-2 text-sm font-semibold text-accent-strong hover:bg-accent hover:text-on-accent">
           <input
             ref={input}
             data-testid="file-input"
@@ -74,7 +74,7 @@ export function UploadPanel({
         </label>
       </div>
       {error ? (
-        <p role="alert" data-testid="upload-error" className="m-0 rounded-xl border border-bad/40 bg-bad-soft px-3 py-2 text-sm text-bad">
+        <p role="alert" data-testid="upload-error" className="m-0 rounded-2xl bg-bad-soft px-4 py-2.5 text-sm text-bad">
           {t('upload.error')}: <bdi>{error}</bdi>
         </p>
       ) : null}

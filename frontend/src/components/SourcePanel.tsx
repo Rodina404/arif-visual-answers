@@ -40,9 +40,9 @@ export function SourcePanel({ docId, req, onClose }: { docId: string; req: Sourc
       aria-modal="false"
       aria-labelledby="source-title"
       data-testid="source-panel"
-      className="fixed inset-y-0 end-0 z-40 flex w-full max-w-md flex-col border-s border-line bg-surface shadow-2xl"
+      className="fixed inset-y-0 end-0 z-40 flex w-full max-w-md flex-col bg-surface shadow-float"
     >
-      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+      <header className="flex items-center justify-between gap-2 px-4 py-3">
         <h2 id="source-title" className="m-0 text-base font-semibold">
           {t('source.title', { n: req.page })}
         </h2>
@@ -50,7 +50,7 @@ export function SourcePanel({ docId, req, onClose }: { docId: string; req: Sourc
           ref={closeRef}
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-line px-3 py-1 text-sm text-ink hover:bg-raised"
+          className="rounded-full bg-raised px-4 py-1 text-sm font-semibold text-ink hover:bg-sunken"
         >
           {t('source.close')}
         </button>

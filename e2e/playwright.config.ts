@@ -17,6 +17,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     viewport: { width: 1280, height: 800 },
+    // Count-up numbers and fades finish instantly: deterministic screenshots, and the reduced-motion path is tested.
+    reducedMotion: 'reduce',
   },
   webServer: {
     command: 'node helpers/serve.mjs',
@@ -62,6 +64,7 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
         video: { mode: 'on', size: { width: 1280, height: 720 } },
         launchOptions: { slowMo: 250 },
+        reducedMotion: 'no-preference', // the recording shows the real motion
       },
       metadata: { lang: 'ar' },
       grep: /@demo/,

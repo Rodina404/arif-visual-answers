@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useI18n } from '../i18n/context'
 import { DEMO_QUESTIONS } from '../lib/format'
 
+/** One-line question input with a send button; the demo questions as full, numbered suggestions. */
 export function QuestionBox({
   disabled,
   busy,
@@ -17,7 +18,7 @@ export function QuestionBox({
   showTextOnly?: boolean
   submitLabel?: string
 }) {
-  const { t } = useI18n()
+  const { t, num } = useI18n()
   const [q, setQ] = useState('')
   const [textOnly, setTextOnly] = useState(false)
   const submit = (question: string) => {
@@ -28,36 +29,31 @@ export function QuestionBox({
   }
   return (
     <form
-      className="grid gap-3"
+      className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3"
       onSubmit={(e) => {
         e.preventDefault()
         submit(q)
       }}
     >
-      <label htmlFor="question" className="text-xs font-semibold text-muted">
+      <label htmlFor="question" className="sr-only">
         {t('ask.label')}
       </label>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <textarea
+      <div className="flex items-center gap-2 rounded-full bg-surface p-1.5 ps-5 shadow-card focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
+        <input
           id="question"
           data-testid="question-input"
           dir="auto"
-          rows={2}
+          type="text"
           maxLength={500}
           value={q}
           placeholder={disabled ? t('ask.needDoc') : t('ask.placeholder')}
           disabled={disabled}
+          autoComplete="off"
           onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              submit(q)
-            }
-          }}
-          className="min-h-12 flex-1 resize-y rounded-xl border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-muted disabled:opacity-60"
+          className="min-w-0 flex-1 bg-transparent py-2 text-base text-ink outline-none placeholder:text-muted disabled:opacity-60"
         />
         {busy && onStop ? (
-          <button type="button" onClick={onStop} className="rounded-xl border border-line bg-surface px-5 py-2 font-semibold text-ink">
+          <button type="button" onClick={onStop} className="h-11 shrink-0 rounded-full bg-raised px-5 text-sm font-semibold text-ink">
             {t('ask.stop')}
           </button>
         ) : (
@@ -65,33 +61,46 @@ export function QuestionBox({
             type="submit"
             data-testid="ask-button"
             disabled={disabled || !q.trim()}
-            className="rounded-xl bg-accent px-5 py-2 font-semibold text-on-accent disabled:opacity-50"
+            aria-label={submitLabel ?? t('ask.send')}
+            className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-on-accent disabled:opacity-40"
           >
-            {submitLabel ?? t('ask.submit')}
+            <span>{submitLabel ?? t('ask.send')}</span>
+            <svg viewBox="0 0 16 16" className="h-4 w-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M3 8h9M8.5 4l4 4-4 4" />
+            </svg>
           </button>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-muted">{t('ask.suggestions')}:</span>
-        {DEMO_QUESTIONS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            data-testid={`suggest-${id}`}
-            disabled={disabled}
-            title={t(`q.${id}`)}
-            onClick={() => submit(t(`q.${id}`))}
-            className="rounded-full border border-line bg-surface px-3 py-1 text-xs text-ink hover:border-accent disabled:opacity-50"
-          >
-            {t(`q.short.${id}`)}
-          </button>
-        ))}
-        {showTextOnly ? (
-          <label className="ms-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-muted">
-            <input type="checkbox" data-testid="text-only" checked={textOnly} onChange={(e) => setTextOnly(e.target.checked)} />
-            {t('ask.textOnly')}
-          </label>
-        ) : null}
+      <div className="grid gap-1.5">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <span className="text-xs font-semibold text-muted">{t('ask.try')}</span>
+          {showTextOnly ? (
+            <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-muted">
+              <input type="checkbox" data-testid="text-only" checked={textOnly} onChange={(e) => setTextOnly(e.target.checked)} className="accent-[var(--color-accent)]" />
+              {t('ask.textOnly')}
+            </label>
+          ) : null}
+        </div>
+        <ol className="m-0 grid list-none gap-1 p-0 sm:grid-cols-2">
+          {DEMO_QUESTIONS.map((id, i) => (
+            <li key={id}>
+              <button
+                type="button"
+                data-testid={`suggest-${id}`}
+                disabled={disabled}
+                onClick={() => submit(t(`q.${id}`))}
+                className="flex w-full items-start gap-2.5 rounded-xl px-3 py-2 text-start text-sm text-ink hover:bg-surface hover:shadow-card disabled:opacity-50"
+              >
+                <span className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[11px] font-bold text-accent-strong tabular-nums">
+                  {num(i + 1)}
+                </span>
+                <span dir="auto" className="min-w-0 leading-snug">
+                  {t(`q.${id}`)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
       </div>
     </form>
   )

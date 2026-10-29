@@ -175,3 +175,19 @@ Chat models on the account: `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `openai
 
 **Takeaways for the interview.** (1) Groq answers in ~2 s of model time, which is fast enough for the live demo, but the free tier's 8K TPM allows about one full answer per 45 s; ask Groq questions about a minute apart, or the second one will wait (up to 30 s) or switch to the qwen fallback. (2) Grounding visibly earns its keep on live output: 10 of 34 live quotes failed verification and were removed or downgraded, never shown as verified. (3) Retrieval kept every live prompt under 6,000 real tokens, and the key page was sent in all 12 runs (e.g. page 21 for q2).
 
+
+## Design pass (2026-10-29)
+
+Options were shown as mockups (`data/design-options.html`); the user picked **1B 2C 3B 4B 5A 6C 7C 8B 9B** and asked to use React Bits. Frontend only: catalog, backend and logic are unchanged.
+
+- **Palette (1B):** teal accent `#0F766E`, coral highlight `#C2462F` reserved for key numbers, soft teal-tinted surfaces, shadows instead of borders; full dark-mode token set. `@theme static` because Tailwind v4 drops theme variables it doesn't see used, and the band colours are referenced through a computed name.
+- **Bands (2C):** each component type has a deep band colour with an icon and label (white text ≥ 4.5:1 in both themes). One card level only; steps are plain rows, quiz options are tiles, comparison columns are tints.
+- **Lead (3B + 4B):** the first component's title is the large takeaway; when the answer has a chart, the largest verified gap (e.g. **+39.0 points at 540B**, 17.9% → 56.9% · p.21) sits beside it, and stat tiles show the gap at every category. All are computed in the UI from the chart's verified points (`lib/keyNumbers.ts`), never by the model. The answer text drops to 16px and follows the first visual.
+- **Chart (5A):** 4px/3px lines, 5.5px points, soft gridlines, the peak marked by a coral dot (`zIndex` 1300, since Recharts 3 drew the line's point over it) and a label placed inward at the plot edge; RTL mirroring unchanged.
+- **Before/After (6C):** inside the 760px column the text wall is the narrower side (13px, grey, masked fade, "…", word count) and the visual side is ~60%, with a "vs" badge (horizontal on phones).
+- **Question area (7C):** single-line pill input with send button; the six demo questions as numbered full-text suggestions; the mock notice is a "Mock" badge in the header.
+- **Width (8B):** one 760px column for header, Ask and Before/After; `grid-cols-[minmax(0,1fr)]` stops long content from widening the page on phones.
+- **Quiz (9B):** 2×2 tiles (min-height 64px) with a real radio covering each tile (keyboard, screen readers, tests), Arabic letters أ ب ج د in Arabic; correct = green + ✓, wrong = rose + ✕, the rest dimmed.
+- **React Bits:** `CountUp` (key number and tiles; needs `motion`, lazy-loaded so it's a 69 KB chunk off the main bundle) and `ClickSpark` (star burst from the correct tile, triggered through its ref) in `src/components/bits/`, MIT + Commons Clause, source read before use. ClickSpark was patched to add `sparkOnClick` and to update prop refs in a layout effect (our lint forbids ref writes during render). FadeContent was not used: it needs GSAP + ScrollTrigger (~70 KB) and hides content until a scroll trigger fires. Both components honour `prefers-reduced-motion`.
+- **Tests:** Playwright runs with `reducedMotion: 'reduce'` (deterministic screenshots, and it exercises the reduced-motion path); the demo project records with full motion. Fixed during the pass: "Mock" badge contrast (4.3:1 → white on coral), a 30px horizontal overflow on phones, the peak label clipping/overlapping in RTL. 20 visual baselines regenerated after review; axe 0 violations; `make e2e` 94 passed twice; backend 167 passed.
+- Review page: `data/design/index.html` (14 before/after pairs + dark mode; not committed, `data/` is git-ignored). Demo re-recorded: `demo/arif-visual-answers.gif` (2.3 MB).

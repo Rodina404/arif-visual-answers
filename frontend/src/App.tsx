@@ -80,65 +80,70 @@ export default function App() {
   return (
     <AppContext.Provider value={ctx}>
       <div className="min-h-screen bg-bg text-ink">
-        <header data-testid="app-header" className="border-b border-line bg-surface">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-            <div data-testid="brand" className="min-w-0">
-              <h1 className="m-0 text-lg font-semibold leading-tight">{t('app.title')}</h1>
-              <p className="m-0 text-xs text-muted">{t('app.subtitle')}</p>
+        <header data-testid="app-header" className="sticky top-0 z-30 bg-bg/90 backdrop-blur">
+          <div className="mx-auto flex max-w-[760px] flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3">
+            <div data-testid="brand" className="flex min-w-0 items-center gap-2.5">
+              <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-lg font-bold text-on-accent">
+                ع
+              </span>
+              <div className="min-w-0">
+                <h1 className="m-0 flex items-center gap-2 text-base font-bold leading-tight">
+                  {t('app.title')}
+                  {config?.mock ? (
+                    <span data-testid="mock-badge" title={t('notice.mock')} className="rounded-full bg-hot px-2 py-0.5 text-[10px] font-bold text-white">
+                      {t('badge.mock')}
+                    </span>
+                  ) : null}
+                </h1>
+                <p className="m-0 text-xs text-muted">{t('app.subtitle')}</p>
+              </div>
             </div>
-            <nav aria-label="views" className="flex flex-wrap items-center gap-2">
-              {(['ask', 'compare'] as const).map((v) => (
-                <a
-                  key={v}
-                  href={v === 'compare' ? '/compare' : '/'}
-                  data-testid={`tab-${v}`}
-                  aria-current={view === v ? 'page' : undefined}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    go(v)
-                  }}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-semibold no-underline ${view === v ? 'bg-accent-soft text-accent' : 'text-muted hover:text-ink'}`}
-                >
-                  {t(`tab.${v}`)}
-                </a>
-              ))}
-              {config && provider ? (
-                <ProviderSwitch providers={config.providers} value={provider} onChange={setProvider} />
-              ) : null}
+            <nav aria-label="views" className="flex flex-wrap items-center gap-1.5">
+              <div className="flex rounded-full bg-raised p-0.5">
+                {(['ask', 'compare'] as const).map((v) => (
+                  <a
+                    key={v}
+                    href={v === 'compare' ? '/compare' : '/'}
+                    data-testid={`tab-${v}`}
+                    aria-current={view === v ? 'page' : undefined}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      go(v)
+                    }}
+                    className={`rounded-full px-3 py-1 text-sm font-semibold no-underline ${view === v ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink'}`}
+                  >
+                    {t(`tab.${v}`)}
+                  </a>
+                ))}
+              </div>
+              {config && provider ? <ProviderSwitch providers={config.providers} value={provider} onChange={setProvider} /> : null}
               <LangToggle />
             </nav>
           </div>
         </header>
 
-        <main className="mx-auto grid max-w-6xl gap-4 px-4 py-5">
-          <p data-testid="demo-notice" className="m-0 text-xs text-muted">
-            {t('notice.demo')}
-            {config?.mock ? <> · {t('notice.mock')}</> : null}
-          </p>
-          <UploadPanel
-            doc={doc}
-            onUploaded={setDoc}
-            limits={{ mb: config?.max_upload_mb ?? 20, pages: config?.max_pages ?? 60 }}
-          />
+        <main className="mx-auto grid max-w-[760px] grid-cols-[minmax(0,1fr)] gap-6 px-4 pb-8 pt-2">
+          <UploadPanel doc={doc} onUploaded={setDoc} limits={{ mb: config?.max_upload_mb ?? 20, pages: config?.max_pages ?? 60 }} />
           {view === 'ask' ? (
-            <div className="mx-auto grid w-full max-w-3xl gap-5">
-              <div className="rounded-2xl border border-line bg-surface p-4">
-                <QuestionBox disabled={!doc} busy={busy} onAsk={run} onStop={stop} />
-              </div>
+            <>
+              <QuestionBox disabled={!doc} busy={busy} onAsk={run} onStop={stop} />
               {state.phase === 'idle' ? (
-                <p className="m-0 text-center text-sm text-muted">{t('answer.empty')}</p>
+                <p className="m-0 py-6 text-center text-sm text-muted">{t('answer.empty')}</p>
               ) : (
                 <AnswerView state={state} onRetry={last ? () => run(last.question, last.textOnly) : undefined} />
               )}
-            </div>
+            </>
           ) : (
             <BeforeAfter docId={doc?.doc_id ?? null} provider={provider ?? undefined} />
           )}
         </main>
 
-        <footer className="mx-auto max-w-6xl px-4 pb-8 pt-2">
-          <p data-testid="residency-badge" className="m-0 inline-block rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted">
+        <footer className="mx-auto grid max-w-[760px] gap-1 px-4 pb-10 pt-2 text-xs text-muted">
+          <p data-testid="residency-badge" className="m-0">
             {t('footer.residency')}
+          </p>
+          <p data-testid="demo-notice" className="m-0">
+            {t('notice.demo')}
           </p>
         </footer>
 

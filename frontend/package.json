@@ -15,6 +15,7 @@
     "@fontsource/ibm-plex-sans-arabic": "5.3.0",
     "@tailwindcss/vite": "4.3.3",
     "katex": "0.19.1",
+    "motion": "12.23.12",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-markdown": "10.1.0",

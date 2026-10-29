@@ -26,7 +26,7 @@ export function CitationChip({ citation, page, label }: { citation?: CitationT; 
         onMouseLeave={() => setShow(false)}
         onFocus={() => setShow(true)}
         onBlur={() => setShow(false)}
-        className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-line bg-accent-soft px-2 py-0 text-xs font-semibold leading-5 text-accent hover:border-accent"
+        className="mx-0.5 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0 align-middle text-[11px] font-semibold leading-5 text-accent-strong hover:bg-accent hover:text-on-accent"
       >
         {label ? <bdi>{label}</bdi> : null}
         <span>{t('cite.page', { n })}</span>
@@ -35,7 +35,7 @@ export function CitationChip({ citation, page, label }: { citation?: CitationT; 
         <span
           id={tipId}
           role="tooltip"
-          className="absolute top-full z-30 mt-1 w-72 max-w-[80vw] rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink shadow-lg start-0"
+          className="absolute top-full z-30 mt-1 w-72 max-w-[80vw] rounded-xl bg-surface p-3 text-xs font-normal text-ink shadow-float start-0"
         >
           <span className="mb-1 block text-muted">{t('cite.quote', { n })}</span>
           <q dir={isMostlyLatin(quote) ? 'ltr' : 'auto'} lang={isMostlyLatin(quote) ? 'en' : undefined} className="ltr-island">
