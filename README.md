@@ -533,8 +533,8 @@ Work top to bottom. After each phase: run its checks, update the checkboxes in t
 - **Accept:** `make setup` works, `GET /healthz` returns 200, the Vite page loads, and `BUILD_LOG.md` lists the versions plus the model check results (or "no key").
 
 ### Phase 1 — Backend core: upload and page text
-- [ ] `/api/documents` with all upload limits, magic bytes, pdfplumber parsing, `visible_text`/`all_text` per page, hidden-text detection, random-UUID storage, and 48 h cleanup.
-- [ ] `/api/documents/{id}/pages/{n}` returns the page's visible text (for the source panel).
+- [x] `/api/documents` with all upload limits, magic bytes, pdfplumber parsing, `visible_text`/`all_text` per page, hidden-text detection, random-UUID storage, and 48 h cleanup.
+- [x] `/api/documents/{id}/pages/{n}` returns the page's visible text (for the source panel).
 - **Accept:** pytest covers valid, non-PDF, oversize, too many pages, encrypted, and injection-hidden-text cases. All pass.
 
 ### Phase 2 — Catalog, schema, provider adapter and streaming

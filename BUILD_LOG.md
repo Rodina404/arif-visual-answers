@@ -28,3 +28,6 @@ Non-generation calls: 1× models.list, 1× files.upload, 1× count_tokens (Phase
 ## Decisions
 
 - **D1 — Linter.** The Vite 8 template ships **oxlint** instead of ESLint. Kept oxlint (faster, zero config) and enabled `react/no-danger` as an error; `make lint` also greps `frontend/src` for `dangerouslySetInnerHTML`.
+- **D2 — Text extraction.** pdfplumber `extract_text(x_tolerance=1.5)`: the default tolerance (3) glued words together in the LaTeX-typeset CoT paper ("Weexplorehow…"), which would break quote matching.
+- **D3 — Hidden-text threshold.** The real paper has dark figure tick labels under 4 pt (e.g. 27 on page 5). Hidden chars are classified as `white`, `offpage` or `tiny`; a page is flagged when white+offpage ≥ 10 or tiny ≥ 60. All hidden chars are still excluded from `visible_text`. cot.pdf: 0 flagged pages; injection.pdf: page 1 flagged.
+- **D4 — Doc store.** Parsed docs are kept in memory with a JSON sidecar in `data/docs/` so a server restart keeps them; cleanup removes both after 48 h.
