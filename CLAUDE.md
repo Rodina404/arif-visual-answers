@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-"Arif Visual Answers": a demo where a user uploads a PDF and asks a question. The answer is a short direct text plus at most 3 typed, grounded visual components (comparison, steps, chart, table, diagram, formula, quiz, flashcards, text). It is Egyptian Arabic (RTL) by default, with an English (LTR) toggle. `docs/BUILD_SPEC.md` is the original build spec (sections are referenced as §N; `README.md` is the company-facing overview). `BUILD_LOG.md` records every decision (D1…D34), the live-call log and the known limitations. Read the decisions before changing behaviour.
+"Arif Visual Answers": a demo where a user uploads a PDF and asks a question. The answer is a short direct text plus at most 3 typed, grounded visual components (comparison, steps, chart, table, diagram, formula, quiz, flashcards, text). It is Egyptian Arabic (RTL) by default, with an English (LTR) toggle. `docs/BUILD_SPEC.md` is the original build spec (sections are referenced as §N; `README.md` is the company-facing overview). `BUILD_LOG.md` records every decision (D1…D42), the live-call log and the known limitations. Read the decisions before changing behaviour.
 
 ## Commands
 
@@ -46,5 +46,5 @@ Request path: `POST /api/ask` → `stream.VisualRun` → provider streams JSON �
 - Fixture quotes must be verbatim from `visible_text` of `cot.pdf`; every `fixtures/answers/cot/q*.json` must stay fully `verified` (`tests/test_fixtures.py`).
 - RTL: components set `dir`/`lang` from `props.lang`; use `<bdi>` for mixed tokens and LTR islands for quotes; never apply letter-spacing to Arabic; `sr-only` goes on a wrapper, never on a `<table>`.
 - The tool transport decodes backslash escapes (`\u....`, `\t`) in written content. To put a real backslash in source or fixtures, build it with `chr(92)`.
-- Gemini live budget: 15 calls total, 14 used (see BUILD_LOG). Groq: 8K tokens/minute on the free tier, so space live runs out (the recorder waits for you). Default to `MOCK_LLM=1` for development; tests pin `PROVIDER=gemini` so `.env` can't change which fixtures they replay. Never run e2e while `make serve` is on :8000 (Playwright would reuse the live server).
+- Gemini live budget: 15 calls total, all 15 used (see BUILD_LOG). Groq: 8K tokens/minute on the free tier, so space live runs out (the recorder waits for you). Default to `MOCK_LLM=1` for development; tests pin `PROVIDER=gemini` so `.env` can't change which fixtures they replay. Never run e2e while `make serve` is on :8000 (Playwright would reuse the live server).
 - Never print `.env`; it holds `GEMINI_API_KEY` and `GROQ_API_KEY`. Inspect it with `sed 's/=.*/=<…>/'`.

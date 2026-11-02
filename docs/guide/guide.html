@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arif Visual Answers Guide</title>
+<style>
+  :root {
+    --ink: #1c1a24; --muted: #5d5970; --line: #e4e1ee; --soft: #f5f3fb;
+    --accent: #6d28d9; --accent-soft: #efe9fc; --hot: #c2462f; --ok: #15803d; --warn: #9a3412;
+  }
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; background: #fff; color: var(--ink);
+    font: 10.5pt/1.5 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 180mm; margin: 0 auto; }
+  h1, h2, h3 { line-height: 1.2; margin: 0; }
+  h2 { font-size: 19pt; margin: 0 0 3mm; color: var(--ink); }
+  h2 .n { color: var(--accent); margin-right: 2mm; }
+  h3 { font-size: 12pt; margin: 5mm 0 1.5mm; }
+  p { margin: 0 0 2.5mm; }
+  .lead { font-size: 12pt; color: var(--muted); margin-bottom: 5mm; }
+  .page { break-before: page; }
+  .avoid { break-inside: avoid; }
+  code, kbd { font-family: Consolas, "Cascadia Mono", Menlo, monospace; font-size: 9.5pt;
+    background: var(--soft); border: 1px solid var(--line); border-radius: 4px; padding: 0 1.2mm; }
+  kbd { background: #fff; box-shadow: 0 1px 0 var(--line); }
+  pre { font-family: Consolas, "Cascadia Mono", Menlo, monospace; font-size: 9.5pt; background: #1f1b2e; color: #f3f0ff;
+    border-radius: 6px; padding: 2.5mm 3.5mm; margin: 1.5mm 0 2.5mm; white-space: pre-wrap; word-break: normal; }
+  [dir="rtl"] { font-family: "Segoe UI", Tahoma, "Geeza Pro", Arial, sans-serif; }
+
+  /* cover */
+  .cover { min-height: 255mm; display: flex; flex-direction: column; justify-content: space-between; }
+  .cover .top { padding-top: 30mm; }
+  .cover img.logo { width: 30mm; height: 30mm; }
+  .cover h1 { font-size: 34pt; margin: 8mm 0 3mm; letter-spacing: -0.5px; }
+  .cover .sub { font-size: 15pt; color: var(--muted); max-width: 150mm; }
+  .cover .pill { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 600;
+    border-radius: 999px; padding: 1mm 4mm; font-size: 10pt; margin-top: 8mm; }
+  .cover .toc { border-top: 1px solid var(--line); padding-top: 5mm; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; font-size: 10.5pt; }
+  .cover .toc b { color: var(--accent); display: inline-block; width: 7mm; }
+  .cover .meta { color: var(--muted); font-size: 9pt; margin-top: 6mm; }
+
+  /* blocks */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 3mm 0 4mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .box { border: 1px solid var(--line); border-radius: 8px; padding: 3.5mm 4mm; background: #fff; }
+  .box h4 { margin: 0 0 1.5mm; font-size: 10.5pt; }
+  .box p { margin: 0; font-size: 9.5pt; color: var(--muted); }
+  .box.problem h4 { color: var(--hot); }
+  .box.fix { background: var(--soft); border-color: transparent; }
+  .box.fix h4 { color: var(--accent); }
+  .callout { border-left: 3px solid var(--accent); background: var(--soft); padding: 3mm 4mm; border-radius: 0 6px 6px 0; margin: 3mm 0 4mm; }
+  .callout.warn { border-color: var(--hot); background: #fdf1ee; }
+  .callout.ok { border-color: var(--ok); background: #eefaf2; }
+  .callout p:last-child { margin: 0; }
+
+  figure { margin: 0; break-inside: avoid; }
+  .shot { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fafafa; max-height: 92mm; }
+  .agent .shot { max-height: 78mm; }
+  .shot img { display: block; width: 177.8%; margin-left: -38.9%; }
+  .wide img { display: block; width: 100%; max-height: 98mm; object-fit: cover; object-position: top; border: 1px solid var(--line); border-radius: 8px; }
+  figcaption { font-size: 9pt; color: var(--muted); margin-top: 1.5mm; }
+  figcaption b { color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 2mm 0 4mm; }
+  th, td { text-align: left; vertical-align: top; padding: 2mm 2.5mm; border-bottom: 1px solid var(--line); }
+  th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); background: var(--soft); }
+  td [dir="rtl"] { display: block; text-align: right; }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps > li { position: relative; padding: 0 0 4mm 12mm; counter-increment: s; break-inside: avoid; }
+  ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 8mm; height: 8mm; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 10pt; }
+  ol.steps > li h3 { margin-top: 1mm; }
+  .os { display: grid; grid-template-columns: 1fr 1.2fr; gap: 4mm; }
+  .os pre { font-size: 8pt; }
+  tr { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .os .box h4 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+  .os .box p, .os .box li { color: var(--ink); font-size: 9.5pt; }
+  .os .box ul { margin: 0; padding-left: 4.5mm; }
+  .tag { display: inline-block; font-size: 8pt; font-weight: 700; border-radius: 4px; padding: 0 1.5mm; vertical-align: 1px; }
+  .tag.off { background: #fde9e4; color: var(--hot); }
+  .tag.live { background: #e3f6ea; color: var(--ok); }
+  dl { display: grid; grid-template-columns: 34mm 1fr; gap: 2mm 5mm; margin: 2mm 0; font-size: 9.8pt; }
+  dt { font-weight: 700; }
+  dd { margin: 0; color: var(--muted); }
+  .foot { color: var(--muted); font-size: 8.5pt; border-top: 1px solid var(--line); padding-top: 3mm; margin-top: 6mm; }
+
+  @media screen {
+    body { background: #ecebf2; padding: 10mm 0; }
+    main { background: #fff; padding: 15mm; box-shadow: 0 2px 16px rgba(0,0,0,.08); }
+    .page { margin-top: 12mm; border-top: 2px dashed var(--line); padding-top: 12mm; }
+    .cover { min-height: auto; }
+  }
+  @media screen and (max-width: 700px) {
+    body { padding: 0; } main { padding: 16px; }
+    .grid3, .grid2, .os, .cover .toc { grid-template-columns: 1fr; }
+    dl { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <div class="top">
+    <img class="logo" src="../images/arif-logo.png" alt="Arif logo">
+    <h1>Arif Visual Answers</h1>
+    <p class="sub">Ask a question about any PDF and get a short answer with charts, tables and steps, where every number is checked against the page it came from. And an assistant that turns a meeting into tasks, but only with your approval.</p>
+    <span class="pill">A guide for everyone: no technical background needed</span>
+  </div>
+  <div>
+    <div class="toc">
+      <div><b>1</b>The idea in one minute</div>
+      <div><b>5</b>Run it on your own computer</div>
+      <div><b>2</b>A tour of the app</div>
+      <div><b>6</b>Things to try</div>
+      <div><b>3</b>The assistant that asks first</div>
+      <div><b>7</b>If something goes wrong</div>
+      <div><b>4</b>Why you can trust the answers</div>
+      <div><b>8</b>Words used in this guide</div>
+    </div>
+    <p class="meta">Prototype built for a conversation with Tawteen Tech about Arif (عارف). Arabic (Egyptian) first, English available. November 2026.</p>
+  </div>
+</section>
+
+<!-- ============ 1. IDEA ============ -->
+<section class="page">
+  <h2><span class="n">1</span>The idea in one minute</h2>
+  <p class="lead">Students and teams read long documents: papers, course notes, reports, meeting notes. They ask questions about them, often in Egyptian Arabic mixed with English words. A normal AI chat answer has three problems.</p>
+
+  <div class="grid3">
+    <div class="box problem"><h4>A wall of text</h4><p>You wanted one number, a trend, the steps, or who does what. You got 300 words.</p></div>
+    <div class="box problem"><h4>You can't check it</h4><p>A chart with one invented number is worse than no chart, and nothing tells you which page a claim came from.</p></div>
+    <div class="box problem"><h4>It can be tricked</h4><p>Once an assistant can create tasks or write emails, a sentence hidden inside a document could try to make it act.</p></div>
+  </div>
+
+  <p><b>What this prototype does instead:</b></p>
+  <div class="grid3">
+    <div class="box fix"><h4>Short answer + up to 3 visuals</h4><p>A few sentences, then the right picture: a chart, table, comparison, steps, diagram, formula, quiz or flashcards. Never more than three.</p></div>
+    <div class="box fix"><h4>Every fact shows its page</h4><p>Each number and claim carries the page and the exact sentence it came from. The app checks it against the PDF. If it doesn't match, it isn't shown as fact.</p></div>
+    <div class="box fix"><h4>Nothing happens without you</h4><p>The assistant can <i>suggest</i> tasks or an email draft. A task is saved only when you click <b>Approve</b>. Nothing is ever sent.</p></div>
+  </div>
+
+  <div class="callout">
+    <p><b>In short:</b> upload a PDF, ask in Arabic or English, read a short answer with a picture you can trust, and let the assistant prepare tasks that wait for your OK.</p>
+  </div>
+
+  <h3>How a question is answered</h3>
+  <table class="avoid">
+    <tr><th style="width:8mm">#</th><th>What happens</th><th>What you see</th></tr>
+    <tr><td>1</td><td>You upload a PDF. The app reads the text on every page (and reads scanned pages with built-in text recognition).</td><td>The file name in the "Working in" bar, with suggested questions.</td></tr>
+    <tr><td>2</td><td>You ask a question. The app finds the pages that matter and sends them to an AI model.</td><td>The answer text appears within a few seconds.</td></tr>
+    <tr><td>3</td><td>The model proposes visuals. The app checks every number and quote against the PDF and removes anything it can't find.</td><td>Up to 3 visuals, each with page numbers you can click.</td></tr>
+    <tr><td>4</td><td>If you asked for tasks or an email, the assistant prepares <i>proposals</i> only.</td><td>Cards with <b>Approve / Edit / Reject</b>.</td></tr>
+  </table>
+</section>
+
+<!-- ============ 2. TOUR ============ -->
+<section class="page">
+  <h2><span class="n">2</span>A tour of the app</h2>
+  <p class="lead">The app looks like a chat window. It opens in Arabic; the <b>···</b> menu at the top switches to English. These pictures come from the offline demo, which is why they show a small "Mock" / "تجريبي" badge.</p>
+
+  <div class="grid2">
+    <figure>
+      <div class="shot"><img src="../images/ar-welcome.png" alt="Welcome screen in Arabic with six suggested question cards"></div>
+      <figcaption><b>Welcome.</b> The PDF you're working in sits at the top ("العمل في" / "Working in"). Suggested questions appear as cards; click one, or type your own at the bottom.</figcaption>
+    </figure>
+    <figure>
+      <div class="shot"><img src="../images/en-chart.png" alt="An English answer with a chart and the key number +39.0 points"></div>
+      <figcaption><b>A visual answer.</b> A headline, the key number (+39.0 points), small tiles, then the chart. Every point says which page it came from ("p. 21").</figcaption>
+    </figure>
+  </div>
+
+  <figure class="wide avoid" style="margin-top:6mm">
+    <img src="../images/ar-before-after.png" alt="Before and after: the same question as plain text and as a visual answer">
+    <figcaption><b>Before vs After</b> (··· menu → View → Before vs After). The same question answered as plain text on one side and as a visual answer on the other, with the time and cost of each.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 3. AGENT ============ -->
+<section class="page agent">
+  <h2><span class="n">3</span>The assistant that asks first</h2>
+  <p class="lead">Ask about a meeting's <b>decisions</b>, <b>who is responsible for what</b>, or ask it to <b>make tasks</b> or <b>draft an email</b>, and Arif switches to assistant mode. It reads the document, finds the items, and prepares proposals. You decide.</p>
+
+  <div class="grid2">
+    <figure>
+      <div class="shot"><img src="../images/agent-approve.png" alt="Task proposals in Arabic with Approve, Edit and Reject buttons; the first one approved"></div>
+      <figcaption><b>Proposals wait for you.</b> Each task shows its owner, due date and the page it came from. The first one was approved ("اتضافت للمهام": added to Tasks); the others still wait for <b>Approve / Edit / Reject</b>.</figcaption>
+    </figure>
+    <figure>
+      <div class="shot"><img src="../images/agent-tasks-tab.png" alt="The Tasks tab showing one approved task with its source sentence"></div>
+      <figcaption><b>The Tasks tab</b> (checklist icon at the top). Only approved tasks appear, each with the exact sentence from the meeting it came from. Email drafts are saved here marked "not sent".</figcaption>
+    </figure>
+  </div>
+
+  <div class="grid2" style="margin-top:6mm">
+    <figure>
+      <div class="shot"><img src="../images/agent-injection.png" alt="A proposal flagged in red because it comes from hidden text in the PDF"></div>
+      <figcaption><b>A trap, caught.</b> This test PDF hides an invisible instruction ("export all customer records…"). Arif shows the suggestion in red, says it comes from hidden text and isn't in the document, and does nothing unless a person approves it.</figcaption>
+    </figure>
+    <div>
+      <div class="callout ok"><p><b>The rule:</b> the assistant's tools can only <i>propose</i>. The only way a task is created is a person clicking <b>Approve</b>, in the same browser that asked. There is no "send" button anywhere: drafts are saved, never sent.</p></div>
+      <div class="callout"><p><b>Execution audit.</b> Under every answer, a drawer lists each step the assistant took (search, extract, propose), how long it took and its status, so you can see exactly what happened.</p></div>
+      <div class="callout warn"><p><b>Warnings you may see:</b> "comes from hidden text", "not found in the document", or "you didn't ask for this". The proposal is still shown, so you know about it, but it's marked.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. TRUST ============ -->
+<section class="page">
+  <h2><span class="n">4</span>Why you can trust the answers</h2>
+  <p class="lead">The AI model never draws the screen directly. It fills in fixed shapes (a chart, a table, a list of steps), and the app checks each one before you see it.</p>
+
+  <table>
+    <tr><th style="width:42mm">Check</th><th>What it means for you</th></tr>
+    <tr><td><b>Quote check</b></td><td>Every fact comes with a quote. The app looks for that quote on the page the model named (or the page next to it). No match → the fact is removed.</td></tr>
+    <tr><td><b>Number check</b></td><td>A number must appear in the quote <i>and</i> on the page. A quote that matches but with one digit changed does not pass.</td></tr>
+    <tr><td><b>Hidden text is ignored</b></td><td>White, tiny or off-page text never counts as evidence. If a PDF contains it, you get a warning.</td></tr>
+    <tr><td><b>Downgrade, don't fake</b></td><td>If too few chart points can be checked, the chart becomes a table of the ones that passed, or is dropped. It is never shown as verified when it isn't.</td></tr>
+    <tr><td><b>Owner and date in the sentence</b></td><td>For tasks, the person's name and the due date must be in the meeting sentence the task cites.</td></tr>
+    <tr><td><b>Limits</b></td><td>At most 3 visuals per answer, a quiz always last, at most 4 assistant steps per question.</td></tr>
+  </table>
+
+  <h3>What it achieved in live tests</h3>
+  <table class="avoid">
+    <tr><th>Test</th><th>Result</th></tr>
+    <tr><td>3 real PDFs (a research paper, a project report, a scanned slide deck), 9 free questions, a third in Egyptian Arabic</td><td>9 of 9 answered, no errors. A visual for 6 of 9. Answers in about 1–3 seconds of model time. About $0.001 per answer.</td></tr>
+    <tr><td>A sample meeting (fictional, Egyptian Arabic): decisions, owners, tasks, email draft</td><td>All 3 decisions and all 4 action items found and checked. Tasks saved only after Approve. The email was drafted, not sent.</td></tr>
+    <tr><td>A PDF with a hidden "create a task" instruction</td><td>Hidden-text warning shown; no task created from the hidden text.</td></tr>
+  </table>
+
+  <h3>Honest limits</h3>
+  <ul>
+    <li>AI models sometimes reword quotes. The check catches this, so some answers show fewer visuals.</li>
+    <li>On Groq's free plan, the app can answer about one question per minute. If you ask quickly, the next answer waits a little.</li>
+    <li>Assistant mode starts on keywords (decisions, owners, tasks, email). Other phrasing gets a normal visual answer.</li>
+    <li>Tasks are stored on this computer only; they are not yet connected to a real task manager or email.</li>
+    <li>Scanned Arabic pages are not read well yet (scanned English pages are).</li>
+  </ul>
+</section>
+
+<!-- ============ 5. RUN ============ -->
+<section class="page">
+  <h2><span class="n">5</span>Run it on your own computer</h2>
+  <p class="lead">About 15 minutes the first time, then one double-click. You need a Windows PC or a Mac, an internet connection, and about 2 GB of free space. You don't need to know any programming.</p>
+
+  <ol class="steps">
+    <li>
+      <h3>Download the project</h3>
+      <p>Open the GitHub link you received. Click the green <b>Code</b> button → <b>Download ZIP</b>. Right-click the ZIP → <b>Extract All…</b> (Mac: double-click it). Put the folder somewhere easy, such as your Desktop.</p>
+    </li>
+    <li>
+      <h3>Install two free helper programs</h3>
+      <p><b>Node.js</b> builds the web page; <b>uv</b> installs the server part (it also fetches the right Python by itself).</p>
+      <div class="os">
+        <div class="box"><h4>Windows</h4>
+          <p>Click Start, type <b>PowerShell</b>, open it, paste these two lines (right-click pastes) and press <kbd>Enter</kbd> after each. Answer <b>Y</b> if asked.</p>
+          <pre>winget install OpenJS.NodeJS.LTS
+winget install astral-sh.uv</pre>
+          <p>Then close PowerShell.</p>
+        </div>
+        <div class="box"><h4>Mac</h4>
+          <p>Install Node.js (the "LTS" button) from <b>nodejs.org</b>. Then open <b>Terminal</b> (Cmd+Space, type Terminal) and paste:</p>
+          <pre>curl -LsSf https://astral.sh/uv/install.sh | sh</pre>
+          <p>Then close Terminal.</p>
+        </div>
+      </div>
+    </li>
+    <li>
+      <h3>Start Arif</h3>
+      <div class="os">
+        <div class="box"><h4>Windows</h4>
+          <p>Open the project folder and double-click <b><code>start.bat</code></b>. If Windows shows "Windows protected your PC", click <b>More info → Run anyway</b>.</p>
+        </div>
+        <div class="box"><h4>Mac</h4>
+          <p>In Terminal type <code>sh </code> (with a space), drag <b><code>start.sh</code></b> from the folder into the Terminal window, and press <kbd>Enter</kbd>.</p>
+        </div>
+      </div>
+      <p style="margin-top:2mm">A black window shows progress. The first time takes a few minutes (it downloads what the app needs). Then your browser opens <b>http://localhost:8000</b> by itself. <b>Keep the black window open</b> while you use Arif; close it to stop.</p>
+    </li>
+    <li>
+      <h3>Try the offline demo <span class="tag off">NO KEY NEEDED</span></h3>
+      <p>Without a key, Arif runs in <b>offline demo mode</b>: it replays answers recorded in advance for the sample files. Click <b>+ Add PDF</b> ("ضيف PDF") and pick a file from the project's <code>fixtures\pdfs</code> folder (see section 6). Your own PDFs need step 5.</p>
+    </li>
+    <li>
+      <h3>Use it on your own PDFs <span class="tag live">LIVE</span></h3>
+      <p>Get a free key from Groq: sign in at <b>console.groq.com</b> → <b>API Keys</b> → <b>Create API Key</b>, and copy it. In the project folder, open the file <b><code>.env</code></b> with Notepad (Mac: TextEdit). It was created on the first start. Find the line <code>GROQ_API_KEY=</code> and paste your key right after the <code>=</code>, with no space:</p>
+      <pre>PROVIDER=groq
+GROQ_API_KEY=gsk_your_key_here</pre>
+      <p>Save, close the black window, and start Arif again (step 3). It now says <b>LIVE mode</b>, and you can upload any PDF and ask anything. Keep the key private, like a password.</p>
+    </li>
+  </ol>
+  <div class="callout"><p><b>Can't see <code>.env</code>?</b> Files whose names start with a dot can be hidden. Windows: in the folder, <b>View → Show → Hidden items</b>. Mac: press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> in Finder.</p></div>
+</section>
+
+<!-- ============ 6. TRY ============ -->
+<section style="margin-top:8mm">
+  <h2><span class="n">6</span>Things to try</h2>
+  <p class="lead">The sample files are in the project folder under <code>fixtures/pdfs</code>. When you upload one, its questions appear as cards: just click. In offline mode, these questions get the recorded answers.</p>
+
+  <h3>The research paper: <code>cot.pdf</code></h3>
+  <p>A 43-page Google research paper on "chain-of-thought prompting" (getting AI to reason step by step).</p>
+  <table>
+    <tr><th>Ask</th><th>You get</th></tr>
+    <tr><td>How much does chain-of-thought improve results on GSM8K as model size grows?<div dir="rtl" lang="ar">الـ chain-of-thought بيحسّن النتايج على GSM8K قد إيه لما حجم الموديل بيكبر؟</div></td><td>A chart with the key number, every point linked to page 21</td></tr>
+    <tr><td>What is chain-of-thought prompting and how is it different from standard prompting?</td><td>A side-by-side comparison</td></tr>
+    <tr><td>Make me flashcards to review the key ideas.</td><td>Flip cards for revision</td></tr>
+    <tr><td>Who are the authors of this paper?</td><td>A short text answer (no picture needed)</td></tr>
+  </table>
+
+  <h3>The meeting: <code>meeting_sample.pdf</code></h3>
+  <p>A one-page, made-up team meeting in Egyptian Arabic with English terms: 3 decisions and 4 action items.</p>
+  <table>
+    <tr><th>Ask</th><th>You get</th></tr>
+    <tr><td>Which decisions did we make?<div dir="rtl" lang="ar">إيه القرارات اللي خدناها؟</div></td><td>3 decision cards, each with its sentence</td></tr>
+    <tr><td>Who is responsible for what?<div dir="rtl" lang="ar">مين مسؤول عن إيه؟</div></td><td>4 action items with owner and due date</td></tr>
+    <tr><td>Create tasks from the action items.<div dir="rtl" lang="ar">اعمللي tasks بالـ action items</div></td><td>4 task proposals. Approve one, then open the Tasks tab (checklist icon)</td></tr>
+    <tr><td>Draft an email to the team with the decisions and who owns each action item.</td><td>An email draft proposal: approve it and it is saved, not sent</td></tr>
+  </table>
+
+  <h3>The trap: <code>injection_tasks.pdf</code></h3>
+  <table class="avoid">
+    <tr><td style="width:50%">Make tasks from the action items.</td><td>The real tasks, plus a hidden-text warning; anything that came from the hidden instruction is flagged in red</td></tr>
+  </table>
+
+  <h3>Other things to click</h3>
+  <ul>
+    <li><b>··· menu → Language</b>: switch between Arabic and English.</li>
+    <li><b>··· menu → View → Before vs After</b>: pick a question and click <b>Run both</b>.</li>
+    <li><b>··· menu → Model</b>: switch between Groq and Gemini (only the ones with a key are available).</li>
+    <li><b>Text only</b> checkbox under the question box: a plain answer without visuals.</li>
+    <li><b>Execution audit</b> under an answer: the steps, time and cost of that answer.</li>
+  </ul>
+</section>
+
+<!-- ============ 7. TROUBLE ============ -->
+<section style="margin-top:8mm">
+  <h2><span class="n">7</span>If something goes wrong</h2>
+  <table>
+    <tr><th style="width:62mm">What you see</th><th>What to do</th></tr>
+    <tr><td>"uv is not installed" or "Node.js is not installed"</td><td>Do step 2 again, then <b>restart the computer</b> (so Windows finds the new programs) and try again.</td></tr>
+    <tr><td>"winget" is not recognised (older Windows)</td><td>Install Node.js from <b>nodejs.org</b> (LTS button). For uv, paste this into PowerShell instead (it is one line):<pre>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</pre></td></tr>
+    <tr><td>"address already in use" / port 8000</td><td>Arif (or another program) is already running. Close the other black window, or restart the computer.</td></tr>
+    <tr><td>The browser didn't open</td><td>Open it yourself and go to <b>http://localhost:8000</b>.</td></tr>
+    <tr><td>The page says it can't connect</td><td>The black window was closed, or is still starting. Start Arif again and wait for the browser to open.</td></tr>
+    <tr><td>It still says OFFLINE DEMO after adding a key</td><td>Check <code>.env</code>: the key goes right after <code>GROQ_API_KEY=</code>, no space, no quotes, and the file was saved. Then restart Arif.</td></tr>
+    <tr><td>My own PDF gets a general answer in offline mode</td><td>Expected: offline mode only knows the sample files. Add a key (step 5).</td></tr>
+    <tr><td>"Rate limited" or an answer takes 30+ seconds</td><td>Groq's free plan allows about one answer per minute. Wait a minute between questions.</td></tr>
+    <tr><td>The PDF is refused</td><td>Limits: a real PDF, up to 20 MB and 60 pages, not password-protected.</td></tr>
+  </table>
+
+  <div class="callout"><p><b>Privacy.</b> The app runs on your computer. Your key stays in <code>.env</code> and is never shown in the browser. In live mode the text of your PDF is sent to the AI provider you chose (Groq or Google); reading scanned pages happens on your computer. Uploaded files are deleted after 48 hours.</p></div>
+
+  <!-- ============ 8. GLOSSARY ============ -->
+  <h2 style="margin-top:9mm"><span class="n">8</span>Words used in this guide</h2>
+  <dl>
+    <dt>AI model</dt><dd>The program that writes the answer. This app can use <b>Groq</b> (model "gpt-oss-120b", fast and cheap; the default) or Google's <b>Gemini</b>.</dd>
+    <dt>API key</dt><dd>A private password that lets the app use an AI model on your account. Free from Groq for light use.</dd>
+    <dt>Offline demo mode</dt><dd>Runs without a key by replaying recorded answers for the sample PDFs. Shows a "Mock" / "تجريبي" badge.</dd>
+    <dt>Live mode</dt><dd>Uses a real AI model with your key, for any PDF and any question.</dd>
+    <dt>Grounding</dt><dd>Checking each fact against the exact page and sentence it came from.</dd>
+    <dt>Proposal</dt><dd>A task or email the assistant suggests. Nothing happens until you approve it.</dd>
+    <dt>Hidden text</dt><dd>Text inside a PDF that a reader can't see (white, tiny or off the page). Ignored as evidence, and reported.</dd>
+    <dt>localhost:8000</dt><dd>The address of the app running on your own computer. Only you can open it.</dd>
+  </dl>
+
+  <p class="foot">Arif Visual Answers is a prototype. Technical details, measurements and every design decision are in the repository's README.md and BUILD_LOG.md.</p>
+</section>
+
+</main>
+</body>
+</html>

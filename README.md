@@ -26,7 +26,8 @@
   <a href="#architecture">Architecture</a> ·
   <a href="#results">Results</a> ·
   <a href="#cost-plan">Cost plan</a> ·
-  <a href="#quick-start">Quick start</a>
+  <a href="#quick-start">Quick start</a> ·
+  <a href="docs/Arif-Visual-Answers-Guide.pdf"><b>Non-technical guide (PDF)</b></a>
 </p>
 
 <p align="center">
@@ -89,7 +90,7 @@ The design follows from these constraints: the model never writes free-form UI, 
 | **Injection-safe actions** | Text in the document can lead to a proposal, never to an action (S2). A proposal that matches text only hidden characters contain is flagged; one without a supporting sentence, or of a kind the user didn't ask for, is flagged too. |
 | **Tasks tab** | Approved tasks with owner, due date and source (file, page, quote), and saved drafts marked "not sent". Each can be deleted. |
 | **Execution audit** | Under every answer: each tool call with its input, status and duration ("Execution audit · 5 completed"). Plain answers list their pipeline steps (retrieve, generate, verify) with tokens and cost. |
-| **Streaming** | The text streams token by token; each visual appears as soon as it is complete and verified. |
+| **Streaming** | With Gemini the text streams token by token and each visual appears as soon as it is complete and verified. Groq can't stream structured output, so its answer arrives in one piece (1–3 s of model time) and then goes through the same checks; the plain-text "Before" answer streams on both. |
 | **Before vs After** | The same question answered as plain prose and as a visual answer, side by side, with cost and time for each. |
 | **Two providers** | Gemini (sends the whole PDF) and Groq (`gpt-oss-120b`, sends retrieved chunks), switchable in the UI. Agent mode always uses Groq. A self-hosted OpenAI-compatible endpoint is also supported for answers. |
 
@@ -136,7 +137,7 @@ The UI is the Arif chat window: a floating panel with the Arif logo, the documen
 
 The **router** picks the path. A question about decisions, owners, action items, "make tasks" or "draft an email" goes to the agent when a Groq key is configured; everything else (or `text_only`) takes the visual path.
 
-**Visual path.** An answer cache (SQLite) replays repeat questions instantly. On a miss, **retrieval** (BM25 over ~600-character chunks, ≈ 5K-token budget; an Arabic question about an English document is translated for search by `gpt-oss-20b`) selects the context, and the **provider** returns one JSON object: `answer_text` plus typed components. The JSON is parsed **while it streams** (jiter): text goes to the browser immediately; each finished component is validated (Pydantic, over-long fields trimmed), grounded (G1, G2) and policed (≤ 3, quiz last, chart → table when fewer than 3 points verify). On 429/503 the server waits (`retry-after`), retries, then uses the fallback model, but only before any output has streamed.
+**Visual path.** An answer cache (SQLite) replays repeat questions instantly. On a miss, **retrieval** (BM25 over ~600-character chunks, a budget of 6,200 *estimated* tokens, which measured ≈ 5K real; an Arabic question about an English document is translated for search by `gpt-oss-20b`) selects the context, and the **provider** returns one JSON object: `answer_text` plus typed components. The JSON is parsed **while it streams** (jiter; Gemini streams, Groq returns it in one non-streamed call): text goes to the browser immediately; each finished component is validated (Pydantic, over-long fields trimmed), grounded (G1, G2) and policed (≤ 3, quiz last, chart → table when fewer than 3 points verify). On 429/503 the server waits (`retry-after`), retries, then uses the fallback model, but only before any output has streamed.
 
 **Agent path.** The document's visible text becomes numbered sentences (`s1`, `s2`, …). Groq tool calling runs for at most 4 steps, each with its own timeout. `extract_items` is a separate strict-JSON call returning items with sentence ids; the server turns ids into page + quote citations and checks G3. `create_task` and `draft_message` store proposals only. If the user asked for an action and the model only *described* it, the loop reminds it once. Verified action items the model didn't reach are then proposed by the server, marked `[server]` in the audit and still waiting for Approve. The server builds the cards from tool results and runs them through the same checks; agent answers are never cached.
 
@@ -214,7 +215,7 @@ That is about **$0.034 per active user per month** on Groq, against about $0.49 
 
 ### Cost controls already built in
 
-- Retrieval caps the prompt at ≈ 5K tokens instead of sending the whole PDF to Groq.
+- Retrieval caps the prompt at about 5K real tokens (≤ 5.1K measured live) instead of sending the whole PDF to Groq.
 - The answer cache makes repeat questions free; translations and suggested questions are cached per document.
 - Small model (`gpt-oss-20b`, half the price) for translation and suggestions; `reasoning_effort=low` on gpt-oss.
 - Hard limits: ≤ 3 components, output token caps, ≤ 4 agent steps, a question limit per document, per-IP rate limits.
@@ -223,7 +224,9 @@ That is about **$0.034 per active user per month** on Groq, against about $0.49 
 
 ## Quick start
 
-Requirements: Python ≥ 3.12 with [uv](https://docs.astral.sh/uv/), Node.js 20+, GNU make (on Windows, run it from Git Bash).
+**Not a developer?** Follow the step-by-step [guide (PDF)](docs/Arif-Visual-Answers-Guide.pdf): install Node.js and uv, then double-click `start.bat` (Windows) or run `sh start.sh` (macOS/Linux). The script installs everything on the first run, builds the UI, starts the server and opens http://localhost:8000. With no API key in `.env` it starts the offline demo; with a key it runs live.
+
+**Developers.** Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python ≥ 3.12 if needed), Node.js 20.19+ or 22+, GNU make (on Windows, run it from Git Bash).
 
 ```bash
 cp .env.example .env      # add GROQ_API_KEY and/or GEMINI_API_KEY, set PROVIDER=groq|gemini
@@ -237,6 +240,7 @@ No key? `make serve-mock` runs the same app offline with recorded answers for th
 
 | Command | What it does |
 |---|---|
+| `start.bat` / `start.sh` | One-click start without make: install, build, serve, open the browser (live if `.env` has a key, else offline) |
 | `make serve` | The app, with the live model from `.env` |
 | `make serve-mock` | The app, offline (recorded answers) |
 | `make test-backend` | pytest |
@@ -280,6 +284,8 @@ backend/tests/        pytest
 frontend/src/         React app: catalog renderers, agent cards, SSE state, i18n, design tokens
 e2e/                  Playwright specs, helpers, visual baselines
 fixtures/             demo PDFs and recorded answers (offline mode and tests)
+start.bat, start.sh   one-click start for Windows / macOS and Linux
+docs/Arif-Visual-Answers-Guide.pdf   guide for non-technical readers (source: docs/guide/guide.html)
 docs/protocol.md      SSE event protocol and action endpoints
 docs/images/          screenshots, logo, architecture diagram (+ its generator)
 docs/BUILD_SPEC.md    the original build specification
