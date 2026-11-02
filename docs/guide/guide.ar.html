@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دليل عارف للإجابات المرئية</title>
+<style>
+  :root {
+    --ink: #1c1a24; --muted: #57536a; --line: #e4e1ee; --soft: #f5f3fb;
+    --accent: #6d28d9; --accent-soft: #efe9fc; --hot: #c2462f; --ok: #15803d;
+  }
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; background: #fff; color: var(--ink);
+    font: 10.5pt/1.62 "Segoe UI", Tahoma, "Geeza Pro", "Noto Sans Arabic", Arial, sans-serif; }
+  main { max-width: 180mm; margin: 0 auto; }
+  h1, h2, h3 { line-height: 1.35; margin: 0; }
+  h2 { font-size: 19pt; margin: 0 0 3mm; }
+  h2 .n { color: var(--accent); margin-inline-end: 2mm; }
+  h3 { font-size: 12.5pt; margin: 5mm 0 1.5mm; }
+  p { margin: 0 0 2.5mm; }
+  .lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 5mm; }
+  .page { break-before: page; }
+  .avoid { break-inside: avoid; }
+  tr { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  code, kbd { font-family: Consolas, "Cascadia Mono", Menlo, monospace; font-size: 9.5pt; direction: ltr; unicode-bidi: isolate;
+    background: var(--soft); border: 1px solid var(--line); border-radius: 4px; padding: 0 1.2mm; }
+  kbd { background: #fff; box-shadow: 0 1px 0 var(--line); }
+  pre { direction: ltr; text-align: left; font-family: Consolas, "Cascadia Mono", Menlo, monospace; font-size: 9.5pt; line-height: 1.5;
+    background: #1f1b2e; color: #f3f0ff; border-radius: 6px; padding: 2.5mm 3.5mm; margin: 1.5mm 0 2.5mm; white-space: pre-wrap; word-break: normal; }
+  .en { direction: ltr; unicode-bidi: isolate; }
+
+  .cover { min-height: 255mm; display: flex; flex-direction: column; justify-content: space-between; }
+  .cover .top { padding-top: 30mm; }
+  .cover img.logo { width: 30mm; height: 30mm; }
+  .cover h1 { font-size: 32pt; margin: 8mm 0 3mm; }
+  .cover h1 small { display: block; text-align: right; font-size: 15pt; color: var(--muted); font-weight: 600; margin-top: 2mm; }
+  .cover .sub { font-size: 14.5pt; color: var(--muted); max-width: 155mm; }
+  .cover .pill { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700;
+    border-radius: 999px; padding: 1mm 4mm; font-size: 10.5pt; margin-top: 8mm; }
+  .cover .toc { border-top: 1px solid var(--line); padding-top: 5mm; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; font-size: 11pt; }
+  .cover .toc b { color: var(--accent); display: inline-block; width: 7mm; }
+  .cover .meta { color: var(--muted); font-size: 9.5pt; margin-top: 6mm; }
+
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 3mm 0 4mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .box { border: 1px solid var(--line); border-radius: 8px; padding: 3.5mm 4mm; background: #fff; }
+  .box h4 { margin: 0 0 1.5mm; font-size: 11pt; }
+  .box p { margin: 0; font-size: 10pt; color: var(--muted); }
+  .box.problem h4 { color: var(--hot); }
+  .box.fix { background: var(--soft); border-color: transparent; }
+  .box.fix h4 { color: var(--accent); }
+  .callout { border-inline-start: 3px solid var(--accent); background: var(--soft); padding: 3mm 4mm; border-radius: 6px 0 0 6px; margin: 3mm 0 4mm; }
+  .callout.warn { border-color: var(--hot); background: #fdf1ee; }
+  .callout.ok { border-color: var(--ok); background: #eefaf2; }
+  .callout p:last-child { margin: 0; }
+
+  figure { margin: 0; break-inside: avoid; }
+  .shot { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fafafa; max-height: 92mm; direction: ltr; }
+  .agent .shot { max-height: 78mm; }
+  .shot img { display: block; width: 177.8%; margin-left: -38.9%; }
+  .wide img { display: block; width: 100%; max-height: 98mm; object-fit: cover; object-position: top; border: 1px solid var(--line); border-radius: 8px; }
+  figcaption { font-size: 9.5pt; color: var(--muted); margin-top: 1.5mm; }
+  figcaption b { color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 9.6pt; margin: 2mm 0 4mm; }
+  th, td { text-align: right; vertical-align: top; padding: 1.6mm 2.5mm; border-bottom: 1px solid var(--line); }
+  th { font-size: 9.5pt; color: var(--muted); background: var(--soft); }
+  td .sub-en { display: block; text-align: left; color: var(--muted); font-size: 9pt; }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps > li { position: relative; padding-block-end: 4mm; padding-inline-start: 12mm; counter-increment: s; break-inside: avoid; }
+  ol.steps > li::before { content: counter(s, arabic-indic); position: absolute; inset-inline-start: 0; top: 1mm; width: 8mm; height: 8mm; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 10pt; }
+  ol.steps > li h3 { margin-top: 1mm; }
+  .os { display: grid; grid-template-columns: 1fr 1.2fr; gap: 4mm; }
+  .os pre { font-size: 8pt; }
+  .os .box h4 { font-size: 10pt; color: var(--muted); }
+  .os .box p { color: var(--ink); font-size: 10pt; }
+  .tag { display: inline-block; font-size: 8.5pt; font-weight: 700; border-radius: 4px; padding: 0 1.5mm; }
+  .tag.off { background: #fde9e4; color: var(--hot); }
+  .tag.live { background: #e3f6ea; color: var(--ok); }
+  ul { padding-inline-start: 6mm; margin: 0 0 3mm; }
+  dl { display: grid; grid-template-columns: 36mm 1fr; gap: 2mm 5mm; margin: 2mm 0; font-size: 10.3pt; }
+  dt { font-weight: 700; }
+  dd { margin: 0; color: var(--muted); }
+  .foot { color: var(--muted); font-size: 9pt; border-top: 1px solid var(--line); padding-top: 3mm; margin-top: 6mm; }
+
+  @media screen {
+    body { background: #ecebf2; padding: 10mm 0; }
+    main { background: #fff; padding: 15mm; box-shadow: 0 2px 16px rgba(0,0,0,.08); }
+    .page { margin-top: 12mm; border-top: 2px dashed var(--line); padding-top: 12mm; }
+    .cover { min-height: auto; }
+  }
+  @media screen and (max-width: 700px) {
+    body { padding: 0; } main { padding: 16px; }
+    .grid3, .grid2, .os, .cover .toc { grid-template-columns: 1fr; }
+    dl { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<!-- ============ الغلاف ============ -->
+<section class="cover">
+  <div class="top">
+    <img class="logo" src="../images/arif-logo.png" alt="شعار عارف">
+    <h1>عارف: الإجابات المرئية<small class="en">Arif Visual Answers</small></h1>
+    <p class="sub">اسأل أي سؤال عن أي ملف PDF، واحصل على إجابة قصيرة معها رسم بياني أو جدول أو خطوات، وكل رقم فيها متحقَّق منه في الصفحة التي جاء منها. ومعها مساعد يحوّل الاجتماع إلى مهام، لكن بعد موافقتك فقط.</p>
+    <span class="pill">دليل للجميع: لا يحتاج إلى أي خلفية تقنية</span>
+  </div>
+  <div>
+    <div class="toc">
+      <div><b>١</b>الفكرة في دقيقة</div>
+      <div><b>٥</b>شغّله على جهازك</div>
+      <div><b>٢</b>جولة في التطبيق</div>
+      <div><b>٦</b>أشياء جرّبها</div>
+      <div><b>٣</b>المساعد الذي يستأذنك أولًا</div>
+      <div><b>٧</b>لو حصلت مشكلة</div>
+      <div><b>٤</b>لماذا تثق في الإجابات</div>
+      <div><b>٨</b>معاني الكلمات المستخدمة</div>
+    </div>
+    <p class="meta">نموذج أوّلي تم بناؤه للنقاش مع شركة Tawteen Tech حول «عارف». العربية (باللهجة المصرية) هي اللغة الأساسية، والإنجليزية متاحة. نوفمبر ٢٠٢٦.</p>
+  </div>
+</section>
+
+<!-- ============ ١. الفكرة ============ -->
+<section class="page">
+  <h2><span class="n">١</span>الفكرة في دقيقة</h2>
+  <p class="lead">الطلاب وفرق العمل يقرؤون مستندات طويلة: أبحاث، ومذكرات دراسية، وتقارير، ومحاضر اجتماعات. ويسألون عنها غالبًا بالعامية المصرية مع كلمات إنجليزية. الإجابة العادية من أي محادثة ذكاء اصطناعي فيها ثلاث مشكلات:</p>
+
+  <div class="grid3">
+    <div class="box problem"><h4>كلام كثير</h4><p>كنت تريد رقمًا واحدًا، أو اتجاهًا، أو الخطوات، أو من المسؤول عن ماذا. فجاءتك ٣٠٠ كلمة.</p></div>
+    <div class="box problem"><h4>لا يمكنك التأكد منها</h4><p>رسم بياني فيه رقم واحد مخترع أسوأ من عدم وجود رسم، ولا شيء يقول لك من أي صفحة جاءت المعلومة.</p></div>
+    <div class="box problem"><h4>يمكن خداعه</h4><p>عندما يستطيع المساعد إنشاء مهام أو كتابة رسائل، يمكن لجملة مخفية داخل المستند أن تحاول دفعه لفعل شيء.</p></div>
+  </div>
+
+  <p><b>ما الذي يفعله هذا النموذج بدلًا من ذلك:</b></p>
+  <div class="grid3">
+    <div class="box fix"><h4>إجابة قصيرة + ٣ رسوم بحدّ أقصى</h4><p>جمل قليلة، ثم الشكل المناسب: رسم بياني، جدول، مقارنة، خطوات، مخطط، معادلة، اختبار قصير، أو بطاقات مراجعة. لا أكثر من ثلاثة.</p></div>
+    <div class="box fix"><h4>كل معلومة تُظهر صفحتها</h4><p>كل رقم ومعلومة معهما رقم الصفحة والجملة الأصلية بالضبط. التطبيق يتحقق منهما في الملف، وإن لم يجدهما لا يعرضهما كحقيقة.</p></div>
+    <div class="box fix"><h4>لا شيء يحدث بدونك</h4><p>المساعد يستطيع <i>اقتراح</i> مهام أو مسودة بريد إلكتروني فقط. المهمة لا تُحفظ إلا عندما تضغط <b>«وافق»</b>. ولا يُرسَل أي شيء أبدًا.</p></div>
+  </div>
+
+  <div class="callout">
+    <p><b>باختصار:</b> ارفع ملف PDF، واسأل بالعربية أو الإنجليزية، واقرأ إجابة قصيرة معها شكل توضيحي تثق فيه، ودع المساعد يجهّز لك مهامًا تنتظر موافقتك.</p>
+  </div>
+
+  <h3>كيف تتم الإجابة عن السؤال</h3>
+  <table class="avoid">
+    <tr><th style="width:8mm">#</th><th>ماذا يحدث</th><th>ماذا ترى</th></tr>
+    <tr><td>١</td><td>ترفع ملف PDF. يقرأ التطبيق النص في كل صفحة (ويقرأ الصفحات الممسوحة ضوئيًا بأداة التعرّف على النصوص المدمجة فيه).</td><td>اسم الملف في شريط «العمل في»، مع أسئلة مقترحة.</td></tr>
+    <tr><td>٢</td><td>تكتب سؤالك. يجد التطبيق الصفحات المهمة ويرسلها إلى نموذج الذكاء الاصطناعي.</td><td>يظهر نص الإجابة خلال ثوانٍ.</td></tr>
+    <tr><td>٣</td><td>يقترح النموذج الأشكال التوضيحية. يتحقق التطبيق من كل رقم واقتباس في الملف، ويحذف ما لا يجده.</td><td>حتى ٣ أشكال، في كل منها أرقام صفحات يمكنك الضغط عليها.</td></tr>
+    <tr><td>٤</td><td>لو طلبت مهامًا أو بريدًا إلكترونيًا، يجهّز المساعد <i>اقتراحات</i> فقط.</td><td>بطاقات فيها <b>«وافق» / «عدّل» / «ارفض»</b>.</td></tr>
+  </table>
+</section>
+
+<!-- ============ ٢. جولة ============ -->
+<section class="page">
+  <h2><span class="n">٢</span>جولة في التطبيق</h2>
+  <p class="lead">التطبيق يشبه نافذة محادثة. يفتح باللغة العربية، ويمكنك التحويل إلى الإنجليزية من قائمة <b>···</b> في الأعلى. هذه الصور مأخوذة من وضع العرض بدون إنترنت، ولذلك تظهر فيها علامة صغيرة «تجريبي».</p>
+
+  <div class="grid2">
+    <figure>
+      <div class="shot"><img src="../images/ar-welcome.png" alt="شاشة الترحيب بالعربية مع ست بطاقات أسئلة مقترحة"></div>
+      <figcaption><b>شاشة الترحيب.</b> الملف الذي تعمل عليه يظهر في الأعلى («العمل في»). الأسئلة المقترحة تظهر كبطاقات: اضغط على واحدة، أو اكتب سؤالك في الأسفل.</figcaption>
+    </figure>
+    <figure>
+      <div class="shot"><img src="../images/en-chart.png" alt="إجابة بالإنجليزية فيها رسم بياني والرقم الأهم +39.0"></div>
+      <figcaption><b>إجابة مرئية</b> (هنا بالإنجليزية). عنوان، ثم الرقم الأهم (+39.0 نقطة)، ثم مربعات صغيرة، ثم الرسم البياني. كل نقطة مكتوب بجانبها رقم صفحتها (p. 21).</figcaption>
+    </figure>
+  </div>
+
+  <figure class="wide avoid" style="margin-top:6mm">
+    <img src="../images/ar-before-after.png" alt="قبل وبعد: نفس السؤال كنص عادي وكإجابة مرئية">
+    <figcaption><b>«قبل وبعد»</b> (قائمة ··· ← طريقة العرض ← قبل وبعد). نفس السؤال مُجاب عنه كنص عادي في جهة، وكإجابة مرئية في الجهة الأخرى، مع الوقت والتكلفة لكلٍّ منهما.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ ٣. المساعد ============ -->
+<section class="page agent">
+  <h2><span class="n">٣</span>المساعد الذي يستأذنك أولًا</h2>
+  <p class="lead">اسأل عن <b>القرارات</b> في اجتماع، أو <b>من المسؤول عن ماذا</b>، أو اطلب منه <b>عمل مهام</b> أو <b>كتابة مسودة بريد</b>، فيتحوّل «عارف» إلى وضع المساعد: يقرأ المستند، ويستخرج العناصر، ويجهّز اقتراحات. والقرار لك.</p>
+
+  <div class="grid2">
+    <figure>
+      <div class="shot"><img src="../images/agent-approve.png" alt="اقتراحات مهام بالعربية مع أزرار وافق وعدّل وارفض، والأولى تمت الموافقة عليها"></div>
+      <figcaption><b>الاقتراحات تنتظرك.</b> كل مهمة فيها المسؤول والميعاد والصفحة التي جاءت منها. الأولى تمت الموافقة عليها («اتضافت للمهام»)، والباقي ما زال ينتظر <b>«وافق» / «عدّل» / «ارفض»</b>.</figcaption>
+    </figure>
+    <figure>
+      <div class="shot"><img src="../images/agent-tasks-tab.png" alt="صفحة المهام فيها مهمة واحدة تمت الموافقة عليها مع الجملة الأصلية"></div>
+      <figcaption><b>صفحة «المهام»</b> (أيقونة قائمة المهام في الأعلى). لا يظهر فيها إلا ما وافقت عليه، ومع كل مهمة الجملة الأصلية من الاجتماع. مسودات البريد تُحفظ هنا مكتوبًا عليها «متبعتتش».</figcaption>
+    </figure>
+  </div>
+
+  <div class="grid2" style="margin-top:6mm">
+    <figure>
+      <div class="shot"><img src="../images/agent-injection.png" alt="اقتراح باللون الأحمر لأنه جاء من نص مخفي في الملف"></div>
+      <figcaption><b>فخ تم كشفه.</b> هذا ملف اختبار يخفي أمرًا غير مرئي («صدّر كل بيانات العملاء…»). يعرض «عارف» الاقتراح باللون الأحمر، ويقول إنه جاء من نص مخفي وغير موجود في المستند، ولا يفعل شيئًا إلا إذا وافق عليه شخص.</figcaption>
+    </figure>
+    <div>
+      <div class="callout ok"><p><b>القاعدة:</b> أدوات المساعد تستطيع <i>الاقتراح</i> فقط. الطريقة الوحيدة لإنشاء مهمة هي أن يضغط شخص <b>«وافق»</b> من نفس المتصفح الذي سأل. ولا يوجد زر «إرسال» في أي مكان: المسودات تُحفظ ولا تُرسَل.</p></div>
+      <div class="callout"><p><b>«سجل التنفيذ».</b> تحت كل إجابة قائمة بكل خطوة قام بها المساعد (بحث، استخراج، اقتراح) ومدتها وحالتها، لترى بالضبط ما حدث.</p></div>
+      <div class="callout warn"><p><b>تحذيرات قد تراها:</b> «جاي من نص مستخبي في الملف»، أو «مش لاقيين الكلام ده في الملف»، أو «إنت ماطلبتش ده». الاقتراح يظل ظاهرًا حتى تعرف به، لكن عليه علامة.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ٤. الثقة ============ -->
+<section class="page">
+  <h2><span class="n">٤</span>لماذا تثق في الإجابات</h2>
+  <p class="lead">نموذج الذكاء الاصطناعي لا يرسم الشاشة مباشرة. هو يملأ أشكالًا ثابتة (رسم بياني، جدول، قائمة خطوات)، والتطبيق يفحص كل شكل قبل أن تراه.</p>
+
+  <table>
+    <tr><th style="width:42mm">الفحص</th><th>ماذا يعني بالنسبة لك</th></tr>
+    <tr><td><b>فحص الاقتباس</b></td><td>كل معلومة معها اقتباس. يبحث التطبيق عن هذا الاقتباس في الصفحة التي ذكرها النموذج (أو الصفحة المجاورة لها). إن لم يجده تُحذف المعلومة.</td></tr>
+    <tr><td><b>فحص الأرقام</b></td><td>الرقم يجب أن يكون موجودًا في الاقتباس <i>وأيضًا</i> في الصفحة. اقتباس مطابق لكن فيه رقم واحد متغيّر لا ينجح.</td></tr>
+    <tr><td><b>تجاهل النص المخفي</b></td><td>النص الأبيض أو الصغير جدًا أو الخارج عن حدود الصفحة لا يُعتبر دليلًا أبدًا. وإذا وُجد في الملف يظهر لك تحذير.</td></tr>
+    <tr><td><b>التبسيط بدل التزييف</b></td><td>لو لم يمكن التحقق من نقاط كافية في رسم بياني، يتحوّل إلى جدول بالنقاط التي نجحت فقط، أو يُحذف. لا يُعرض أبدًا على أنه متحقَّق منه وهو ليس كذلك.</td></tr>
+    <tr><td><b>المسؤول والميعاد في نفس الجملة</b></td><td>في المهام، يجب أن يكون اسم الشخص والميعاد موجودين في جملة الاجتماع التي تستند إليها المهمة.</td></tr>
+    <tr><td><b>حدود ثابتة</b></td><td>٣ أشكال بحدّ أقصى في كل إجابة، والاختبار القصير دائمًا في الآخر، و٤ خطوات بحدّ أقصى للمساعد في كل سؤال.</td></tr>
+  </table>
+
+  <h3>النتائج في اختبارات حقيقية</h3>
+  <table class="avoid">
+    <tr><th>الاختبار</th><th>النتيجة</th></tr>
+    <tr><td>٣ ملفات PDF حقيقية (ورقة بحثية، تقرير مشروع، عرض شرائح ممسوح ضوئيًا)، و٩ أسئلة حرة، ثلثها بالعامية المصرية</td><td>تمت الإجابة عن ٩ من ٩ بدون أخطاء. ظهر شكل توضيحي في ٦ من ٩. وقت النموذج حوالي ١ إلى ٣ ثوانٍ. التكلفة حوالي ٠٫٠٠١ دولار للإجابة.</td></tr>
+    <tr><td>اجتماع تجريبي (خيالي، بالعامية المصرية): القرارات، والمسؤولون، والمهام، ومسودة بريد</td><td>تم استخراج القرارات الثلاثة وبنود العمل الأربعة كلها والتحقق منها. المهام لم تُحفظ إلا بعد «وافق». البريد كُتب كمسودة ولم يُرسَل.</td></tr>
+    <tr><td>ملف PDF فيه أمر مخفي «أنشئ مهمة»</td><td>ظهر تحذير النص المخفي، ولم تُنشأ أي مهمة من النص المخفي.</td></tr>
+  </table>
+
+  <h3>حدود بصراحة</h3>
+  <ul>
+    <li>نماذج الذكاء الاصطناعي أحيانًا تعيد صياغة الاقتباس. الفحص يكتشف ذلك، فتظهر في بعض الإجابات أشكال أقل.</li>
+    <li>في الخطة المجانية لـ Groq، يستطيع التطبيق الإجابة عن سؤال واحد تقريبًا في الدقيقة. لو سألت بسرعة، تنتظر الإجابة التالية قليلًا.</li>
+    <li>وضع المساعد يبدأ بكلمات محددة (القرارات، المسؤول، المهام، البريد). الصياغات الأخرى تحصل على إجابة مرئية عادية.</li>
+    <li>المهام محفوظة على هذا الجهاز فقط، وغير مربوطة بعد بأداة مهام حقيقية أو ببريد إلكتروني.</li>
+    <li>الصفحات العربية الممسوحة ضوئيًا لا تُقرأ جيدًا بعد (الصفحات الإنجليزية الممسوحة تُقرأ).</li>
+  </ul>
+</section>
+
+<!-- ============ ٥. التشغيل ============ -->
+<section class="page">
+  <h2><span class="n">٥</span>شغّله على جهازك</h2>
+  <p class="lead">حوالي ١٥ دقيقة في المرة الأولى، وبعدها ضغطة مزدوجة واحدة. تحتاج إلى جهاز Windows أو Mac، واتصال بالإنترنت، وحوالي ٢ جيجابايت مساحة فارغة. لا تحتاج إلى معرفة أي برمجة.</p>
+
+  <ol class="steps">
+    <li>
+      <h3>نزّل المشروع</h3>
+      <p>افتح رابط GitHub الذي وصلك. اضغط الزر الأخضر <b class="en">Code</b> ثم <b class="en">Download ZIP</b>. اضغط بالزر الأيمن على الملف المضغوط ثم <b>«استخراج الكل»</b> (<span class="en">Extract All</span>)، وعلى Mac اضغط عليه ضغطة مزدوجة. ضع المجلد في مكان سهل مثل سطح المكتب.</p>
+    </li>
+    <li>
+      <h3>ثبّت برنامجين مساعدين مجانيين</h3>
+      <p><b class="en">Node.js</b> يبني صفحة التطبيق، و<b class="en">uv</b> يثبّت جزء الخادم (ويحضر نسخة Python المناسبة بنفسه).</p>
+      <div class="os">
+        <div class="box"><h4>Windows</h4>
+          <p>اضغط «ابدأ» واكتب <b class="en">PowerShell</b> وافتحه، ثم الصق هذين السطرين (الزر الأيمن يلصق) واضغط <kbd>Enter</kbd> بعد كل سطر. اكتب <b class="en">Y</b> إذا طُلب منك.</p>
+          <pre>winget install OpenJS.NodeJS.LTS
+winget install astral-sh.uv</pre>
+          <p>ثم أغلق PowerShell.</p>
+        </div>
+        <div class="box"><h4>Mac</h4>
+          <p>ثبّت Node.js من موقع <b class="en">nodejs.org</b> (زر <span class="en">LTS</span>). ثم افتح <b class="en">Terminal</b> (اضغط <span class="en">Cmd+Space</span> واكتب Terminal) والصق:</p>
+          <pre>curl -LsSf https://astral.sh/uv/install.sh | sh</pre>
+          <p>ثم أغلق Terminal.</p>
+        </div>
+      </div>
+    </li>
+    <li>
+      <h3>شغّل «عارف»</h3>
+      <div class="os">
+        <div class="box"><h4>Windows</h4>
+          <p>افتح مجلد المشروع واضغط ضغطة مزدوجة على <b><code>start.bat</code></b>. لو ظهرت رسالة «<span class="en">Windows protected your PC</span>» اضغط <b class="en">More info</b> ثم <b class="en">Run anyway</b>.</p>
+        </div>
+        <div class="box"><h4>Mac</h4>
+          <p>في Terminal اكتب <code>sh </code> (ومعها مسافة)، ثم اسحب الملف <b><code>start.sh</code></b> من المجلد إلى نافذة Terminal، واضغط <kbd>Enter</kbd>.</p>
+        </div>
+      </div>
+      <p style="margin-top:2mm">ستظهر نافذة سوداء تعرض التقدّم. المرة الأولى تأخذ بضع دقائق (لتنزيل ما يحتاجه التطبيق). بعدها يفتح المتصفح وحده على العنوان <b class="en">http://localhost:8000</b>. <b>اترك النافذة السوداء مفتوحة</b> طوال استخدامك لـ«عارف»، وأغلقها لإيقافه.</p>
+    </li>
+    <li>
+      <h3>جرّب وضع العرض بدون مفتاح <span class="tag off">لا يحتاج مفتاحًا</span></h3>
+      <p>بدون مفتاح، يعمل «عارف» في <b>وضع العرض بدون إنترنت</b> (<span class="en">offline demo</span>): يعرض إجابات مسجّلة مسبقًا للملفات التجريبية. اضغط <b>«ضيف PDF»</b> واختر ملفًا من مجلد <code>fixtures\pdfs</code> داخل المشروع (انظر القسم ٦). ملفاتك الخاصة تحتاج إلى الخطوة ٥.</p>
+    </li>
+    <li>
+      <h3>استخدمه على ملفاتك <span class="tag live">مباشر</span></h3>
+      <p>احصل على مفتاح مجاني من Groq: سجّل الدخول في <b class="en">console.groq.com</b> ثم <b class="en">API Keys</b> ثم <b class="en">Create API Key</b>، وانسخ المفتاح. في مجلد المشروع افتح الملف <b><code>.env</code></b> باستخدام Notepad (على Mac: TextEdit). هذا الملف أُنشئ عند التشغيل الأول. ابحث عن السطر <code>GROQ_API_KEY=</code> والصق مفتاحك بعد علامة <code>=</code> مباشرة بدون مسافة:</p>
+      <pre>PROVIDER=groq
+GROQ_API_KEY=gsk_your_key_here</pre>
+      <p>احفظ الملف، وأغلق النافذة السوداء، وشغّل «عارف» مرة أخرى (الخطوة ٣). ستظهر الآن عبارة <b class="en">LIVE mode</b>، وتستطيع رفع أي ملف PDF وسؤال أي شيء. حافظ على سرية المفتاح مثل كلمة المرور.</p>
+    </li>
+  </ol>
+  <div class="callout"><p><b>لا ترى ملف <code>.env</code>؟</b> الملفات التي يبدأ اسمها بنقطة قد تكون مخفية. على Windows: من المجلد اختر <b>عرض ← إظهار ← العناصر المخفية</b> (<span class="en">View → Show → Hidden items</span>). على Mac: اضغط <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> في Finder.</p></div>
+</section>
+
+<!-- ============ ٦. جرّب ============ -->
+<section style="margin-top:8mm">
+  <h2><span class="n">٦</span>أشياء جرّبها</h2>
+  <p class="lead">الملفات التجريبية موجودة في مجلد المشروع داخل <code>fixtures/pdfs</code>. عندما ترفع واحدًا منها تظهر أسئلته كبطاقات: اضغط فقط. في وضع العرض بدون مفتاح، هذه الأسئلة تحصل على الإجابات المسجّلة.</p>
+
+  <h3>الورقة البحثية: <code>cot.pdf</code></h3>
+  <p>ورقة بحثية من Google في ٤٣ صفحة عن «<span class="en">chain-of-thought prompting</span>» (جعل الذكاء الاصطناعي يفكّر خطوة بخطوة).</p>
+  <table>
+    <tr><th>اسأل</th><th>ستحصل على</th></tr>
+    <tr><td>الـ chain-of-thought بيحسّن النتايج على GSM8K قد إيه لما حجم الموديل بيكبر؟<span class="en sub-en">How much does chain-of-thought improve results on GSM8K as model size grows?</span></td><td>رسم بياني مع الرقم الأهم، وكل نقطة مربوطة بالصفحة ٢١</td></tr>
+    <tr><td>يعني إيه chain-of-thought prompting وإيه الفرق بينه وبين الـ standard prompting؟</td><td>مقارنة جنبًا إلى جنب</td></tr>
+    <tr><td>اعملي flashcards أراجع بيها الأفكار الأساسية.</td><td>بطاقات مراجعة تقلبها</td></tr>
+    <tr><td>مين اللي كتبوا الورقة دي؟</td><td>إجابة نصية قصيرة (لا تحتاج شكلًا)</td></tr>
+  </table>
+
+  <h3>الاجتماع: <code>meeting_sample.pdf</code></h3>
+  <p>محضر اجتماع فريق خيالي في صفحة واحدة، بالعامية المصرية مع مصطلحات إنجليزية: ٣ قرارات و٤ بنود عمل.</p>
+  <table>
+    <tr><th>اسأل</th><th>ستحصل على</th></tr>
+    <tr><td>إيه القرارات اللي خدناها؟</td><td>٣ بطاقات قرارات، مع كل منها جملتها الأصلية</td></tr>
+    <tr><td>مين مسؤول عن إيه؟</td><td>٤ بنود عمل بالمسؤول والميعاد</td></tr>
+    <tr><td>اعمللي tasks بالـ action items</td><td>٤ اقتراحات مهام. وافق على واحدة، ثم افتح صفحة «المهام» (أيقونة قائمة المهام)</td></tr>
+    <tr><td>اكتبلي ايميل للفريق فيه القرارات ومين مسؤول عن إيه.</td><td>اقتراح مسودة بريد: وافق عليه فيُحفظ، ولا يُرسَل</td></tr>
+  </table>
+
+  <h3>الفخ: <code>injection_tasks.pdf</code></h3>
+  <table class="avoid">
+    <tr><td style="width:50%">اعمللي tasks بالـ action items</td><td>المهام الحقيقية، مع تحذير من النص المخفي؛ وأي شيء جاء من الأمر المخفي يظهر باللون الأحمر</td></tr>
+  </table>
+
+  <h3>أشياء أخرى تضغط عليها</h3>
+  <ul>
+    <li><b>قائمة ··· ← اللغة</b>: التبديل بين العربية والإنجليزية.</li>
+    <li><b>قائمة ··· ← طريقة العرض ← قبل وبعد</b>: اختر سؤالًا واضغط <b>«شغّل الاتنين»</b>.</li>
+    <li><b>قائمة ··· ← الموديل</b>: التبديل بين Groq وGemini (المتاح فقط هو ما له مفتاح).</li>
+    <li>خانة <b>«نص بس»</b> تحت مربع السؤال: إجابة نصية عادية بدون أشكال.</li>
+    <li><b>«سجل التنفيذ»</b> تحت أي إجابة: الخطوات والوقت والتكلفة لهذه الإجابة.</li>
+  </ul>
+</section>
+
+<!-- ============ ٧. المشكلات ============ -->
+<section style="margin-top:8mm">
+  <h2><span class="n">٧</span>لو حصلت مشكلة</h2>
+  <table>
+    <tr><th style="width:62mm">ماذا ترى</th><th>ماذا تفعل</th></tr>
+    <tr><td><span class="en">"uv is not installed"</span> أو <span class="en">"Node.js is not installed"</span></td><td>أعد الخطوة ٢، ثم <b>أعد تشغيل الجهاز</b> (حتى يتعرّف Windows على البرامج الجديدة)، وحاول مرة أخرى.</td></tr>
+    <tr><td>الأمر <span class="en">winget</span> غير معروف (نسخ Windows القديمة)</td><td>ثبّت Node.js من <b class="en">nodejs.org</b> (زر LTS). ولتثبيت uv الصق هذا في PowerShell بدلًا من ذلك (وهو سطر واحد):<pre>powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</pre></td></tr>
+    <tr><td><span class="en">"address already in use"</span> أو المنفذ 8000</td><td>«عارف» (أو برنامج آخر) يعمل بالفعل. أغلق النافذة السوداء الأخرى، أو أعد تشغيل الجهاز.</td></tr>
+    <tr><td>المتصفح لم يفتح</td><td>افتحه بنفسك واذهب إلى <b class="en">http://localhost:8000</b>.</td></tr>
+    <tr><td>الصفحة تقول إنها لا تستطيع الاتصال</td><td>النافذة السوداء أُغلقت، أو ما زالت تبدأ. شغّل «عارف» مرة أخرى وانتظر حتى يفتح المتصفح.</td></tr>
+    <tr><td>ما زالت تظهر <span class="en">OFFLINE DEMO</span> بعد إضافة المفتاح</td><td>راجع <code>.env</code>: المفتاح يُكتب مباشرة بعد <code>GROQ_API_KEY=</code>، بدون مسافة وبدون علامات تنصيص، وتأكد أنك حفظت الملف. ثم أعد تشغيل «عارف».</td></tr>
+    <tr><td>ملفي الخاص يحصل على إجابة عامة في وضع العرض</td><td>هذا متوقّع: وضع العرض يعرف الملفات التجريبية فقط. أضف مفتاحًا (الخطوة ٥).</td></tr>
+    <tr><td><span class="en">"Rate limited"</span> أو الإجابة تأخذ أكثر من ٣٠ ثانية</td><td>الخطة المجانية لـ Groq تسمح بحوالي إجابة واحدة في الدقيقة. انتظر دقيقة بين الأسئلة.</td></tr>
+    <tr><td>الملف مرفوض</td><td>الحدود: ملف PDF حقيقي، حتى ٢٠ ميجابايت و٦٠ صفحة، وغير محمي بكلمة مرور.</td></tr>
+  </table>
+
+  <div class="callout"><p><b>الخصوصية.</b> التطبيق يعمل على جهازك. مفتاحك يبقى في ملف <code>.env</code> ولا يظهر أبدًا في المتصفح. في الوضع المباشر يُرسَل نص ملف PDF إلى مزوّد الذكاء الاصطناعي الذي اخترته (Groq أو Google)، أما قراءة الصفحات الممسوحة ضوئيًا فتتم على جهازك. الملفات المرفوعة تُحذف بعد ٤٨ ساعة.</p></div>
+
+  <!-- ============ ٨. المصطلحات ============ -->
+  <h2 style="margin-top:9mm"><span class="n">٨</span>معاني الكلمات المستخدمة</h2>
+  <dl>
+    <dt>نموذج الذكاء الاصطناعي</dt><dd>البرنامج الذي يكتب الإجابة. يمكن للتطبيق استخدام <b>Groq</b> (النموذج <span class="en">gpt-oss-120b</span>، سريع ورخيص، وهو الافتراضي) أو <b>Gemini</b> من Google.</dd>
+    <dt>مفتاح API</dt><dd>كلمة مرور خاصة تسمح للتطبيق باستخدام نموذج ذكاء اصطناعي على حسابك. مجاني من Groq للاستخدام الخفيف.</dd>
+    <dt>وضع العرض بدون مفتاح</dt><dd>يعمل بدون مفتاح ويعرض إجابات مسجّلة مسبقًا للملفات التجريبية. تظهر فيه علامة «تجريبي».</dd>
+    <dt>الوضع المباشر</dt><dd>يستخدم نموذج ذكاء اصطناعي حقيقيًا بمفتاحك، لأي ملف PDF وأي سؤال.</dd>
+    <dt>التحقق من المصدر</dt><dd>فحص كل معلومة في الصفحة والجملة الأصلية التي جاءت منها بالضبط.</dd>
+    <dt>اقتراح</dt><dd>مهمة أو بريد يقترحه المساعد. لا يحدث شيء حتى توافق عليه.</dd>
+    <dt>النص المخفي</dt><dd>نص داخل ملف PDF لا يستطيع القارئ رؤيته (أبيض، أو صغير جدًا، أو خارج الصفحة). لا يُعتبر دليلًا، ويتم التنبيه إليه.</dd>
+    <dt class="en" style="text-align:right">localhost:8000</dt><dd>عنوان التطبيق وهو يعمل على جهازك. لا يستطيع أحد غيرك فتحه.</dd>
+  </dl>
+
+  <p class="foot">«عارف: الإجابات المرئية» نموذج أوّلي. التفاصيل التقنية والقياسات وكل قرارات التصميم موجودة في ملفي README.md وBUILD_LOG.md في المستودع. هذا الدليل متاح أيضًا بالإنجليزية: <span class="en">docs/Arif-Visual-Answers-Guide.pdf</span>.</p>
+</section>
+
+</main>
+</body>
+</html>

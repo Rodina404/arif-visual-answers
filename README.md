@@ -27,7 +27,8 @@
   <a href="#results">Results</a> ·
   <a href="#cost-plan">Cost plan</a> ·
   <a href="#quick-start">Quick start</a> ·
-  <a href="docs/Arif-Visual-Answers-Guide.pdf"><b>Non-technical guide (PDF)</b></a>
+  <a href="docs/Arif-Visual-Answers-Guide.pdf"><b>Non-technical guide (PDF)</b></a> ·
+  <a href="docs/Arif-Visual-Answers-Guide-AR.pdf"><b>الدليل بالعربي (PDF)</b></a>
 </p>
 
 <p align="center">
@@ -224,7 +225,7 @@ That is about **$0.034 per active user per month** on Groq, against about $0.49 
 
 ## Quick start
 
-**Not a developer?** Follow the step-by-step [guide (PDF)](docs/Arif-Visual-Answers-Guide.pdf): install Node.js and uv, then double-click `start.bat` (Windows) or run `sh start.sh` (macOS/Linux). The script installs everything on the first run, builds the UI, starts the server and opens http://localhost:8000. With no API key in `.env` it starts the offline demo; with a key it runs live.
+**Not a developer?** Follow the step-by-step guide, in [English](docs/Arif-Visual-Answers-Guide.pdf) or [Arabic](docs/Arif-Visual-Answers-Guide-AR.pdf) (PDF): install Node.js and uv, then double-click `start.bat` (Windows) or run `sh start.sh` (macOS/Linux). The script installs everything on the first run, builds the UI, starts the server and opens http://localhost:8000. With no API key in `.env` it starts the offline demo; with a key it runs live.
 
 **Developers.** Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python ≥ 3.12 if needed), Node.js 20.19+ or 22+, GNU make (on Windows, run it from Git Bash).
 
@@ -285,7 +286,8 @@ frontend/src/         React app: catalog renderers, agent cards, SSE state, i18n
 e2e/                  Playwright specs, helpers, visual baselines
 fixtures/             demo PDFs and recorded answers (offline mode and tests)
 start.bat, start.sh   one-click start for Windows / macOS and Linux
-docs/Arif-Visual-Answers-Guide.pdf   guide for non-technical readers (source: docs/guide/guide.html)
+docs/Arif-Visual-Answers-Guide.pdf      guide for non-technical readers (source: docs/guide/guide.html)
+docs/Arif-Visual-Answers-Guide-AR.pdf   the same guide in Arabic (source: docs/guide/guide.ar.html)
 docs/protocol.md      SSE event protocol and action endpoints
 docs/images/          screenshots, logo, architecture diagram (+ its generator)
 docs/BUILD_SPEC.md    the original build specification
